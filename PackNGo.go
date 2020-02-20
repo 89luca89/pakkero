@@ -14,6 +14,7 @@ import (
 	mrand "math/rand"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -295,6 +296,15 @@ func encryptAESGCM(plaintext []byte, divider string) string {
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64) {
 
+	// get the current script path
+	selfPath := filepath.Dir(os.Args[0])
+	// declare outfile as original filename + .enc
+	outfile := infile + ".enc"
+
+	// offset Hysteresis, this will prevent easy key retrieving
+	mrand.Seed(time.Now().UTC().UnixNano())
+	offset = offset + (mrand.Int63n(2048-128) + 128)
+
 	dividerSeedAES := make([]byte, 1)
 	rand.Read(dividerSeedAES)
 	dividerAES := fmt.Sprintf("%x", dividerSeedAES)
@@ -305,27 +315,29 @@ func PackNGo(infile string, offset int64) {
 	}
 	dividerStringAES = dividerStringAES[:len(dividerStringAES)-1]
 
-	copyRunnerSource := exec.Command("cp", "./run.go", "./test-enc.go")
+	copyRunnerSource := exec.Command("cp", selfPath+"/run.go", infile+".go")
 	copyRunnerSource.Run()
 
 	// obfuscate
-	obfuscate("./test-enc.go", fmt.Sprintf("%d", offset), dividerStringAES)
+	obfuscate(selfPath+"/"+infile+".go", fmt.Sprintf("%d", offset), dividerStringAES)
 
 	// compile the runner binary
-	buildRunner := exec.Command("go", "build", "-i", "-gcflags", "-N -l", "-ldflags", // "-s -w", "./test-enc.go")
-		"-s -w -extldflags -static", "./test-enc.go")
-	stripRunner := exec.Command("strip", "./test-enc")
+	buildRunner := exec.Command("go", "build", "-i", "-gcflags", "-N -l", "-ldflags",
+		"-s -w -extldflags -static",
+		"-o", outfile,
+		infile+".go")
+	stripRunner := exec.Command("strip", outfile)
 	buildRunner.Run()
 	stripRunner.Run()
 
 	// remove unused file
-	upxRunner := exec.Command("upx", "--ultra-brute", "./test-enc")
+	upxRunner := exec.Command("upx", "--ultra-brute", outfile)
 	upxRunner.Run()
-	stripUPX("./test-enc")
+	stripUPX(outfile)
 
 	// remove unused file
-	// removeRunnerSource := exec.Command("rm", "-f", "./test-enc.go")
-	// removeRunnerSource.Run()
+	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
+	removeRunnerSource.Run()
 
 	// get file to encrypt argument
 	b, err := ioutil.ReadFile(infile) // just pass the file name
@@ -337,7 +349,7 @@ func PackNGo(infile string, offset int64) {
 	// encrypt aes256-gcm
 	ciphertext := encryptAESGCM(plaintext, dividerAES)
 
-	encFile, _ := os.Open("./test-enc")
+	encFile, _ := os.Open(outfile)
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
@@ -349,7 +361,7 @@ func PackNGo(infile string, offset int64) {
 	mrand.Seed(time.Now().UTC().UnixNano())
 	rand.Read(randomGarbage)
 	// append payload to the runner itself
-	file, err := os.OpenFile("./test-enc", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf("failed opening file: %s", err)
 	}
