@@ -294,13 +294,14 @@ func encryptAESGCM(plaintext []byte, divider string) string {
 }
 
 // PackNGo will Encrypt and pack the payload for a secure execution
-func PackNGo(infile string, offset int64) {
+func PackNGo(infile string, offset int64, outfile string) {
 
 	// get the current script path
 	selfPath := filepath.Dir(os.Args[0])
 	// declare outfile as original filename + .enc
-	outfile := infile + ".enc"
-
+	if len(outfile) <= 0 {
+		outfile = infile + ".enc"
+	}
 	// offset Hysteresis, this will prevent easy key retrieving
 	mrand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (mrand.Int63n(2048-128) + 128)
@@ -396,8 +397,9 @@ Print help.
 func help() {
 	fmt.Println("Usage: ./encrypt -file /path/to/file -offset OFFSET")
 	fmt.Println("  -file				Target file to Pack")
+	fmt.Println("  -o   <file>			Place the output into <file>")
 	fmt.Println("  -offset			Offset where to start the payload (Bytes)")
-	fmt.Println("                                Offset minimal value is 600000")
+	fmt.Println("				Offset minimal value is 600000")
 	fmt.Println("  -v				Check " + programName + " version")
 }
 
@@ -420,6 +422,7 @@ func main() {
 			help()
 		}
 		file := flag.String("file", "", "")
+		output := flag.String("o", "", "")
 		offset := flag.Int64("offset", 0, "")
 		flag.Bool("v", false, "")
 		flag.Parse()
@@ -427,26 +430,14 @@ func main() {
 		switch os.Args[1] {
 		case "-v":
 			printVersion()
-		case "-file":
-			if *file != "" && *offset >= int64(600000) {
-				PackNGo(*file, *offset)
-			} else {
-				fmt.Println("Missing arguments or invalid arguments!")
-				help()
-				os.Exit(1)
-			}
-		case "-offset":
-			if *file != "" && *offset >= int64(600000) {
-				PackNGo(*file, *offset)
-			} else {
-				fmt.Println("Missing arguments or invalid arguments!")
-				help()
-				os.Exit(1)
-			}
 		default:
-			fmt.Println("Missing arguments or invalid arguments!")
-			help()
-			os.Exit(1)
+			if *file != "" && *offset >= int64(600000) {
+				PackNGo(*file, *offset, *output)
+			} else {
+				fmt.Println("Missing arguments or invalid arguments!")
+				help()
+				os.Exit(1)
+			}
 		}
 	}
 }
