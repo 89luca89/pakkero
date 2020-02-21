@@ -136,7 +136,10 @@ Basic techniques are applied:
 */
 func obfuscate(infile string, offset string) int {
 
-	content, _ := ioutil.ReadFile(infile)
+	content, err := ioutil.ReadFile(infile)
+	if err != nil {
+		panic(fmt.Sprintf("failed reading file: %s", err))
+	}
 	lines := strings.Split(string(content), "\n")
 
 	// randomize anti-debug checks
@@ -222,7 +225,10 @@ func stripUPX(infile string) {
 		}
 		// replace UPX sequence with random garbage
 		cmd := exec.Command("sed", "-i", `s/`+v+`/`+sedString+`/g`, infile)
-		cmd.Run()
+		err := cmd.Run()
+		if err != nil {
+			panic(fmt.Sprintf("failed to execute command %s: %s", cmd.String(), err))
+		}
 	}
 }
 
@@ -238,12 +244,15 @@ this will not only encrypt the payload but:
 func encryptAESGCM(plaintext []byte, outfile string) string {
 	// generate a password using the randomized UPX Binary's md5sum
 	/*
-	    the aes-256 psk is the md5sum of the whole executable
-        this is also useful to protect against NOP attacks to the anti-debug
-        features in the binary.
-        This doubles also as anti-tamper measure.
+			    the aes-256 psk is the md5sum of the whole executable
+		        this is also useful to protect against NOP attacks to the anti-debug
+		        features in the binary.
+		        This doubles also as anti-tamper measure.
 	*/
-	b, _ := ioutil.ReadFile(outfile)
+	b, err := ioutil.ReadFile(outfile)
+	if err != nil {
+		panic(fmt.Sprintf("failed reading file: %s", err))
+	}
 	key := md5.Sum(b)
 	//	generate new cipher
 	c, err := aes.NewCipher(key[:])
@@ -292,30 +301,44 @@ func PackNGo(infile string, offset int64, outfile string) {
 	copyRunnerSource.Run()
 
 	// obfuscate
-	obfuscate(selfPath+"/"+infile+".go", fmt.Sprintf("%d", offset))
+	obfuscate(infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the runner binary
 	buildRunner := exec.Command("go", "build", "-i", "-gcflags", "-N -l", "-ldflags",
 		"-s -w -extldflags -static",
 		"-o", outfile,
 		infile+".go")
-	stripRunner := exec.Command("strip", outfile)
-	buildRunner.Run()
-	stripRunner.Run()
+	err := buildRunner.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner.String(), err))
+	}
 
-	// remove unused file
+	// strip symbols
+	stripRunner := exec.Command("strip", outfile)
+	err = stripRunner.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner.String(), err))
+	}
+	// run UPX to shrink output size
 	upxRunner := exec.Command("upx", "--ultra-brute", outfile)
-	upxRunner.Run()
+	err = upxRunner.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
+	}
+	// strip UPX headers
 	stripUPX(outfile)
 
 	// remove unused file
 	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
-	removeRunnerSource.Run()
+	err = removeRunnerSource.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource.String(), err))
+	}
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Printf("failed opening file: %s", err)
+		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
@@ -335,7 +358,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// append randomness to the runner itself
 	_, err = encFile.WriteString(string(randomGarbage))
 	if err != nil {
-		fmt.Printf("failed writing to file: %s", err)
+		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 
 	// get file to encrypt argument
@@ -351,7 +374,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
 	if err != nil {
-		fmt.Printf("failed writing to file: %s", err)
+		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 }
 
@@ -359,16 +382,16 @@ func PackNGo(infile string, offset int64, outfile string) {
 Test if all dependencies are present
 in the system
 */
-func testDependencies() bool {
+func testDependencies() error {
 	for _, v := range dependencies {
 		cmd := exec.Command("which", v)
 		err := cmd.Run()
 		if err != nil {
-			fmt.Println("Missing dependency: " + v)
-			return false
+			panic("Missing dependency: " + v)
+			return err
 		}
 	}
-	return true
+	return nil
 }
 
 /*
@@ -393,7 +416,7 @@ func printVersion() {
 
 func main() {
 	// fist test if all dependencies are present
-	if testDependencies() {
+	if testDependencies() == nil {
 		if len(os.Args) == 1 {
 			help()
 			os.Exit(1)
