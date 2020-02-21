@@ -23,6 +23,7 @@ import (
 const programName = "PackNGo"
 const version = "0.1.0"
 const offsetPlaceholder = "9999999"
+
 var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 
 /*
