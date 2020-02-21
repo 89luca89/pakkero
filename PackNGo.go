@@ -358,9 +358,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	blockCount := offset - encFileSize
 
 	// create some random garbage to rise entropy
-	randomGarbage := make([]byte, blockCount)
-	mrand.Seed(time.Now().UTC().UnixNano())
-	rand.Read(randomGarbage)
+	randomGarbage := make([]byte, 1)
+	for int64(len(randomGarbage)) < blockCount {
+		mrand.Seed(time.Now().UTC().UnixNano())
+		garbageByte := make([]byte, 1)
+		rand.Read(garbageByte)
+		randomGarbage = append(randomGarbage, garbageByte[0])
+	}
 	// append payload to the runner itself
 	file, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
