@@ -192,11 +192,11 @@ func ob_proceede() {
 	defer ob_file.Close()
 
 	// OB_CHECK
-	var ob_offset int64 = PLACEHOLDER_OFFSET
+	var ob_offset int64 = 9999999
 	var ob_whence int
 	ob_stats_file, _ := ob_file.Stat()
 
-    // read the complete executable
+	// read the complete executable
 	ob_key := make([]byte, ob_offset)
 	ob_file.Read(ob_key)
 
@@ -221,10 +221,10 @@ func ob_proceede() {
 
 	// OB_CHECK
 	/*
-	    the aes-256 psk is the md5sum of the whole executable
-        this is also useful to protect against NOP attacks to the anti-debug
-        features in the binary.
-        This doubles also as anti-tamper measure.
+			    the aes-256 psk is the md5sum of the whole executable
+		        this is also useful to protect against NOP attacks to the anti-debug
+		        features in the binary.
+		        This doubles also as anti-tamper measure.
 	*/
 	ob_password := ob_md5.Sum([]byte(ob_key))
 	// OB_CHECK

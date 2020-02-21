@@ -22,7 +22,7 @@ import (
 
 const programName = "PackNGo"
 const version = "0.1.0"
-
+const offsetPlaceholder = "9999999"
 var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 
 /*
@@ -179,7 +179,7 @@ func obfuscate(infile string, offset string) int {
 	}
 
 	// insert offset
-	output = strings.ReplaceAll(output, "PLACEHOLDER_OFFSET", offset)
+	output = strings.ReplaceAll(output, offsetPlaceholder, offset)
 	// remove indentation
 	output = strings.ReplaceAll(output, "\t", "")
 
