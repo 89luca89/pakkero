@@ -124,7 +124,6 @@ This part will attempt to obfuscate the go code of the runner before
 compiling it.
 
 Basic techniques are applied:
-
 - Insert anti-debug checks in random order to ensure binaries generated are
   always different
 - Insert those anti-debug checks whenever in the code a "// OB_CHECK" is present
@@ -133,10 +132,9 @@ Basic techniques are applied:
     - those start with ob_* and will bel isted
     - for each matching string generate a typosquatted random string and
       replace all string with that
-- insert in the runner the divider
 - insert in the runner the chosen offset
 */
-func obfuscate(infile string, offset string, divider string) int {
+func obfuscate(infile string, offset string) int {
 
 	content, _ := ioutil.ReadFile(infile)
 	lines := strings.Split(string(content), "\n")
@@ -177,8 +175,6 @@ func obfuscate(infile string, offset string, divider string) int {
 		output = strings.ReplaceAll(output, w, generateName())
 	}
 
-	// insert divider
-	output = strings.ReplaceAll(output, "PLACEHOLDER_AES", divider)
 	// insert offset
 	output = strings.ReplaceAll(output, "PLACEHOLDER_OFFSET", offset)
 	// remove indentation
@@ -191,12 +187,10 @@ func obfuscate(infile string, offset string, divider string) int {
 }
 
 /*
-
 Using UPX To shrink the binary is good
 this will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
 simple attempts like "upx -d"
-
 */
 func stripUPX(infile string) {
 	// Bit sequence of UPX copyright and header infos
@@ -236,29 +230,23 @@ func stripUPX(infile string) {
 Wrapper around AESGCM encryption
 
 this will not only encrypt the payload but:
-
-- generate a random seed for a password
+- generate a password using the randomized UPX Binary's md5sum
 - cipher the payload with AESGCM using the generated password
 - swap endianess on all the encrypted bytes
-- append the seed
-- append a random divider
-- append seed lenght
 - reverse the complete payload
-
 */
-func encryptAESGCM(plaintext []byte, divider string) string {
-
-	// generate password
-	mrand.Seed(time.Now().UTC().UnixNano())
-	lenght := 256
-	seed := make([]byte, lenght)
-	rand.Read(seed)
-	password := fmt.Sprintf("%x", md5.Sum(seed))
-	key := []byte(password)
-	sseed := string(seed)
-
-	// generate new cipher
-	c, err := aes.NewCipher(key)
+func encryptAESGCM(plaintext []byte, outfile string) string {
+	// generate a password using the randomized UPX Binary's md5sum
+	/*
+	    the aes-256 psk is the md5sum of the whole executable
+        this is also useful to protect against NOP attacks to the anti-debug
+        features in the binary.
+        This doubles also as anti-tamper measure.
+	*/
+	b, _ := ioutil.ReadFile(outfile)
+	key := md5.Sum(b)
+	//	generate new cipher
+	c, err := aes.NewCipher(key[:])
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -272,23 +260,17 @@ func encryptAESGCM(plaintext []byte, divider string) string {
 		fmt.Println(err)
 	}
 
-	// encrypt
+	// cipher the payload with AESGCM using the generated password
 	bCiphertext := gcm.Seal(nonce, nonce, plaintext, nil)
 
-	// caesarize cipher
+	// swap endianess on all the encrypted bytes
 	for i := range bCiphertext {
 		bCiphertext[i] = bitReverse(bCiphertext[i])
 	}
 
 	ciphertext := string(bCiphertext)
-	// embed the seed
-	ciphertext += sseed
-	// embed the custom divider
-	ciphertext += divider
-	// embed seed lenght
-	ciphertext += fmt.Sprintf("%d", len(sseed))
 
-	// Reverse the payload!!
+	// reverse the complete payload
 	ciphertext = string(reverse([]byte(ciphertext)))
 	return ciphertext
 }
@@ -306,21 +288,11 @@ func PackNGo(infile string, offset int64, outfile string) {
 	mrand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (mrand.Int63n(2048-128) + 128)
 
-	dividerSeedAES := make([]byte, 1)
-	rand.Read(dividerSeedAES)
-	dividerAES := fmt.Sprintf("%x", dividerSeedAES)
-	dividerSeedAES = generateStaticString(dividerAES)
-	dividerStringAES := ""
-	for _, v := range dividerSeedAES {
-		dividerStringAES += fmt.Sprintf("%d", v) + ","
-	}
-	dividerStringAES = dividerStringAES[:len(dividerStringAES)-1]
-
 	copyRunnerSource := exec.Command("cp", selfPath+"/run.go", infile+".go")
 	copyRunnerSource.Run()
 
 	// obfuscate
-	obfuscate(selfPath+"/"+infile+".go", fmt.Sprintf("%d", offset), dividerStringAES)
+	obfuscate(selfPath+"/"+infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the runner binary
 	buildRunner := exec.Command("go", "build", "-i", "-gcflags", "-N -l", "-ldflags",
@@ -340,17 +312,11 @@ func PackNGo(infile string, offset int64, outfile string) {
 	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
 	removeRunnerSource.Run()
 
-	// get file to encrypt argument
-	b, err := ioutil.ReadFile(infile) // just pass the file name
-	content := string(b)
-
-	// plaintext content
-	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
-
-	// encrypt aes256-gcm
-	ciphertext := encryptAESGCM(plaintext, dividerAES)
-
-	encFile, _ := os.Open(outfile)
+	// read compiled file
+	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Printf("failed opening file: %s", err)
+	}
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
@@ -365,15 +331,25 @@ func PackNGo(infile string, offset int64, outfile string) {
 		rand.Read(garbageByte)
 		randomGarbage = append(randomGarbage, garbageByte[0])
 	}
-	// append payload to the runner itself
-	file, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Printf("failed opening file: %s", err)
-	}
-	defer file.Close()
 
-	_, err = file.WriteString(string(randomGarbage))
-	_, err = file.WriteString(ciphertext)
+	// append randomness to the runner itself
+	_, err = encFile.WriteString(string(randomGarbage))
+	if err != nil {
+		fmt.Printf("failed writing to file: %s", err)
+	}
+
+	// get file to encrypt argument
+	b, err := ioutil.ReadFile(infile) // just pass the file name
+	content := string(b)
+
+	// plaintext content
+	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
+
+	// encrypt aes256-gcm
+	ciphertext := encryptAESGCM(plaintext, outfile)
+
+	// append payload to the runner itself
+	_, err = encFile.WriteString(ciphertext)
 	if err != nil {
 		fmt.Printf("failed writing to file: %s", err)
 	}

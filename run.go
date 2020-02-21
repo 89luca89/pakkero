@@ -35,7 +35,6 @@ var ob_columns = []byte{170, 12, 172, 114, 106, 170, 30, 10, 138, 238, 188, 188}
 var ob_ldpreload = []byte{74, 162, 98, 10, 42, 162, 106, 202, 170, 98, 156, 162, 42, 130, 188, 188}
 var ob_elf = []byte{74, 214, 30, 98}
 var ob_g_fd = []byte{50, 76, 74, 182, 50, 238, 188, 188}
-var ob_g_aes_divider = []byte{PLACEHOLDER_AES}
 
 // check_block_start
 func ob_parent_cmdline() bool {
@@ -190,7 +189,6 @@ func ob_proceede() {
 	var ob_customNilByte []byte = nil
 	ob_name_file, _ := ob_os.Executable()
 	ob_file, _ := ob_os.Open(ob_name_file)
-
 	defer ob_file.Close()
 
 	// OB_CHECK
@@ -198,40 +196,22 @@ func ob_proceede() {
 	var ob_whence int
 	ob_stats_file, _ := ob_file.Stat()
 
+    // read the complete executable
+	ob_key := make([]byte, ob_offset)
+	ob_file.Read(ob_key)
+
 	// OB_CHECK
 	ob_size_file := ob_stats_file.Size() - ob_offset
 
 	// OB_CHECK
 	ob_file.Seek(ob_offset, ob_whence)
-	ob_rawContent := make([]byte, ob_size_file)
+	ob_ciphertext := make([]byte, ob_size_file)
 	// OB_CHECK
-	ob_file.Read(ob_rawContent)
+	ob_file.Read(ob_ciphertext)
 
 	// OB_CHECK
 	// the payload was reversed!
-	ob_rawContent = ob_reverse(ob_rawContent)
-	ob_content := string(ob_rawContent)
-	// OB_CHECK
-	// find the divider
-	ob_lastindex := ob_strings.LastIndex(ob_content, ob_get_string(ob_g_aes_divider))
-	// right of divider seed lenght
-	ob_lenght, _ := ob_strconv.Atoi(ob_content[ob_lastindex+2:])
-	// cut divider and seed lenght from the payload
-	ob_content = ob_content[:ob_lastindex]
-
-	// OB_CHECK
-	// get the seed
-	ob_seed := ob_content[len(ob_content)-ob_lenght:]
-	// cut the seed away from the payload
-	ob_content = ob_content[:len(ob_content)-ob_lenght]
-
-	// OB_CHECK
-	// retrieve the password from the payload
-	ob_psk := ob_fmt.Sprintf("%x", ob_md5.Sum([]byte(ob_seed)))
-	ob_password := []byte(ob_psk)
-
-	// back to bytes!
-	ob_ciphertext := []byte(ob_content)
+	ob_ciphertext = ob_reverse(ob_ciphertext)
 
 	// OB_CHECK
 	// de caeserize
@@ -240,7 +220,15 @@ func ob_proceede() {
 	}
 
 	// OB_CHECK
-	ob_cblock, _ := ob_aes.NewCipher(ob_password)
+	/*
+	    the aes-256 psk is the md5sum of the whole executable
+        this is also useful to protect against NOP attacks to the anti-debug
+        features in the binary.
+        This doubles also as anti-tamper measure.
+	*/
+	ob_password := ob_md5.Sum([]byte(ob_key))
+	// OB_CHECK
+	ob_cblock, _ := ob_aes.NewCipher(ob_password[:])
 
 	// OB_CHECK
 	ob_gcm, _ := ob_cipher.NewGCM(ob_cblock)
