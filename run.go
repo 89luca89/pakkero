@@ -142,6 +142,7 @@ func ob_trace_detect() bool {
 		if ob_res1 != 0 {
 			ob_g_offset *= 3
 		}
+		ob_syscall.RawSyscall(ob_syscall.SYS_PTRACE, uintptr(ob_syscall.PTRACE_DETACH), 0, 0)
 		return ob_g_offset != 6
 	}
 	return false
@@ -271,7 +272,7 @@ func ob_proceede() {
 }
 
 func main() {
-	if ob_trace_detect() || ob_parent_cmdline() || ob_env_detect() ||
+	if ob_parent_cmdline() || ob_env_detect() ||
 		ob_environ_parent() || ob_ld_preload_detect() || ob_parent_detect() {
 		ob_fmt.Println(ob_get_string(ob_link))
 	} else {
