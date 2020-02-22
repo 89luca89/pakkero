@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/hex"
 	"flag"
 	"fmt"
@@ -310,6 +311,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// compile the runner binary
 	gopath, _ := os.LookupEnv("GOPATH")
 	buildRunner := exec.Command("go", "build", "-i",
+		"-gcflags=-l",
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
@@ -404,11 +406,22 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 
+	// calculate final padding
+	finalPaddingArray := make([]byte, binary.MaxVarintLen64)
+	n := binary.PutVarint(finalPaddingArray, offset)
+	finalPaddingB := finalPaddingArray[:n]
+	for i := range finalPaddingB {
+		finalPaddingB[i] = bitReverse(finalPaddingB[i])
+	}
+	finalPadding, _ := binary.Varint(finalPaddingB)
+	if finalPadding < 0 {
+		finalPadding = finalPadding * -1
+	}
 	// create another random garbage to rise entropy
 	randomEndGarbage := make([]byte, 1)
 	mrand.Seed(time.Now().UTC().UnixNano())
 	rand.Read(randomEndGarbage)
-	for int64(len(randomEndGarbage)) < (offset / 2) {
+	for int64(len(randomEndGarbage)) < finalPadding {
 		mrand.Seed(time.Now().UTC().UnixNano())
 		garbageByte := make([]byte, 1)
 		rand.Read(garbageByte)

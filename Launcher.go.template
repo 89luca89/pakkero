@@ -7,6 +7,7 @@ import (
 	ob_cipher "crypto/cipher"
 	ob_md5 "crypto/md5"
 	ob_base64 "encoding/base64"
+	ob_binary "encoding/binary"
 	ob_fmt "fmt"
 	ob_ioutil "io/ioutil"
 	ob_os "os"
@@ -198,6 +199,16 @@ func ob_proceede() {
 	var ob_whence int
 	ob_stats_file, _ := ob_file.Stat()
 
+	// calculate final padding
+	ob_array_final_padding := make([]byte, ob_binary.MaxVarintLen64)
+	ob_byte_final_padding := ob_array_final_padding[:ob_binary.PutVarint(ob_array_final_padding, ob_offset)]
+	for ob_index := range ob_byte_final_padding {
+		ob_byte_final_padding[ob_index] = ob_bitReverse(ob_byte_final_padding[ob_index])
+	}
+	ob_final_padding, _ := ob_binary.Varint(ob_byte_final_padding)
+	if ob_final_padding < 0 {
+		ob_final_padding = ob_final_padding * -1
+	}
 	// read the complete executable
 	ob_key := make([]byte, ob_offset)
 	ob_file.Read(ob_key)
@@ -210,7 +221,7 @@ func ob_proceede() {
 	ob_ciphertext := make([]byte, ob_size_file)
 	// OB_CHECK
 	ob_file.Read(ob_ciphertext)
-	ob_ciphertext = ob_ciphertext[:int64(len(ob_ciphertext))-(ob_offset/2)]
+	ob_ciphertext = ob_ciphertext[:int64(len(ob_ciphertext))-ob_final_padding]
 	// OB_CHECK
 	// the payload was reversed!
 	ob_ciphertext = ob_reverse(ob_ciphertext)
