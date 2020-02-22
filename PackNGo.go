@@ -296,10 +296,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// offset Hysteresis, this will prevent easy key retrieving
 	mrand.Seed(time.Now().UTC().UnixNano())
-	offset = offset + (mrand.Int63n(2048-128) + 128)
+	offset = offset + (mrand.Int63n(4096-128) + 128)
 
 	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.template", infile+".go")
-	copyRunnerSource.Run()
+	err := copyRunnerSource.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", copyRunnerSource, err))
+	}
 
 	// obfuscate
 	obfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
@@ -318,7 +321,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-o", outfile,
 		infile+".go")
 	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
-	err := buildRunner.Run()
+	err = buildRunner.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner, err))
 	}
@@ -370,6 +373,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// create some random garbage to rise entropy
 	randomGarbage := make([]byte, 1)
+	mrand.Seed(time.Now().UTC().UnixNano())
+	rand.Read(randomGarbage)
 	for int64(len(randomGarbage)) < blockCount {
 		mrand.Seed(time.Now().UTC().UnixNano())
 		garbageByte := make([]byte, 1)
@@ -395,6 +400,20 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
+	if err != nil {
+		panic(fmt.Sprintf("failed writing to file: %s", err))
+	}
+	// append a random garbage equal to the offset at the end of the payload
+	randomEndGarbage := make([]byte, 1)
+	mrand.Seed(time.Now().UTC().UnixNano())
+	rand.Read(randomEndGarbage)
+	for int64(len(randomEndGarbage)) < offset {
+		mrand.Seed(time.Now().UTC().UnixNano())
+		garbageByte := make([]byte, 1)
+		rand.Read(garbageByte)
+		randomEndGarbage = append(randomEndGarbage, garbageByte[0])
+	}
+	_, err = encFile.WriteString(string(randomEndGarbage))
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
