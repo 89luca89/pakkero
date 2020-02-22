@@ -228,7 +228,7 @@ func stripUPX(infile string) {
 		cmd := exec.Command("sed", "-i", `s/`+v+`/`+sedString+`/g`, infile)
 		err := cmd.Run()
 		if err != nil {
-			panic(fmt.Sprintf("failed to execute command %s: %s", cmd.String(), err))
+			panic(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
 		}
 	}
 }
@@ -305,23 +305,34 @@ func PackNGo(infile string, offset int64, outfile string) {
 	obfuscate(infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the runner binary
-	buildRunner := exec.Command("go", "build", "-i", "-gcflags", "-N -l", "-ldflags",
-		"-s -w -extldflags -static",
+	gopath, _ := os.LookupEnv("GOPATH")
+	buildRunner := exec.Command("go", "build", "-i",
+		"-gcflags=-N",
+		"-gcflags=-nolocalimports",
+		"-gcflags=-pack",
+		"-gcflags=-trimpath="+gopath+"/src/",
+		"-asmflags=-trimpath="+gopath+"/src/",
+		"-ldflags=-s",
 		"-o", outfile,
 		infile+".go")
+	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
 	err := buildRunner.Run()
 	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner.String(), err))
+		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner, err))
 	}
 
+	cmd := exec.Command("cp", outfile, "/tmp/test-prestrip")
+	cmd.Run()
 	// strip symbols
-	stripRunner := exec.Command("strip", outfile)
+	stripRunner := exec.Command("strip", "-s", outfile)
 	err = stripRunner.Run()
 	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner.String(), err))
+		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
 	}
+	cmd = exec.Command("cp", outfile, "/tmp/test-poststrip")
+	cmd.Run()
 	// run UPX to shrink output size
-	upxRunner := exec.Command("upx", "--ultra-brute", outfile)
+	upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
 	err = upxRunner.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
@@ -333,7 +344,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
 	err = removeRunnerSource.Run()
 	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource.String(), err))
+		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
 	}
 
 	// read compiled file
@@ -344,6 +355,17 @@ func PackNGo(infile string, offset int64, outfile string) {
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
+
+	// Ensure input offset is valid comared to compiled file size!
+	if offset <= encFileSize {
+		removeLeftOvers := exec.Command("rm", "-f", outfile)
+		err = removeLeftOvers.Run()
+		if err != nil {
+			panic(fmt.Sprintf("failed writing to file: %s", err))
+		}
+		panic("ERROR! Calculated offset is lower than launcher size: " +
+			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
+	}
 	// calculate where to put garbage and where to put the payload
 	blockCount := offset - encFileSize
 
@@ -403,7 +425,7 @@ func help() {
 	fmt.Println("  -file				Target file to Pack")
 	fmt.Println("  -o   <file>			Place the output into <file>")
 	fmt.Println("  -offset			Offset where to start the payload (Bytes)")
-	fmt.Println("				Offset minimal value is 600000")
+	fmt.Println("				Offset minimal recommended value is 600000")
 	fmt.Println("  -v				Check " + programName + " version")
 }
 
@@ -435,7 +457,7 @@ func main() {
 		case "-v":
 			printVersion()
 		default:
-			if *file != "" && *offset >= int64(600000) {
+			if *file != "" && *offset >= 0 {
 				PackNGo(*file, *offset, *output)
 			} else {
 				fmt.Println("Missing arguments or invalid arguments!")
