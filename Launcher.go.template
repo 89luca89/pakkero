@@ -206,6 +206,7 @@ func ob_proceede() {
 		ob_byte_final_padding[ob_index] = ob_bitReverse(ob_byte_final_padding[ob_index])
 	}
 	ob_final_padding, _ := ob_binary.Varint(ob_byte_final_padding)
+	// make it positive!
 	if ob_final_padding < 0 {
 		ob_final_padding = ob_final_padding * -1
 	}

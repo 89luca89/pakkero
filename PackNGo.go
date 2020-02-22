@@ -414,6 +414,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		finalPaddingB[i] = bitReverse(finalPaddingB[i])
 	}
 	finalPadding, _ := binary.Varint(finalPaddingB)
+	// make it positive!
 	if finalPadding < 0 {
 		finalPadding = finalPadding * -1
 	}
