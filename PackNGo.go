@@ -403,7 +403,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
-	// append a random garbage equal to the offset at the end of the payload
+
+	// create another random garbage to rise entropy
 	randomEndGarbage := make([]byte, 1)
 	mrand.Seed(time.Now().UTC().UnixNano())
 	rand.Read(randomEndGarbage)
@@ -413,6 +414,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 		rand.Read(garbageByte)
 		randomEndGarbage = append(randomEndGarbage, garbageByte[0])
 	}
+
+	// append random garbage equal to half the offset at the end of the payload
 	_, err = encFile.WriteString(string(randomEndGarbage))
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
