@@ -29,7 +29,7 @@ var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 /*
 Reverse a slice of bytes
 */
-func reverse(input []byte) []byte {
+func reverseByteArray(input []byte) []byte {
 	reversed := []byte{}
 	for i := range input {
 		n := input[len(input)-1-i]
@@ -54,7 +54,7 @@ func bitReverse(b byte) byte {
 /*
 Reverse a slice of strings
 */
-func arrStringReverse(ss []string) []string {
+func reverseStringArray(ss []string) []string {
 	last := len(ss) - 1
 	for i := 0; i < len(ss)/2; i++ {
 		ss[i], ss[last-i] = ss[last-i], ss[i]
@@ -65,7 +65,7 @@ func arrStringReverse(ss []string) []string {
 /*
 Reverse a string
 */
-func stringReverse(input string) string {
+func reverseString(input string) string {
 	var result string
 	for _, value := range input {
 		result = string(value) + result
@@ -87,7 +87,7 @@ Typosquat name generator
 based on a lenght (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
-func generateName() string {
+func generateTyposquatName() string {
 	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mrand.Seed(time.Now().UnixNano())
@@ -110,8 +110,8 @@ Generate an obfuscated string from input:
     - b64 it
     - bit fot bit endianess
 */
-func generateStaticString(in string) []byte {
-	in = stringReverse(in)
+func generateBinaryReversedString(in string) []byte {
+	in = reverseString(in)
 	result := []byte(base64.StdEncoding.EncodeToString([]byte(in)))
 	for index := range result {
 		result[index] = bitReverse(result[index])
@@ -121,7 +121,7 @@ func generateStaticString(in string) []byte {
 
 /*
 
-This part will attempt to obfuscate the go code of the runner before
+This part will attempt to obfuscateLauncher the go code of the runner before
 compiling it.
 
 Basic techniques are applied:
@@ -135,7 +135,7 @@ Basic techniques are applied:
       replace all string with that
 - insert in the runner the chosen offset
 */
-func obfuscate(infile string, offset string) int {
+func obfuscateLauncher(infile string, offset string) int {
 
 	content, err := ioutil.ReadFile(infile)
 	if err != nil {
@@ -173,10 +173,10 @@ func obfuscate(infile string, offset string) int {
 	// obfuscate functions and variables names
 	r := regexp.MustCompile(`ob_[a-zA-Z_]+`)
 	words := r.FindAllString(output, -1)
-	words = arrStringReverse(words)
+	words = reverseStringArray(words)
 	for _, w := range words {
 		// generate random name for each matching string
-		output = strings.ReplaceAll(output, w, generateName())
+		output = strings.ReplaceAll(output, w, generateTyposquatName())
 	}
 
 	// insert offset
@@ -196,7 +196,7 @@ this will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
 simple attempts like "upx -d"
 */
-func stripUPX(infile string) {
+func stripUpxHeaders(infile string) {
 	// Bit sequence of UPX copyright and header infos
 	header := []string{
 		`\x49\x6e\x66\x6f\x3a\x20\x54\x68\x69\x73`,
@@ -281,7 +281,7 @@ func encryptAESGCM(plaintext []byte, outfile string) string {
 	ciphertext := string(bCiphertext)
 
 	// reverse the complete payload
-	ciphertext = string(reverse([]byte(ciphertext)))
+	ciphertext = string(reverseByteArray([]byte(ciphertext)))
 	return ciphertext
 }
 
@@ -298,11 +298,11 @@ func PackNGo(infile string, offset int64, outfile string) {
 	mrand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (mrand.Int63n(2048-128) + 128)
 
-	copyRunnerSource := exec.Command("cp", selfPath+"/run.go", infile+".go")
+	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.template", infile+".go")
 	copyRunnerSource.Run()
 
 	// obfuscate
-	obfuscate(infile+".go", fmt.Sprintf("%d", offset))
+	obfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the runner binary
 	gopath, _ := os.LookupEnv("GOPATH")
@@ -310,6 +310,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
+		"-gcflags=-trimpath="+selfPath,
+		"-asmflags=-trimpath="+selfPath,
 		"-gcflags=-trimpath="+gopath+"/src/",
 		"-asmflags=-trimpath="+gopath+"/src/",
 		"-ldflags=-s",
@@ -321,16 +323,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner, err))
 	}
 
-	cmd := exec.Command("cp", outfile, "/tmp/test-prestrip")
-	cmd.Run()
 	// strip symbols
 	stripRunner := exec.Command("strip", "-s", outfile)
 	err = stripRunner.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
 	}
-	cmd = exec.Command("cp", outfile, "/tmp/test-poststrip")
-	cmd.Run()
+
 	// run UPX to shrink output size
 	upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
 	err = upxRunner.Run()
@@ -338,7 +337,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
 	}
 	// strip UPX headers
-	stripUPX(outfile)
+	stripUpxHeaders(outfile)
 
 	// remove unused file
 	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
@@ -418,6 +417,14 @@ func testDependencies() error {
 }
 
 /*
+Print version.
+*/
+func printVersion() {
+	fmt.Println(programName + " v" + version)
+	os.Exit(0)
+}
+
+/*
 Print help.
 */
 func help() {
@@ -427,14 +434,6 @@ func help() {
 	fmt.Println("  -offset			Offset where to start the payload (Bytes)")
 	fmt.Println("				Offset minimal recommended value is 600000")
 	fmt.Println("  -v				Check " + programName + " version")
-}
-
-/*
-Print version.
-*/
-func printVersion() {
-	fmt.Println(programName + " v" + version)
-	os.Exit(0)
 }
 
 func main() {
