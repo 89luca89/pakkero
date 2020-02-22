@@ -42,7 +42,7 @@ func reverseByteArray(input []byte) []byte {
 /*
 Change a byte endianess
 */
-func bitReverse(b byte) byte {
+func reverseByte(b byte) byte {
 	var d byte
 	for i := 0; i < 8; i++ {
 		d <<= 1
@@ -115,7 +115,7 @@ func generateBinaryReversedString(in string) []byte {
 	in = reverseString(in)
 	result := []byte(base64.StdEncoding.EncodeToString([]byte(in)))
 	for index := range result {
-		result[index] = bitReverse(result[index])
+		result[index] = reverseByte(result[index])
 	}
 	return result
 }
@@ -243,7 +243,7 @@ this will not only encrypt the payload but:
 - swap endianess on all the encrypted bytes
 - reverse the complete payload
 */
-func encryptAESGCM(plaintext []byte, outfile string) string {
+func encryptAESReversed(plaintext []byte, outfile string) string {
 	// generate a password using the randomized UPX Binary's md5sum
 	/*
 			    the aes-256 psk is the md5sum of the whole executable
@@ -276,7 +276,7 @@ func encryptAESGCM(plaintext []byte, outfile string) string {
 
 	// swap endianess on all the encrypted bytes
 	for i := range bCiphertext {
-		bCiphertext[i] = bitReverse(bCiphertext[i])
+		bCiphertext[i] = reverseByte(bCiphertext[i])
 	}
 
 	ciphertext := string(bCiphertext)
@@ -398,7 +398,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
 	// encrypt aes256-gcm
-	ciphertext := encryptAESGCM(plaintext, outfile)
+	ciphertext := encryptAESReversed(plaintext, outfile)
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
@@ -411,7 +411,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	n := binary.PutVarint(finalPaddingArray, offset)
 	finalPaddingB := finalPaddingArray[:n]
 	for i := range finalPaddingB {
-		finalPaddingB[i] = bitReverse(finalPaddingB[i])
+		finalPaddingB[i] = reverseByte(finalPaddingB[i])
 	}
 	finalPadding, _ := binary.Varint(finalPaddingB)
 	// make it positive!
