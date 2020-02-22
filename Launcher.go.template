@@ -210,7 +210,7 @@ func ob_proceede() {
 	ob_ciphertext := make([]byte, ob_size_file)
 	// OB_CHECK
 	ob_file.Read(ob_ciphertext)
-	ob_ciphertext = ob_ciphertext[:int64(len(ob_ciphertext))-ob_offset]
+	ob_ciphertext = ob_ciphertext[:int64(len(ob_ciphertext))-(ob_offset/2)]
 	// OB_CHECK
 	// the payload was reversed!
 	ob_ciphertext = ob_reverse(ob_ciphertext)

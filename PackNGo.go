@@ -407,7 +407,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	randomEndGarbage := make([]byte, 1)
 	mrand.Seed(time.Now().UTC().UnixNano())
 	rand.Read(randomEndGarbage)
-	for int64(len(randomEndGarbage)) < offset {
+	for int64(len(randomEndGarbage)) < (offset / 2) {
 		mrand.Seed(time.Now().UTC().UnixNano())
 		garbageByte := make([]byte, 1)
 		rand.Read(garbageByte)
