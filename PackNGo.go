@@ -311,7 +311,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// compile the runner binary
 	gopath, _ := os.LookupEnv("GOPATH")
 	buildRunner := exec.Command("go", "build", "-i",
-		"-gcflags=-l",
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
