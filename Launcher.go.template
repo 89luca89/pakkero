@@ -1,6 +1,27 @@
 //go:binary-only-package
 package main
 
+/*
+#include <stdio.h>
+#include <sys/ptrace.h>
+int ptrace_detect () {
+	int offset = 0;
+
+    if (ptrace(PTRACE_TRACEME, 0, 1, 0) == 0){
+        offset = 2;
+    }
+	if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1){
+        offset = offset * 3;
+    }
+
+    if (offset == 2 * 3){
+        return 0;
+    } else {
+        return -1;
+    }
+}
+*/
+import "C"
 import (
 	ob_bytes "bytes"
 	ob_aes "crypto/aes"
@@ -132,21 +153,8 @@ func ob_ld_preload_detect() bool {
 	return false
 }
 
-func ob_trace_detect() bool {
-	if ob_os.Getuid() == 0 {
-		ob_g_offset := 0
-		ob_res, _, _ := ob_syscall.RawSyscall(ob_syscall.SYS_PTRACE, uintptr(ob_syscall.PTRACE_TRACEME), 0, 0)
-		if ob_res == 0 {
-			ob_g_offset += 2
-		}
-		ob_res1, _, _ := ob_syscall.RawSyscall(ob_syscall.SYS_PTRACE, uintptr(ob_syscall.PTRACE_TRACEME), 0, 0)
-		if ob_res1 != 0 {
-			ob_g_offset *= 3
-		}
-		ob_syscall.RawSyscall(ob_syscall.SYS_PTRACE, uintptr(ob_syscall.PTRACE_DETACH), 0, 0)
-		return ob_g_offset != 6
-	}
-	return false
+func ob_go_trace_detect() bool {
+	return C.ptrace_detect() != 0
 }
 
 // check_block_end
@@ -284,7 +292,7 @@ func ob_proceede() {
 }
 
 func main() {
-	if ob_parent_cmdline() || ob_env_detect() ||
+	if ob_go_trace_detect() || ob_parent_cmdline() || ob_env_detect() ||
 		ob_environ_parent() || ob_ld_preload_detect() || ob_parent_detect() {
 		ob_fmt.Println(ob_get_string(ob_link))
 	} else {
