@@ -24,13 +24,13 @@ int ptrace_detect () {
 import "C"
 import (
 	ob_bytes "bytes"
+	ob_zlib "compress/zlib"
 	ob_aes "crypto/aes"
 	ob_cipher "crypto/cipher"
 	ob_md5 "crypto/md5"
 	ob_base64 "encoding/base64"
 	ob_binary "encoding/binary"
-	ob_fmt "fmt"
-	ob_ioutil "io/ioutil"
+	ob_utilio "io/ioutil"
 	ob_os "os"
 	ob_exec "os/exec"
 	ob_strconv "strconv"
@@ -43,42 +43,27 @@ var ob_link = []byte{170, 106, 114, 26, 154, 106, 14, 106,
 	178, 150, 156, 172, 70, 194, 172, 12,
 	134, 234, 146, 110, 50, 94, 14, 94,
 	198, 18, 74, 12, 134, 130, 188, 188}
-var ob_proc = []byte{50, 76, 114, 110, 198, 118, 130, 110}
-var ob_stat = []byte{38, 226, 98, 12, 198, 158, 28, 188}
-var ob_cmdline = []byte{90, 234, 172, 14, 70, 226, 74, 46, 154, 158, 28, 188}
-var ob_gdb = []byte{154, 182, 74, 118}
-var ob_strace = []byte{90, 234, 114, 22, 198, 118, 74, 94}
-var ob_ltrace = []byte{90, 234, 114, 22, 198, 118, 74, 206}
-var ob_lldb = []byte{154, 182, 74, 206, 70, 130, 188, 188}
-var ob_lines = []byte{170, 12, 106, 242, 202, 170, 238, 188}
-var ob_valgrind = []byte{90, 226, 172, 14, 198, 182, 38, 206, 154, 26, 154, 188}
-var ob_dlv = []byte{38, 182, 30, 214}
-var ob_godebug = []byte{90, 204, 106, 150, 90, 234, 74, 110, 90, 238, 188, 188}
-var ob_columns = []byte{170, 12, 172, 114, 106, 170, 30, 10, 138, 238, 188, 188}
-var ob_ldpreload = []byte{74, 162, 98, 10, 42, 162, 106, 202, 170, 98, 156, 162, 42, 130, 188, 188}
-var ob_elf = []byte{74, 214, 30, 98}
-var ob_g_fd = []byte{50, 76, 74, 182, 50, 238, 188, 188}
 
 // check_block_start
 func ob_parent_cmdline() bool {
 	ob_pid_parent := ob_os.Getppid()
 
-	ob_name_file := ob_get_string(ob_proc) + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
-		ob_get_string(ob_cmdline)
-	ob_stat_parent, _ := ob_ioutil.ReadFile(ob_name_file)
-	if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_gdb)) {
+	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+		`/cmdline`
+	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
+	if ob_strings.Contains(string(ob_stat_parent), `gdb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_strace)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `strace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_ltrace)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `ltrace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_lldb)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `lldb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_valgrind)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `valgrind`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_dlv)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `dlv`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_godebug)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `godebug`) {
 		return true
 	} else {
 		return false
@@ -87,51 +72,51 @@ func ob_parent_cmdline() bool {
 func ob_parent_detect() bool {
 	ob_pid_parent := ob_os.Getppid()
 
-	ob_name_file := ob_get_string(ob_proc) + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
-		ob_get_string(ob_stat)
-	ob_stat_parent, _ := ob_ioutil.ReadFile(ob_name_file)
-	if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_gdb)) {
+	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+		`/stat`
+	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
+	if ob_strings.Contains(string(ob_stat_parent), `gdb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_strace)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `strace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_ltrace)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `ltrace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_lldb)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `lldb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_valgrind)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `valgrind`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_dlv)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `dlv`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), ob_get_string(ob_godebug)) {
+	} else if ob_strings.Contains(string(ob_stat_parent), `godebug`) {
 		return true
 	} else {
 		return false
 	}
 }
 func ob_environ_parent() bool {
-	ob_l_lines, _ := ob_os.LookupEnv("_")
-	if ob_strings.Contains(ob_l_lines, ob_get_string(ob_gdb)) {
+	ob_l_lines, _ := ob_os.LookupEnv(`_`)
+	if ob_strings.Contains(ob_l_lines, `gdb`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_strace)) {
+	} else if ob_strings.Contains(ob_l_lines, `strace`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_ltrace)) {
+	} else if ob_strings.Contains(ob_l_lines, `ltrace`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_lldb)) {
+	} else if ob_strings.Contains(ob_l_lines, `lldb`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_valgrind)) {
+	} else if ob_strings.Contains(ob_l_lines, `valgrind`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_dlv)) {
+	} else if ob_strings.Contains(ob_l_lines, `dlv`) {
 		return true
-	} else if ob_strings.Contains(ob_l_lines, ob_get_string(ob_godebug)) {
+	} else if ob_strings.Contains(ob_l_lines, `godebug`) {
 		return true
 	} else {
 		return false
 	}
 }
 func ob_env_detect() bool {
-	_, ob_l_lines := ob_os.LookupEnv(ob_get_string(ob_lines))
-	_, ob_l_columns := ob_os.LookupEnv(ob_get_string(ob_columns))
-	_, ob_l_ldpreload := ob_os.LookupEnv(ob_get_string(ob_ldpreload))
+	_, ob_l_lines := ob_os.LookupEnv(`LINES`)
+	_, ob_l_columns := ob_os.LookupEnv(`COLUMNS`)
+	_, ob_l_ldpreload := ob_os.LookupEnv(`LD_PRELOAD`)
 	if ob_l_lines || ob_l_columns || ob_l_ldpreload {
 		return true
 	} else {
@@ -141,10 +126,10 @@ func ob_env_detect() bool {
 
 func ob_ld_preload_detect() bool {
 	if ob_env_detect() == false {
-		ob_os.Setenv(ob_get_string(ob_ldpreload), ob_get_string(ob_stat))
-		ob_l_ldpreload, _ := ob_os.LookupEnv(ob_get_string(ob_ldpreload))
-		if ob_l_ldpreload == ob_get_string(ob_stat) {
-			ob_os.Unsetenv(ob_get_string(ob_ldpreload))
+		ob_os.Setenv(`LD_PRELOAD`, `/stat`)
+		ob_l_ldpreload, _ := ob_os.LookupEnv(`LD_PRELOAD`)
+		if ob_l_ldpreload == `/stat` {
+			ob_os.Unsetenv(`LD_PRELOAD`)
 			return false
 		} else {
 			return true
@@ -203,7 +188,7 @@ func ob_proceede() {
 	defer ob_file.Close()
 
 	// OB_CHECK
-	var ob_offset int64 = 9999999
+	ob_offset, _ := ob_strconv.ParseInt(`9999999`, 10, 64)
 	var ob_whence int
 	ob_stats_file, _ := ob_file.Stat()
 
@@ -242,12 +227,12 @@ func ob_proceede() {
 	}
 
 	// OB_CHECK
-	/*
-			    the aes-256 psk is the md5sum of the whole executable
-		        this is also useful to protect against NOP attacks to the anti-debug
-		        features in the binary.
-		        This doubles also as anti-tamper measure.
-	*/
+	//
+	//		    the aes-256 psk is the md5sum of the whole executable
+	//		 	        this is also useful to protect against NOP attacks to the anti-debug
+	//		 	        features in the binary.
+	//		 	        This doubles also as anti-tamper measure.
+	//
 	ob_password := ob_md5.Sum([]byte(ob_key))
 	// OB_CHECK
 	ob_cblock, _ := ob_aes.NewCipher(ob_password[:])
@@ -261,22 +246,35 @@ func ob_proceede() {
 	// OB_CHECK
 	// decrypt!!!
 	ob_nonce, ob_ciphertext := ob_ciphertext[:ob_size_nonce], ob_ciphertext[ob_size_nonce:]
-	ob_plaintext, _ := ob_gcm.Open(ob_customNilByte, ob_nonce, ob_ciphertext, ob_customNilByte)
+	ob_c_plaintext, _ := ob_gcm.Open(ob_customNilByte, ob_nonce, ob_ciphertext, ob_customNilByte)
 
+	// OB_CHECK
+	// the payload was compressed!
+	ob_buffer_plaintext := ob_bytes.NewReader(ob_c_plaintext)
+	// OB_CHECK
+	ob_zlib_reader, err := ob_zlib.NewReader(ob_buffer_plaintext)
+	if err != nil {
+		println(err)
+	}
+	// OB_CHECK
+	ob_plaintext, _ := ob_utilio.ReadAll(ob_zlib_reader)
+	ob_zlib_reader.Close()
 	// OB_CHECK
 	// payload was in b64
 	ob_payload, _ := ob_base64.StdEncoding.DecodeString(string(ob_plaintext))
 
 	// OB_CHECK
-	ob_fdName := ""
+	ob_fdName := ``
 	ob_filedescriptor, _, _ := ob_syscall.Syscall(319, uintptr(ob_unsafe.Pointer(&ob_fdName)),
 		uintptr(0x0001), 0)
 	ob_syscall.Write(int(ob_filedescriptor), ob_payload)
 
 	// OB_CHECK
-	ob_fdPath := ob_fmt.Sprintf(ob_get_string(ob_proc)+"%d"+ob_get_string(ob_g_fd)+"%d",
-		ob_os.Getpid(), ob_filedescriptor)
-	if ob_strings.Contains(string(ob_payload[:4]), ob_get_string(ob_elf)) {
+	ob_fdPath := `/proc/` +
+		ob_strconv.Itoa(ob_os.Getpid()) +
+		`/fd/` +
+		ob_strconv.Itoa(int(ob_filedescriptor))
+	if ob_strings.Contains(string(ob_payload[:4]), `ELF`) {
 		// OB_CHECK
 		_ = ob_syscall.Exec(ob_fdPath, ob_os.Args, ob_os.Args)
 	} else {
@@ -287,14 +285,15 @@ func ob_proceede() {
 		ob_cmd.Stdout = &ob_stdout
 		// OB_CHECK
 		ob_cmd.Run()
-		ob_fmt.Print(string(ob_stdout.Bytes()))
+		print(string(ob_stdout.Bytes()))
 	}
 }
 
+// OB_ADDITIONAL_FUNCTIONS
 func main() {
 	if ob_go_trace_detect() || ob_parent_cmdline() || ob_env_detect() ||
 		ob_environ_parent() || ob_ld_preload_detect() || ob_parent_detect() {
-		ob_fmt.Println(ob_get_string(ob_link))
+		println(ob_get_string(ob_link))
 	} else {
 		ob_proceede()
 	}

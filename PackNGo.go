@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/zlib"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
@@ -25,7 +27,23 @@ const programName = "PackNGo"
 const version = "0.1.0"
 const offsetPlaceholder = "9999999"
 
+var secrets = map[string][]string{}
 var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
+
+/*
+Deduplicate a given slice
+*/
+func unique(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
+}
 
 /*
 Reverse a slice of bytes
@@ -92,7 +110,7 @@ func generateTyposquatName() string {
 	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mrand.Seed(time.Now().UnixNano())
-	lenght := 128
+	lenght := 8
 	b := make([]rune, lenght)
 	mrand.Seed(time.Now().UnixNano())
 	// ensure we do not start with a number or we will break code.
@@ -103,6 +121,55 @@ func generateTyposquatName() string {
 		}
 	}
 	return string(b)
+}
+
+/*
+	Obfuscates a string creating a function that returns
+	that value as a string encoded with a series og byteshift operations
+*/
+func obfuscateString(txt string, function string) string {
+	lines := []string{}
+	for _, item := range []byte(txt) {
+		lines = append(
+			lines, getoneCodedChar(item),
+		)
+	}
+	return fmt.Sprintf("func "+
+		function+
+		"() string { return string(\n[]byte{\n%s,\n},\n)}",
+		strings.Join(lines, ",\n"))
+}
+
+/*
+	Transform a char/byte in a series of operations on value 1
+
+	thanks to:
+	https://github.com/GH0st3rs/obfus/blob/master/obfus.go
+*/
+func getoneCodedChar(n byte) (buf string) {
+	var arr []byte
+	var x uint8
+	for n > 1 {
+		x = 0
+		if n%2 == 1 {
+			x = 1
+		}
+		arr = append(arr, x)
+		n = n >> 1
+	}
+	buf = "1"
+	mrand.Seed(time.Now().Unix())
+	for i := len(arr) - 1; i >= 0; i-- {
+		buf = fmt.Sprintf("%s<<%s", buf, "1")
+		if arr[i] == 1 {
+			op := "(%s|%s)"
+			if mrand.Intn(2) == 0 {
+				op = "(%s^%s)"
+			}
+			buf = fmt.Sprintf(op, buf, "1")
+		}
+	}
+	return buf
 }
 
 /*
@@ -129,7 +196,8 @@ Basic techniques are applied:
 - Insert anti-debug checks in random order to ensure binaries generated are
   always different
 - Insert those anti-debug checks whenever in the code a "// OB_CHECK" is present
-- remove comments
+- extract all plaintext strings denotet with backticks and obfuscate them
+	using byteshift wise operations
 - extract all obfuscation-enabled func and var names:
     - those start with ob_* and will bel isted
     - for each matching string generate a typosquatted random string and
@@ -144,13 +212,19 @@ func obfuscateLauncher(infile string, offset string) int {
 	}
 	lines := strings.Split(string(content), "\n")
 
-	// randomize anti-debug checks
+	/*
+		--- Start anti-debug ----------------------------
+	*/
+	// Insert random order of anti-debug check
+	// together with inline compilation to induce big number
+	// of instructions in random order
 	randomChecks := []string{
 		`ob_parent_cmdline()`,
 		`ob_env_detect()`,
 		`ob_environ_parent() `,
 		`ob_ld_preload_detect()`,
 		`ob_parent_detect()`}
+	// find OB_CHECK and put the checks there.
 	for i, v := range lines {
 		if strings.Contains(v, "// OB_CHECK") {
 			sedString := ""
@@ -162,28 +236,57 @@ func obfuscateLauncher(infile string, offset string) int {
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + `{ ob_fmt.Println(ob_get_string(ob_link)) }`
-		} else if strings.Contains(v, "//") {
-			// remove comments
-			lines[i] = ""
+			lines[i] = `if ` + sedString + `{ println(ob_get_string(ob_link)) }`
 		}
 	}
 	// back to single string
 	output := strings.Join(lines, "\n")
+	/*
+		--- End anti-debug ------------------------------
+	*/
 
+	/*
+		--- Start string obfuscation --------------------
+	*/
+	// Regex all plaintext strings denoted by backticks
+	regex := regexp.MustCompile("`[/a-zA-Z_-]+`")
+	words := regex.FindAllString(output, -1)
+	words = unique(words)
+	for _, w := range words {
+		// add string to the secrets!
+		secret := w[1 : len(w)-1]
+		println(secret)
+		secrets[generateTyposquatName()] = []string{secret, w}
+	}
+	// create function call
+	sedString := ""
+	// replace all secrects with the respective obfuscated string
+	for k, w := range secrets {
+		sedString = sedString + obfuscateString(w[0], k) + "\n"
+		output = strings.ReplaceAll(output, w[1], k+"()")
+	}
+	// insert all the functions before the main
+	sedString = sedString + "func main() {\n"
+	output = strings.ReplaceAll(output, "func main() {", sedString)
+	/*
+		--- End string obfuscation ----------------------
+	*/
+
+	/*
+		--- Start function name obfuscation -------------
+	*/
 	// obfuscate functions and variables names
-	r := regexp.MustCompile(`ob_[a-zA-Z_]+`)
-	words := r.FindAllString(output, -1)
+	regex = regexp.MustCompile(`ob_[a-zA-Z_]+`)
+	words = regex.FindAllString(output, -1)
 	words = reverseStringArray(words)
+	words = unique(words)
 	for _, w := range words {
 		// generate random name for each matching string
 		output = strings.ReplaceAll(output, w, generateTyposquatName())
 	}
-
-	// insert offset
-	output = strings.ReplaceAll(output, offsetPlaceholder, offset)
-	// remove indentation
-	output = strings.ReplaceAll(output, "\t", "")
+	/*
+		--- End function name obfuscation ---------------
+	*/
 
 	// save.
 	ioutil.WriteFile(infile, []byte(output), 0644)
@@ -259,16 +362,16 @@ func encryptAESReversed(plaintext []byte, outfile string) string {
 	//	generate new cipher
 	c, err := aes.NewCipher(key[:])
 	if err != nil {
-		fmt.Println(err)
+		println(err)
 	}
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
-		fmt.Println(err)
+		println(err)
 	}
 
 	nonce := make([]byte, gcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		fmt.Println(err)
+		println(err)
 	}
 
 	// cipher the payload with AESGCM using the generated password
@@ -298,6 +401,10 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// offset Hysteresis, this will prevent easy key retrieving
 	mrand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (mrand.Int63n(4096-128) + 128)
+
+	// add offset to the secrets!
+	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
+		offsetPlaceholder + "`"}
 
 	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.template", infile+".go")
 	err := copyRunnerSource.Run()
@@ -334,21 +441,23 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
 	}
 
+	// TODO: QUI METTO ASM RANDOMICO INVECE DEI NOP
+
 	// run UPX to shrink output size
-	upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
-	err = upxRunner.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
-	}
-	// strip UPX headers
-	stripUpxHeaders(outfile)
+	// upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
+	// err = upxRunner.Run()
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
+	// }
+	// // strip UPX headers
+	// stripUpxHeaders(outfile)
 
 	// remove unused file
-	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
-	err = removeRunnerSource.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
-	}
+	// removeRunnerSource := exec.Command("rm", "-f", infile+".go")
+	// err = removeRunnerSource.Run()
+	// if err != nil {
+	// 	panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
+	// }
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -396,8 +505,15 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// plaintext content
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
+	// GZIP before encrypt
+	var zlib_plaintext bytes.Buffer
+	zlib_writer := zlib.NewWriter(&zlib_plaintext)
+	zlib_writer.Write(plaintext)
+	zlib_writer.Close()
+
+	// TODO: Modalitá ASK password o modalitá ECDSA
 	// encrypt aes256-gcm
-	ciphertext := encryptAESReversed(plaintext, outfile)
+	ciphertext := encryptAESReversed(zlib_plaintext.Bytes(), outfile)
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
@@ -457,7 +573,7 @@ func testDependencies() error {
 Print version.
 */
 func printVersion() {
-	fmt.Println(programName + " v" + version)
+	println(programName + " v" + version)
 	os.Exit(0)
 }
 
@@ -465,12 +581,12 @@ func printVersion() {
 Print help.
 */
 func help() {
-	fmt.Println("Usage: ./encrypt -file /path/to/file -offset OFFSET")
-	fmt.Println("  -file				Target file to Pack")
-	fmt.Println("  -o   <file>			Place the output into <file>")
-	fmt.Println("  -offset			Offset where to start the payload (Bytes)")
-	fmt.Println("				Offset minimal recommended value is 600000")
-	fmt.Println("  -v				Check " + programName + " version")
+	println("Usage: ./encrypt -file /path/to/file -offset OFFSET")
+	println("  -file				Target file to Pack")
+	println("  -o   <file>			Place the output into <file>")
+	println("  -offset			Offset where to start the payload (Bytes)")
+	println("				Offset minimal recommended value is 600000")
+	println("  -v				Check " + programName + " version")
 }
 
 func main() {
@@ -496,7 +612,7 @@ func main() {
 			if *file != "" && *offset >= 0 {
 				PackNGo(*file, *offset, *output)
 			} else {
-				fmt.Println("Missing arguments or invalid arguments!")
+				println("Missing arguments or invalid arguments!")
 				help()
 				os.Exit(1)
 			}
