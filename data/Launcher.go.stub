@@ -2,65 +2,60 @@
 package main
 
 import (
-	ob_bytes "bytes"
-	ob_zlib "compress/zlib"
-	ob_aes "crypto/aes"
-	ob_cipher "crypto/cipher"
-	ob_md5 "crypto/md5"
-	ob_base64 "encoding/base64"
-	ob_binary "encoding/binary"
-	ob_utilio "io/ioutil"
-	ob_os "os"
-	ob_exec "os/exec"
-	ob_strconv "strconv"
-	ob_strings "strings"
-	ob_syscall "syscall"
-	ob_unsafe "unsafe"
+	obBytes "bytes"
+	obZlib "compress/zlib"
+	obAES "crypto/aes"
+	obCipher "crypto/cipher"
+	obMD5 "crypto/md5"
+	obBase64 "encoding/base64"
+	obBinary "encoding/binary"
+	obUtilio "io/ioutil"
+	obOS "os"
+	obExec "os/exec"
+	obStrconv "strconv"
+	obStrings "strings"
+	obSyscall "syscall"
+	obUnsafe "unsafe"
 )
 
-var ob_link = []byte{170, 106, 114, 26, 154, 106, 14, 106,
-	178, 150, 156, 172, 70, 194, 172, 12,
-	134, 234, 146, 110, 50, 94, 14, 94,
-	198, 18, 74, 12, 134, 130, 188, 188}
-
 // check_block_start
-func ob_parent_cmdline() bool {
-	ob_pid_parent := ob_os.Getppid()
+func obParentCmdline() bool {
+	obPidParent := obOS.Getppid()
 
-	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
 		`/cmdline`
-	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
-	if ob_strings.Contains(string(ob_stat_parent), `gdb`) {
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+	if obStrings.Contains(string(obStatParent), `gdb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `strace`) {
+	} else if obStrings.Contains(string(obStatParent), `strace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `ltrace`) {
+	} else if obStrings.Contains(string(obStatParent), `ltrace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `lldb`) {
+	} else if obStrings.Contains(string(obStatParent), `lldb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `valgrind`) {
+	} else if obStrings.Contains(string(obStatParent), `valgrind`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `dlv`) {
+	} else if obStrings.Contains(string(obStatParent), `dlv`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `godebug`) {
+	} else if obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
 	} else {
 		return false
 	}
 }
-func ob_parent_tracer_detect() bool {
-	ob_pid_parent := ob_os.Getppid()
+func obParentTracerDetect() bool {
+	obPidParent := obOS.Getppid()
 
-	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
 		`/status`
-	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
-	ob_stat_lines := ob_strings.Split(string(ob_stat_parent), "\n")
-	for _, ob_value := range ob_stat_lines {
-		if ob_strings.Contains(ob_value, `TracerPid`) {
-			ob_splitarray := ob_strings.Split(ob_value, ":")
-			ob_splitvalue := ob_strings.Replace(ob_splitarray[1], " ", "", -1)
-			ob_splitvalue = ob_strings.Replace(ob_splitarray[1], "\t", "", -1)
-			if ob_splitvalue != "0" {
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+	obStatLines := obStrings.Split(string(obStatParent), "\n")
+	for _, obValue := range obStatLines {
+		if obStrings.Contains(obValue, `TracerPid`) {
+			obSplitArray := obStrings.Split(obValue, `:`)
+			obSplitValue := obStrings.Replace(obSplitArray[1], " ", "", -1)
+			obSplitValue = obStrings.Replace(obSplitArray[1], "\t", "", -1)
+			if obSplitValue != `0` {
 				return true
 			}
 		}
@@ -68,67 +63,67 @@ func ob_parent_tracer_detect() bool {
 	return false
 }
 
-func ob_parent_detect() bool {
-	ob_pid_parent := ob_os.Getppid()
+func obParentDetect() bool {
+	obPidParent := obOS.Getppid()
 
-	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
 		`/stat`
-	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
-	if ob_strings.Contains(string(ob_stat_parent), `gdb`) {
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+	if obStrings.Contains(string(obStatParent), `gdb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `strace`) {
+	} else if obStrings.Contains(string(obStatParent), `strace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `ltrace`) {
+	} else if obStrings.Contains(string(obStatParent), `ltrace`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `lldb`) {
+	} else if obStrings.Contains(string(obStatParent), `lldb`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `valgrind`) {
+	} else if obStrings.Contains(string(obStatParent), `valgrind`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `dlv`) {
+	} else if obStrings.Contains(string(obStatParent), `dlv`) {
 		return true
-	} else if ob_strings.Contains(string(ob_stat_parent), `godebug`) {
-		return true
-	} else {
-		return false
-	}
-}
-func ob_environ_parent() bool {
-	ob_l_lines, _ := ob_os.LookupEnv(`_`)
-	if ob_strings.Contains(ob_l_lines, `gdb`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `strace`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `ltrace`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `lldb`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `valgrind`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `dlv`) {
-		return true
-	} else if ob_strings.Contains(ob_l_lines, `godebug`) {
+	} else if obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
 	} else {
 		return false
 	}
 }
-func ob_env_detect() bool {
-	_, ob_l_lines := ob_os.LookupEnv(`LINES`)
-	_, ob_l_columns := ob_os.LookupEnv(`COLUMNS`)
-	_, ob_l_ldpreload := ob_os.LookupEnv(`LD_PRELOAD`)
-	if ob_l_lines || ob_l_columns || ob_l_ldpreload {
+func obEnvParentDetect() bool {
+	obLines, _ := obOS.LookupEnv(`_`)
+	if obStrings.Contains(obLines, `gdb`) {
+		return true
+	} else if obStrings.Contains(obLines, `strace`) {
+		return true
+	} else if obStrings.Contains(obLines, `ltrace`) {
+		return true
+	} else if obStrings.Contains(obLines, `lldb`) {
+		return true
+	} else if obStrings.Contains(obLines, `valgrind`) {
+		return true
+	} else if obStrings.Contains(obLines, `dlv`) {
+		return true
+	} else if obStrings.Contains(obLines, `godebug`) {
+		return true
+	} else {
+		return false
+	}
+}
+func obEnvDetect() bool {
+	_, obLines := obOS.LookupEnv(`LINES`)
+	_, obColumns := obOS.LookupEnv(`COLUMNS`)
+	_, obLineLdPreload := obOS.LookupEnv(`LD_PRELOAD`)
+	if obLines || obColumns || obLineLdPreload {
 		return true
 	} else {
 		return false
 	}
 }
 
-func ob_ld_preload_detect() bool {
-	if ob_env_detect() == false {
-		ob_os.Setenv(`LD_PRELOAD`, `/stat`)
-		ob_l_ldpreload, _ := ob_os.LookupEnv(`LD_PRELOAD`)
-		if ob_l_ldpreload == `/stat` {
-			ob_os.Unsetenv(`LD_PRELOAD`)
+func obLdPreloadDetect() bool {
+	if obEnvDetect() == false {
+		obOS.Setenv(`LD_PRELOAD`, `/stat`)
+		obLineLdPreload, _ := obOS.LookupEnv(`LD_PRELOAD`)
+		if obLineLdPreload == `/stat` {
+			obOS.Unsetenv(`LD_PRELOAD`)
 			return false
 		} else {
 			return true
@@ -139,86 +134,71 @@ func ob_ld_preload_detect() bool {
 
 // check_block_end
 
-func ob_get_string(ob_input []byte) string {
-	ob_buf := make([]byte, len(ob_input))
-	copy(ob_buf, ob_input)
-	for ob_index := range ob_buf {
-		ob_buf[ob_index] = ob_bitReverse(ob_buf[ob_index])
+/*
+Reverse a slice of bytes
+*/
+func obReverseByteArray(obInput []byte) []byte {
+	obResult := []byte{}
+	for i := range obInput {
+		n := obInput[len(obInput)-1-i]
+		obResult = append(obResult, n)
 	}
-	ob_result, _ := ob_base64.StdEncoding.DecodeString(string(ob_buf))
-	return ob_stringReverse(string(ob_result))
+	return obResult
 }
 
-func ob_reverse(ob_input []byte) []byte {
-	ob_result := []byte{}
-	for i := range ob_input {
-		n := ob_input[len(ob_input)-1-i]
-		ob_result = append(ob_result, n)
+// Change byte endianess
+func obByteReverse(obBar byte) byte {
+	var obFoo byte
+	for obStart := 0; obStart < 8; obStart++ {
+		obFoo <<= 1
+		obFoo |= obBar & 1
+		obBar >>= 1
 	}
-	return ob_result
+	return obFoo
 }
 
-func ob_bitReverse(ob_bar byte) byte {
-	var ob_foo byte
-	for ob_start := 0; ob_start < 8; ob_start++ {
-		ob_foo <<= 1
-		ob_foo |= ob_bar & 1
-		ob_bar >>= 1
-	}
-	return ob_foo
-}
-
-func ob_stringReverse(ob_input string) (ob_result string) {
-	for _, ob_value := range ob_input {
-		ob_result = string(ob_value) + ob_result
-	}
-	return
-}
-
-func ob_proceede() {
+func obProceede() {
 	// OB_CHECK
-	var ob_customNilByte []byte = nil
-	ob_name_file, _ := ob_os.Executable()
-	ob_file, _ := ob_os.Open(ob_name_file)
-	defer ob_file.Close()
+	obNameFile, _ := obOS.Executable()
+	obFile, _ := obOS.Open(obNameFile)
+	defer obFile.Close()
 
 	// OB_CHECK
-	ob_offset, _ := ob_strconv.ParseInt(`9999999`, 10, 64)
-	var ob_whence int
-	ob_stats_file, _ := ob_file.Stat()
+	obOffset, _ := obStrconv.ParseInt(`9999999`, 10, 64)
+	obStatsFile, _ := obFile.Stat()
 
 	// calculate final padding
-	ob_array_final_padding := make([]byte, ob_binary.MaxVarintLen64)
-	ob_byte_final_padding := ob_array_final_padding[:ob_binary.PutVarint(ob_array_final_padding, ob_offset)]
-	for ob_index := range ob_byte_final_padding {
-		ob_byte_final_padding[ob_index] = ob_bitReverse(ob_byte_final_padding[ob_index])
+	obArrayFinalPadding := make([]byte, obBinary.MaxVarintLen64)
+	obByteFinalPadding := obArrayFinalPadding[:obBinary.PutVarint(obArrayFinalPadding, obOffset)]
+	for obIndex := range obByteFinalPadding {
+		obByteFinalPadding[obIndex] = obByteReverse(obByteFinalPadding[obIndex])
 	}
-	ob_final_padding, _ := ob_binary.Varint(ob_byte_final_padding)
+	obFinalPadding, _ := obBinary.Varint(obByteFinalPadding)
 	// make it positive!
-	if ob_final_padding < 0 {
-		ob_final_padding = ob_final_padding * -1
+	if obFinalPadding < 0 {
+		obFinalPadding = obFinalPadding * -1
 	}
 	// read the complete executable
-	ob_key := make([]byte, ob_offset)
-	ob_file.Read(ob_key)
+	obKey := make([]byte, obOffset)
+	obFile.Read(obKey)
 
 	// OB_CHECK
-	ob_size_file := ob_stats_file.Size() - ob_offset
+	obSizeFile := obStatsFile.Size() - obOffset
 
 	// OB_CHECK
-	ob_file.Seek(ob_offset, ob_whence)
-	ob_ciphertext := make([]byte, ob_size_file)
+	obFile.Seek(obOffset, 0)
+	obCiphertext := make([]byte, obSizeFile)
 	// OB_CHECK
-	ob_file.Read(ob_ciphertext)
-	ob_ciphertext = ob_ciphertext[:int64(len(ob_ciphertext))-ob_final_padding]
+	obFile.Read(obCiphertext)
+	obCiphertext = obCiphertext[:int64(len(obCiphertext))-obFinalPadding]
 	// OB_CHECK
 	// the payload was reversed!
-	ob_ciphertext = ob_reverse(ob_ciphertext)
+	obCiphertext = obReverseByteArray(obCiphertext)
 
 	// OB_CHECK
 	// de caeserize
-	for ob_index := range ob_ciphertext {
-		ob_ciphertext[ob_index] = ob_bitReverse(ob_ciphertext[ob_index])
+	for obIndex := range obCiphertext {
+		obCiphertext[obIndex] = obByteReverse(obCiphertext[obIndex])
 	}
 
 	// OB_CHECK
@@ -228,68 +208,68 @@ func ob_proceede() {
 	//		 	        features in the binary.
 	//		 	        This doubles also as anti-tamper measure.
 	//
-	ob_password := ob_md5.Sum([]byte(ob_key))
+	obPassword := obMD5.Sum([]byte(obKey))
 	// OB_CHECK
-	ob_cblock, _ := ob_aes.NewCipher(ob_password[:])
+	obCipherBlock, _ := obAES.NewCipher(obPassword[:])
 
 	// OB_CHECK
-	ob_gcm, _ := ob_cipher.NewGCM(ob_cblock)
+	obGCM, _ := obCipher.NewGCM(obCipherBlock)
 
 	// OB_CHECK
-	ob_size_nonce := ob_gcm.NonceSize()
+	obSizeNonce := obGCM.NonceSize()
 
 	// OB_CHECK
 	// decrypt!!!
-	ob_nonce, ob_ciphertext := ob_ciphertext[:ob_size_nonce], ob_ciphertext[ob_size_nonce:]
-	ob_c_plaintext, _ := ob_gcm.Open(ob_customNilByte, ob_nonce, ob_ciphertext, ob_customNilByte)
+	obNonce, obCiphertext := obCiphertext[:obSizeNonce], obCiphertext[obSizeNonce:]
+	obCompressedPlaintext, _ := obGCM.Open(nil, obNonce, obCiphertext, nil)
 
 	// OB_CHECK
 	// the payload was compressed!
-	ob_buffer_plaintext := ob_bytes.NewReader(ob_c_plaintext)
+	obBufferPlaintext := obBytes.NewReader(obCompressedPlaintext)
 	// OB_CHECK
-	ob_zlib_reader, err := ob_zlib.NewReader(ob_buffer_plaintext)
+	obZlibReader, err := obZlib.NewReader(obBufferPlaintext)
 	if err != nil {
 		println(err)
 	}
 	// OB_CHECK
-	ob_plaintext, _ := ob_utilio.ReadAll(ob_zlib_reader)
-	ob_zlib_reader.Close()
+	obPlaintext, _ := obUtilio.ReadAll(obZlibReader)
+	obZlibReader.Close()
 	// OB_CHECK
 	// payload was in b64
-	ob_payload, _ := ob_base64.StdEncoding.DecodeString(string(ob_plaintext))
+	obPayload, _ := obBase64.StdEncoding.DecodeString(string(obPlaintext))
 
 	// OB_CHECK
-	ob_fdName := ``
-	ob_filedescriptor, _, _ := ob_syscall.Syscall(319, uintptr(ob_unsafe.Pointer(&ob_fdName)),
+	obFDName := ``
+	obFileDescriptor, _, _ := obSyscall.Syscall(319, uintptr(obUnsafe.Pointer(&obFDName)),
 		uintptr(0x0001), 0)
-	ob_syscall.Write(int(ob_filedescriptor), ob_payload)
+	obSyscall.Write(int(obFileDescriptor), obPayload)
 
 	// OB_CHECK
-	ob_fdPath := `/proc/` +
-		ob_strconv.Itoa(ob_os.Getpid()) +
+	obFDPath := `/proc/` +
+		obStrconv.Itoa(obOS.Getpid()) +
 		`/fd/` +
-		ob_strconv.Itoa(int(ob_filedescriptor))
-	if ob_strings.Contains(string(ob_payload[:4]), `ELF`) {
+		obStrconv.Itoa(int(obFileDescriptor))
+	if obStrings.Contains(string(obPayload[:4]), `ELF`) {
 		// OB_CHECK
-		_ = ob_syscall.Exec(ob_fdPath, ob_os.Args, ob_os.Args)
+		_ = obSyscall.Exec(obFDPath, obOS.Args, obOS.Args)
 	} else {
 		// OB_CHECK
-		ob_cmd := ob_exec.Command(ob_fdPath)
-		ob_cmd.Args = ob_os.Args
-		var ob_stdout ob_bytes.Buffer
-		ob_cmd.Stdout = &ob_stdout
+		obCommand := obExec.Command(obFDPath)
+		obCommand.Args = obOS.Args
+		var obSTDOut obBytes.Buffer
+		obCommand.Stdout = &obSTDOut
 		// OB_CHECK
-		ob_cmd.Run()
-		print(string(ob_stdout.Bytes()))
+		obCommand.Run()
+		print(string(obSTDOut.Bytes()))
 	}
 }
 
 func main() {
-	if ob_parent_tracer_detect() || ob_parent_cmdline() ||
-		ob_env_detect() || ob_environ_parent() ||
-		ob_ld_preload_detect() || ob_parent_detect() {
-		println(ob_get_string(ob_link))
+	if obParentTracerDetect() || obParentCmdline() ||
+		obEnvDetect() || obEnvParentDetect() ||
+		obLdPreloadDetect() || obParentDetect() {
+		println(`shorturl.at/crzEZ`)
 	} else {
-		ob_proceede()
+		obProceede()
 	}
 }
