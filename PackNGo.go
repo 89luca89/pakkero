@@ -126,13 +126,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
 	// GZIP before encrypt
-	var zlib_plaintext bytes.Buffer
-	zlib_writer := zlib.NewWriter(&zlib_plaintext)
-	zlib_writer.Write(plaintext)
-	zlib_writer.Close()
+	var zlibPlaintext bytes.Buffer
+	zlibWriter := zlib.NewWriter(&zlibPlaintext)
+	zlibWriter.Write(plaintext)
+	zlibWriter.Close()
 
 	// encrypt aes256-gcm
-	ciphertext := encryptAESReversed(zlib_plaintext.Bytes(), outfile)
+	ciphertext := encryptAESReversed(zlibPlaintext.Bytes(), outfile)
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
