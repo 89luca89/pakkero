@@ -35,7 +35,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
-	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.template", infile+".go")
+	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.stub", infile+".go")
 	err := copyRunnerSource.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", copyRunnerSource, err))
