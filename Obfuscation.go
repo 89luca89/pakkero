@@ -59,6 +59,9 @@ based on a lenght (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
 func generateTyposquatName() string {
+	// We divide between an alphabet with number
+	// and one without, because function/variable names
+	// must not start with a number.
 	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mrand.Seed(time.Now().UnixNano())
@@ -164,9 +167,9 @@ func obfuscateLauncher(infile string, offset string) int {
 	}
 	lines := strings.Split(string(content), "\n")
 
-	/*
-		--- Start anti-debug ----------------------------
-	*/
+	/******************************************************
+	/	--- Start anti-debug ----------------------------
+	/*****************************************************/
 	// Insert random order of anti-debug check
 	// together with inline compilation to induce big number
 	// of instructions in random order
@@ -194,13 +197,13 @@ func obfuscateLauncher(infile string, offset string) int {
 	}
 	// back to single string
 	output := strings.Join(lines, "\n")
-	/*
-		--- End anti-debug ------------------------------
-	*/
+	/******************************************************
+	/	--- End anti-debug ------------------------------
+	/*****************************************************/
 
-	/*
-		--- Start string obfuscation --------------------
-	*/
+	/******************************************************
+	/	--- Start string obfuscation --------------------
+	/*****************************************************/
 	// Regex all plaintext strings denoted by backticks
 	regex := regexp.MustCompile("`[/a-zA-Z._-]+`")
 	words := regex.FindAllString(output, -1)
@@ -220,13 +223,13 @@ func obfuscateLauncher(infile string, offset string) int {
 	// insert all the functions before the main
 	sedString = sedString + "func main() {\n"
 	output = strings.ReplaceAll(output, "func main() {", sedString)
-	/*
-		--- End string obfuscation ----------------------
-	*/
+	/******************************************************
+	/	--- End string obfuscation ----------------------
+	/*****************************************************/
 
-	/*
-		--- Start function name obfuscation -------------
-	*/
+	/******************************************************
+	/	--- Start function name obfuscation -------------
+	/*****************************************************/
 	// obfuscate functions and variables names
 	regex = regexp.MustCompile(`ob[a-zA-Z0-9_]+`)
 	words = regex.FindAllString(output, -1)
@@ -236,9 +239,9 @@ func obfuscateLauncher(infile string, offset string) int {
 		// generate random name for each matching string
 		output = strings.ReplaceAll(output, w, generateTyposquatName())
 	}
-	/*
-		--- End function name obfuscation ---------------
-	*/
+	/******************************************************
+	/	--- End function name obfuscation ---------------
+	/*****************************************************/
 
 	// save.
 	ioutil.WriteFile(infile, []byte(output), 0644)
