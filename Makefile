@@ -7,7 +7,8 @@ all:
 		-asmflags="-trimpath=." \
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
-		-ldflags="-s";
+		-ldflags="-s" \
+		-o dist/PackNGo
 clean:
 	rm PackNGo;
 	go build -i \
@@ -18,4 +19,5 @@ clean:
 		-asmflags="-trimpath=." \
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
-		-ldflags="-s"
+		-ldflags="-s" \
+		-o dist/PackNGo
