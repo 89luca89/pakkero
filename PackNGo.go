@@ -24,7 +24,7 @@ import (
 )
 
 const programName = "PackNGo"
-const version = "0.1.0"
+const version = "0.2.0"
 const offsetPlaceholder = "9999999"
 
 var secrets = map[string][]string{}
@@ -131,7 +131,7 @@ func obfuscateString(txt string, function string) string {
 	lines := []string{}
 	for _, item := range []byte(txt) {
 		lines = append(
-			lines, getoneCodedChar(item),
+			lines, getOnecodedChar(item),
 		)
 	}
 	return fmt.Sprintf("func "+
@@ -146,7 +146,7 @@ func obfuscateString(txt string, function string) string {
 	thanks to:
 	https://github.com/GH0st3rs/obfus/blob/master/obfus.go
 */
-func getoneCodedChar(n byte) (buf string) {
+func getOnecodedChar(n byte) (buf string) {
 	var arr []byte
 	var x uint8
 	for n > 1 {
@@ -440,23 +440,12 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
 	}
 
-	// TODO: QUI METTO ASM RANDOMICO INVECE DEI NOP
-
-	// run UPX to shrink output size
-	// upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
-	// err = upxRunner.Run()
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
-	// }
-	// // strip UPX headers
-	// stripUpxHeaders(outfile)
-
 	// remove unused file
-	// removeRunnerSource := exec.Command("rm", "-f", infile+".go")
-	// err = removeRunnerSource.Run()
-	// if err != nil {
-	// 	panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
-	// }
+	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
+	err = removeRunnerSource.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
+	}
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -468,6 +457,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	encFileSize := encFileStat.Size()
 
 	// Ensure input offset is valid comared to compiled file size!
+	println(encFileSize)
 	if offset <= encFileSize {
 		removeLeftOvers := exec.Command("rm", "-f", outfile)
 		err = removeLeftOvers.Run()
@@ -510,7 +500,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	zlib_writer.Write(plaintext)
 	zlib_writer.Close()
 
-	// TODO: Modalitá ASK password o modalitá ECDSA
 	// encrypt aes256-gcm
 	ciphertext := encryptAESReversed(zlib_plaintext.Bytes(), outfile)
 
