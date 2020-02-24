@@ -133,12 +133,12 @@ func obfuscateLauncher(infile string, offset string) int {
 	// together with inline compilation to induce big number
 	// of instructions in random order
 	randomChecks := []string{
-		`ob_parent_tracer_detect()`,
-		`ob_parent_cmdline()`,
-		`ob_env_detect()`,
-		`ob_environ_parent() `,
-		`ob_ld_preload_detect()`,
-		`ob_parent_detect()`}
+		`obParentTracerDetect()`,
+		`obParentCmdLineDetect()`,
+		`obEnvDetect()`,
+		`obEnvParentDetect() `,
+		`obLdPreloadDetect()`,
+		`obParentDetect()`}
 	// find OB_CHECK and put the checks there.
 	for i, v := range lines {
 		if strings.Contains(v, "// OB_CHECK") {
@@ -151,7 +151,7 @@ func obfuscateLauncher(infile string, offset string) int {
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + `{ println(ob_get_string(ob_link)) }`
+			lines[i] = `if ` + sedString + "{ println(`shorturl.at/crzEZ`) }"
 		}
 	}
 	// back to single string
@@ -164,7 +164,7 @@ func obfuscateLauncher(infile string, offset string) int {
 		--- Start string obfuscation --------------------
 	*/
 	// Regex all plaintext strings denoted by backticks
-	regex := regexp.MustCompile("`[/a-zA-Z_-]+`")
+	regex := regexp.MustCompile("`[/a-zA-Z._-]+`")
 	words := regex.FindAllString(output, -1)
 	words = unique(words)
 	for _, w := range words {
@@ -190,7 +190,7 @@ func obfuscateLauncher(infile string, offset string) int {
 		--- Start function name obfuscation -------------
 	*/
 	// obfuscate functions and variables names
-	regex = regexp.MustCompile(`ob_[a-zA-Z0-9_]+`)
+	regex = regexp.MustCompile(`ob[a-zA-Z0-9_]+`)
 	words = regex.FindAllString(output, -1)
 	words = reverseStringArray(words)
 	words = unique(words)

@@ -19,7 +19,7 @@ import (
 )
 
 // check_block_start
-func obParentCmdline() bool {
+func obParentCmdLineDetect() bool {
 	obPidParent := obOS.Getppid()
 
 	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
@@ -263,7 +263,7 @@ func obProceede() {
 }
 
 func main() {
-	if obParentTracerDetect() || obParentCmdline() ||
+	if obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
 		println(`shorturl.at/crzEZ`)
