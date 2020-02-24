@@ -255,7 +255,6 @@ func obfuscateLauncher(infile string, offset string) int {
 	for _, w := range words {
 		// add string to the secrets!
 		secret := w[1 : len(w)-1]
-		println(secret)
 		secrets[generateTyposquatName()] = []string{secret, w}
 	}
 	// create function call

@@ -289,7 +289,6 @@ func ob_proceede() {
 	}
 }
 
-// OB_ADDITIONAL_FUNCTIONS
 func main() {
 	if ob_go_trace_detect() || ob_parent_cmdline() || ob_env_detect() ||
 		ob_environ_parent() || ob_ld_preload_detect() || ob_parent_detect() {
