@@ -35,7 +35,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
-	copyRunnerSource := exec.Command("cp", selfPath+"/Launcher.go.stub", infile+".go")
+	copyRunnerSource := exec.Command("cp", selfPath+"/data/Launcher.go.stub", infile+".go")
 	err := copyRunnerSource.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", copyRunnerSource, err))
@@ -64,7 +64,26 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 
 	// strip symbols
-	stripRunner := exec.Command("strip", "-s", outfile)
+	stripRunner := exec.Command("strip",
+		"-sxXwSgd",
+		"--remove-section=.bss",
+		"--remove-section=.comment",
+		"--remove-section=.eh_frame",
+		"--remove-section=.eh_frame_hdr",
+		"--remove-section=.fini",
+		"--remove-section=.fini_array",
+		"--remove-section=.gnu.build.attributes",
+		"--remove-section=.gnu.hash",
+		"--remove-section=.gnu.version",
+		"--remove-section=.go.buildinfo",
+		"--remove-section=.got",
+		"--remove-section=.note.ABI-tag",
+		"--remove-section=.note.gnu.build-id",
+		"--remove-section=.note.go.buildid",
+		"--remove-section=.shstrtab",
+		"--remove-section=.typelink",
+		outfile)
+
 	err = stripRunner.Run()
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
