@@ -75,11 +75,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 			"--remove-section=.typelink",
 			outfile})
 
-	// run UPX to shrink output size
-	execCommand("upx",
-		[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
-	// strip UPX headers to make it difficult to unpack
-	stripUpxHeaders(outfile)
+	/*
+		// run UPX to shrink output size
+		execCommand("upx",
+			[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
+		// strip UPX headers to make it difficult to unpack
+		stripUpxHeaders(outfile)
+	*/
 
 	// remove unused file
 	execCommand("rm", []string{"-f", infile + ".go"})

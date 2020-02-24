@@ -1,6 +1,46 @@
 //go:binary-only-package
 package main
 
+/*
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/ptrace.h>
+
+// attach to PTRACE, register if successful
+// attach A G A I N , register if unsuccessful
+// this protects against custom ptrace (always returning 0)
+// against NOP attacks and LD_PRELOAD attacks
+int ptrace_detect () {
+       int offset = 0;
+
+    if (ptrace(PTRACE_TRACEME, 0, 1, 0) == 0){
+        offset = 2;
+    }
+       if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1){
+        offset = offset * 3;
+    }
+
+    if (offset == 2 * 3){
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+// GDB relocates the heap to the end of the bss section
+int fd_detect() {
+    static unsigned char bss;
+    unsigned char *testmem = malloc(0x10);
+
+    if (testmem - &bss > 0x20000) {
+        return 0;
+    } else {
+        return -1;
+    }
+
+}
+*/
+import "C"
 import (
 	obBytes "bytes"
 	obZlib "compress/zlib"
@@ -19,6 +59,14 @@ import (
 )
 
 // check_block_start
+func obPtraceDetect() bool {
+	return C.ptrace_detect() < 0
+}
+
+func obPtraceFDDetect() bool {
+	return C.fd_detect() < 0
+}
+
 func obParentCmdLineDetect() bool {
 	obPidParent := obOS.Getppid()
 
@@ -263,7 +311,8 @@ func obProceede() {
 }
 
 func main() {
-	if obParentTracerDetect() || obParentCmdLineDetect() ||
+	if obPtraceDetect() || obPtraceFDDetect() ||
+		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
 		println(`shorturl.at/crzEZ`)
