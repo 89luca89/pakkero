@@ -1,45 +1,6 @@
 //go:binary-only-package
 package main
 
-/*
-#include <stdio.h>
-#include <sys/ptrace.h>
-
-// attach to PTRACE, register if successful
-// attach A G A I N , register if unsuccessful
-// this protects against custom ptrace (always returning 0)
-// against NOP attacks and LD_PRELOAD attacks
-int ptrace_detect () {
-	int offset = 0;
-
-    if (ptrace(PTRACE_TRACEME, 0, 1, 0) == 0){
-        offset = 2;
-    }
-	if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1){
-        offset = offset * 3;
-    }
-
-    if (offset == 2 * 3){
-        return 0;
-    } else {
-        return -1;
-    }
-}
-
-// GDB relocates the heap to the end of the bss section
-static int fd_detect(void) {
-    static unsigned char bss;
-    unsigned char *probe = malloc(0x10);
-
-    if (probe - &bss > 0x20000) {
-        return 0;
-    } else {
-        return -1;
-    }
-
-}
-*/
-import "C"
 import (
 	ob_bytes "bytes"
 	ob_zlib "compress/zlib"
@@ -87,6 +48,26 @@ func ob_parent_cmdline() bool {
 		return false
 	}
 }
+func ob_parent_tracer_detect() bool {
+	ob_pid_parent := ob_os.Getppid()
+
+	ob_name_file := `/proc/` + ob_strconv.FormatInt(int64(ob_pid_parent), 10) +
+		`/status`
+	ob_stat_parent, _ := ob_utilio.ReadFile(ob_name_file)
+	ob_stat_lines := ob_strings.Split(string(ob_stat_parent), "\n")
+	for _, ob_value := range ob_stat_lines {
+		if ob_strings.Contains(ob_value, `TracerPid`) {
+			ob_splitarray := ob_strings.Split(ob_value, ":")
+			ob_splitvalue := ob_strings.Replace(ob_splitarray[1], " ", "", -1)
+			ob_splitvalue = ob_strings.Replace(ob_splitarray[1], "\t", "", -1)
+			if ob_splitvalue != "0" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func ob_parent_detect() bool {
 	ob_pid_parent := ob_os.Getppid()
 
@@ -154,14 +135,6 @@ func ob_ld_preload_detect() bool {
 		}
 	}
 	return false
-}
-
-func ob_go_trace_detect() bool {
-	return C.ptrace_detect() != 0
-}
-
-func ob_go_fd_detect() bool {
-	return C.fd_detect() != 0
 }
 
 // check_block_end
@@ -312,8 +285,9 @@ func ob_proceede() {
 }
 
 func main() {
-	if ob_go_trace_detect() || ob_go_fd_detect() || ob_parent_cmdline() || ob_env_detect() ||
-		ob_environ_parent() || ob_ld_preload_detect() || ob_parent_detect() {
+	if ob_parent_tracer_detect() || ob_parent_cmdline() ||
+		ob_env_detect() || ob_environ_parent() ||
+		ob_ld_preload_detect() || ob_parent_detect() {
 		println(ob_get_string(ob_link))
 	} else {
 		ob_proceede()

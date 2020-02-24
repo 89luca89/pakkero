@@ -133,7 +133,7 @@ func obfuscateLauncher(infile string, offset string) int {
 	// together with inline compilation to induce big number
 	// of instructions in random order
 	randomChecks := []string{
-		`ob_go_fd_detect()`,
+		`ob_parent_tracer_detect()`,
 		`ob_parent_cmdline()`,
 		`ob_env_detect()`,
 		`ob_environ_parent() `,

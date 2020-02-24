@@ -75,7 +75,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"--remove-section=.gnu.build.attributes",
 		"--remove-section=.gnu.hash",
 		"--remove-section=.gnu.version",
-		"--remove-section=.go.buildinfo",
 		"--remove-section=.got",
 		"--remove-section=.note.ABI-tag",
 		"--remove-section=.note.gnu.build-id",
@@ -88,6 +87,15 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
 	}
+
+	// run UPX to shrink output size
+	upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
+	err = upxRunner.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
+	}
+	// strip UPX headers
+	stripUpxHeaders(outfile)
 
 	// remove unused file
 	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
@@ -106,8 +114,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	encFileSize := encFileStat.Size()
 
 	// Ensure input offset is valid comared to compiled file size!
-	println(encFileSize)
-	println(offset)
 	if offset <= encFileSize {
 		removeLeftOvers := exec.Command("rm", "-f", outfile)
 		err = removeLeftOvers.Run()
