@@ -44,7 +44,6 @@ func stripUpxHeaders(infile string) {
 		// generate random byte sequence
 		replace := make([]byte, 1)
 		for len(sedString) < len(v) {
-			mrand.Seed(time.Now().UTC().UnixNano())
 			rand.Read(replace)
 			sedString += `\x` + hex.EncodeToString(replace)
 		}
@@ -64,14 +63,13 @@ func generateTyposquatName() string {
 	// must not start with a number.
 	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
-	mrand.Seed(time.Now().UnixNano())
 	lenght := 128
 	b := make([]rune, lenght)
-	mrand.Seed(time.Now().UnixNano())
 	// ensure we do not start with a number or we will break code.
 	b[0] = letterRunes[mrand.Intn(len(letterRunes))]
 	for i := range b {
 		if i != 0 {
+			mrand.Seed(time.Now().UnixNano())
 			b[i] = mixedRunes[mrand.Intn(len(mixedRunes))]
 		}
 	}

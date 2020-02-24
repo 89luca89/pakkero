@@ -34,12 +34,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
+	// copy the stup from where to start.
 	execCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
 
-	// obfuscate
+	// obfuscate the launcher
 	obfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
 
-	// compile the runner binary
+	// compile the launcher binary
 	gopath, _ := os.LookupEnv("GOPATH")
 	execCommand("go", []string{"build", "-i",
 		"-gcflags=-N",
@@ -54,7 +55,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		infile + ".go"})
 	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
 
-	// strip symbols
+	// strip symbols and headers
 	execCommand("strip",
 		[]string{"-sxXwSgd",
 			"--remove-section=.bss",
@@ -77,7 +78,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// run UPX to shrink output size
 	execCommand("upx",
 		[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
-	// strip UPX headers
+	// strip UPX headers to make it difficult to unpack
 	stripUpxHeaders(outfile)
 
 	// remove unused file
@@ -102,16 +103,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	blockCount := offset - encFileSize
 
 	// create some random garbage to rise entropy
-	randomGarbage := make([]byte, 1)
-	mrand.Seed(time.Now().UTC().UnixNano())
+	randomGarbage := make([]byte, blockCount)
 	rand.Read(randomGarbage)
-	for int64(len(randomGarbage)) < blockCount {
-		mrand.Seed(time.Now().UTC().UnixNano())
-		garbageByte := make([]byte, 1)
-		rand.Read(garbageByte)
-		randomGarbage = append(randomGarbage, garbageByte[0])
-	}
-
 	// append randomness to the runner itself
 	_, err = encFile.WriteString(string(randomGarbage))
 	if err != nil {
@@ -119,8 +112,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 
 	// get file to encrypt argument
-	b, err := ioutil.ReadFile(infile) // just pass the file name
-	content := string(b)
+	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
+	content := string(byteContent)
 
 	// plaintext content
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
@@ -154,15 +147,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 
 	// create another random garbage to rise entropy
-	randomEndGarbage := make([]byte, 1)
-	mrand.Seed(time.Now().UTC().UnixNano())
+	randomEndGarbage := make([]byte, finalPadding)
 	rand.Read(randomEndGarbage)
-	for int64(len(randomEndGarbage)) < finalPadding {
-		mrand.Seed(time.Now().UTC().UnixNano())
-		garbageByte := make([]byte, 1)
-		rand.Read(garbageByte)
-		randomEndGarbage = append(randomEndGarbage, garbageByte[0])
-	}
 
 	// append random garbage equal to bit-reverse of the offset
 	// at the end of the payload
