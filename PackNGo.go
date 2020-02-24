@@ -11,7 +11,6 @@ import (
 	"io/ioutil"
 	mrand "math/rand"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"time"
 )
@@ -35,74 +34,54 @@ func PackNGo(infile string, offset int64, outfile string) {
 	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
-	copyRunnerSource := exec.Command("cp", selfPath+"/data/Launcher.go.stub", infile+".go")
-	err := copyRunnerSource.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", copyRunnerSource, err))
-	}
+	execCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
 
 	// obfuscate
 	obfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the runner binary
 	gopath, _ := os.LookupEnv("GOPATH")
-	buildRunner := exec.Command("go", "build", "-i",
+	execCommand("go", []string{"build", "-i",
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
-		"-gcflags=-trimpath="+selfPath,
-		"-asmflags=-trimpath="+selfPath,
-		"-gcflags=-trimpath="+gopath+"/src/",
-		"-asmflags=-trimpath="+gopath+"/src/",
+		"-gcflags=-trimpath=" + selfPath,
+		"-asmflags=-trimpath=" + selfPath,
+		"-gcflags=-trimpath=" + gopath + "/src/",
+		"-asmflags=-trimpath=" + gopath + "/src/",
 		"-ldflags=-s",
 		"-o", outfile,
-		infile+".go")
+		infile + ".go"})
 	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
-	err = buildRunner.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", buildRunner, err))
-	}
 
 	// strip symbols
-	stripRunner := exec.Command("strip",
-		"-sxXwSgd",
-		"--remove-section=.bss",
-		"--remove-section=.comment",
-		"--remove-section=.eh_frame",
-		"--remove-section=.eh_frame_hdr",
-		"--remove-section=.fini",
-		"--remove-section=.fini_array",
-		"--remove-section=.gnu.build.attributes",
-		"--remove-section=.gnu.hash",
-		"--remove-section=.gnu.version",
-		"--remove-section=.got",
-		"--remove-section=.note.ABI-tag",
-		"--remove-section=.note.gnu.build-id",
-		"--remove-section=.note.go.buildid",
-		"--remove-section=.shstrtab",
-		"--remove-section=.typelink",
-		outfile)
-
-	err = stripRunner.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", stripRunner, err))
-	}
+	execCommand("strip",
+		[]string{"-sxXwSgd",
+			"--remove-section=.bss",
+			"--remove-section=.comment",
+			"--remove-section=.eh_frame",
+			"--remove-section=.eh_frame_hdr",
+			"--remove-section=.fini",
+			"--remove-section=.fini_array",
+			"--remove-section=.gnu.build.attributes",
+			"--remove-section=.gnu.hash",
+			"--remove-section=.gnu.version",
+			"--remove-section=.got",
+			"--remove-section=.note.ABI-tag",
+			"--remove-section=.note.gnu.build-id",
+			"--remove-section=.note.go.buildid",
+			"--remove-section=.shstrtab",
+			"--remove-section=.typelink",
+			outfile})
 
 	// run UPX to shrink output size
-	upxRunner := exec.Command("upx", "-q", "-f", "--overlay=strip", "--ultra-brute", outfile)
-	err = upxRunner.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", upxRunner.String(), err))
-	}
+	execCommand("upx",
+		[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
 	// strip UPX headers
 	stripUpxHeaders(outfile)
 
 	// remove unused file
-	removeRunnerSource := exec.Command("rm", "-f", infile+".go")
-	err = removeRunnerSource.Run()
-	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", removeRunnerSource, err))
-	}
+	execCommand("rm", []string{"-f", infile + ".go"})
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -115,11 +94,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
-		removeLeftOvers := exec.Command("rm", "-f", outfile)
-		err = removeLeftOvers.Run()
-		if err != nil {
-			panic(fmt.Sprintf("failed writing to file: %s", err))
-		}
+		execCommand("rm", []string{"-f", outfile})
 		panic("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}

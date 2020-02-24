@@ -7,13 +7,51 @@ import (
 	"fmt"
 	"io/ioutil"
 	mrand "math/rand"
-	"os/exec"
 	"regexp"
 	"strings"
 	"time"
 )
 
 var secrets = map[string][]string{}
+
+/*
+Using UPX To shrink the binary is good
+this will ensure no trace of UPX headers are left
+so that reversing will be more challenging and break
+simple attempts like "upx -d"
+*/
+func stripUpxHeaders(infile string) {
+	// Bit sequence of UPX copyright and header infos
+	header := []string{
+		`\x49\x6e\x66\x6f\x3a\x20\x54\x68\x69\x73`,
+		`\x20\x66\x69\x6c\x65\x20\x69\x73\x20\x70`,
+		`\x61\x63\x6b\x65\x64\x20\x77\x69\x74\x68`,
+		`\x20\x74\x68\x65\x20\x55\x50\x58\x20\x65`,
+		`\x78\x65\x63\x75\x74\x61\x62\x6c\x65\x20`,
+		`\x70\x61\x63\x6b\x65\x72\x20\x68\x74\x74`,
+		`\x70\x3a\x2f\x2f\x75\x70\x78\x2e\x73\x66`,
+		`\x2e\x6e\x65\x74\x20\x24\x0a\x00\x24\x49`,
+		`\x64\x3a\x20\x55\x50\x58\x20\x33\x2e\x39`,
+		`\x36\x20\x43\x6f\x70\x79\x72\x69\x67\x68`,
+		`\x74\x20\x28\x43\x29\x20\x31\x39\x39\x36`,
+		`\x2d\x32\x30\x32\x30\x20\x74\x68\x65\x20`,
+		`\x55\x50\x58\x20\x54\x65\x61\x6d\x2e\x20`,
+		`\x41\x6c\x6c\x20\x52\x69\x67\x68\x74\x73`,
+		`\x20\x52\x65\x73\x65\x72\x76\x65\x64\x2e`,
+		`\x55\x50\x58\x21`}
+	for _, v := range header {
+		sedString := ""
+		// generate random byte sequence
+		replace := make([]byte, 1)
+		for len(sedString) < len(v) {
+			mrand.Seed(time.Now().UTC().UnixNano())
+			rand.Read(replace)
+			sedString += `\x` + hex.EncodeToString(replace)
+		}
+		// replace UPX sequence with random garbage
+		execCommand("sed", []string{"-i", `s/` + v + `/` + sedString + `/g`, infile})
+	}
+}
 
 /*
 Typosquat name generator
@@ -24,7 +62,7 @@ func generateTyposquatName() string {
 	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
 	mrand.Seed(time.Now().UnixNano())
-	lenght := 8
+	lenght := 128
 	b := make([]rune, lenght)
 	mrand.Seed(time.Now().UnixNano())
 	// ensure we do not start with a number or we will break code.
@@ -206,47 +244,4 @@ func obfuscateLauncher(infile string, offset string) int {
 	ioutil.WriteFile(infile, []byte(output), 0644)
 
 	return 0
-}
-
-/*
-Using UPX To shrink the binary is good
-this will ensure no trace of UPX headers are left
-so that reversing will be more challenging and break
-simple attempts like "upx -d"
-*/
-func stripUpxHeaders(infile string) {
-	// Bit sequence of UPX copyright and header infos
-	header := []string{
-		`\x49\x6e\x66\x6f\x3a\x20\x54\x68\x69\x73`,
-		`\x20\x66\x69\x6c\x65\x20\x69\x73\x20\x70`,
-		`\x61\x63\x6b\x65\x64\x20\x77\x69\x74\x68`,
-		`\x20\x74\x68\x65\x20\x55\x50\x58\x20\x65`,
-		`\x78\x65\x63\x75\x74\x61\x62\x6c\x65\x20`,
-		`\x70\x61\x63\x6b\x65\x72\x20\x68\x74\x74`,
-		`\x70\x3a\x2f\x2f\x75\x70\x78\x2e\x73\x66`,
-		`\x2e\x6e\x65\x74\x20\x24\x0a\x00\x24\x49`,
-		`\x64\x3a\x20\x55\x50\x58\x20\x33\x2e\x39`,
-		`\x36\x20\x43\x6f\x70\x79\x72\x69\x67\x68`,
-		`\x74\x20\x28\x43\x29\x20\x31\x39\x39\x36`,
-		`\x2d\x32\x30\x32\x30\x20\x74\x68\x65\x20`,
-		`\x55\x50\x58\x20\x54\x65\x61\x6d\x2e\x20`,
-		`\x41\x6c\x6c\x20\x52\x69\x67\x68\x74\x73`,
-		`\x20\x52\x65\x73\x65\x72\x76\x65\x64\x2e`,
-		`\x55\x50\x58\x21`}
-	for _, v := range header {
-		sedString := ""
-		// generate random byte sequence
-		replace := make([]byte, 1)
-		for len(sedString) < len(v) {
-			mrand.Seed(time.Now().UTC().UnixNano())
-			rand.Read(replace)
-			sedString += `\x` + hex.EncodeToString(replace)
-		}
-		// replace UPX sequence with random garbage
-		cmd := exec.Command("sed", "-i", `s/`+v+`/`+sedString+`/g`, infile)
-		err := cmd.Run()
-		if err != nil {
-			panic(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
-		}
-	}
 }

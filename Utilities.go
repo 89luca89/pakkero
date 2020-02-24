@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	mrand "math/rand"
 	"os"
 	"os/exec"
@@ -84,17 +85,25 @@ func shuffleSlice(in []string) []string {
 }
 
 /*
+Wrapper arount exec.Command to execute a command
+and ensure it's result is not err.
+Else panic.
+*/
+func execCommand(name string, args []string) {
+	cmd := exec.Command(name, args...)
+	err := cmd.Run()
+	if err != nil {
+		panic(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
+	}
+}
+
+/*
 Test if all dependencies are present
 in the system
 */
 func testDependencies() error {
 	for _, v := range dependencies {
-		cmd := exec.Command("which", v)
-		err := cmd.Run()
-		if err != nil {
-			panic("Missing dependency: " + v)
-			return err
-		}
+		execCommand("which", []string{v})
 	}
 	return nil
 }
