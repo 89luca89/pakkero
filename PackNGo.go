@@ -57,8 +57,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, outfile)
 	flags = append(flags, infile+".go")
 	execCommand("go", flags)
-	// "-ldflags=-extldflags=-static",
-	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
 
 	// strip symbols and headers
 	execCommand("strip",
