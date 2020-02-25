@@ -42,7 +42,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// compile the launcher binary
 	gopath, _ := os.LookupEnv("GOPATH")
-	execCommand("go", []string{"build", "-i",
+	var flags []string
+
+	flags = []string{"build", "-i",
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
@@ -50,9 +52,12 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-asmflags=-trimpath=" + selfPath,
 		"-gcflags=-trimpath=" + gopath + "/src/",
 		"-asmflags=-trimpath=" + gopath + "/src/",
-		"-ldflags=-s",
-		"-o", outfile,
-		infile + ".go"})
+		"-ldflags=-s"}
+	flags = append(flags, "-o")
+	flags = append(flags, outfile)
+	flags = append(flags, infile+".go")
+	execCommand("go", flags)
+	// "-ldflags=-extldflags=-static",
 	// -gccgoflags " -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions -fcrossjumping -fdata-sections -ffunction-sections "
 
 	// strip symbols and headers
