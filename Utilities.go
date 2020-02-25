@@ -121,8 +121,8 @@ Print help.
 */
 func help() {
 	println("Usage: ./encrypt -file /path/to/file -offset OFFSET")
-	println("  -file				Target file to Pack")
-	println("  -o   <file>			Place the output into <file>")
+	println("  -file <file>			Target file to Pack")
+	println("  -o   <file>			Place the output into <file> (default is <inputfile>.enc)")
 	println("  -offset			Offset where to start the payload (Bytes)")
 	println("				Offset minimal recommended value is 600000")
 	println("  -v				Check " + programName + " version")
