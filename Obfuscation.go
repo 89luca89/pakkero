@@ -172,7 +172,7 @@ func obfuscateLauncher(infile string, offset string) int {
 	// together with inline compilation to induce big number
 	// of instructions in random order
 	randomChecks := []string{
-		`obPtraceFDDetect()`,
+		`obPtraceNearHeap()`,
 		`obParentTracerDetect()`,
 		`obParentCmdLineDetect()`,
 		`obEnvDetect()`,

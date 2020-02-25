@@ -44,7 +44,10 @@ func PackNGo(infile string, offset int64, outfile string) {
 	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
 
-	flags = []string{"build", "-i",
+	os.Setenv("CGO_CFLAGS",
+		"-static -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions"+
+			" -fcrossjumping -fdata-sections -ffunction-sections")
+	flags = []string{"build",
 		"-gcflags=-N",
 		"-gcflags=-nolocalimports",
 		"-gcflags=-pack",
@@ -52,6 +55,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-asmflags=-trimpath=" + selfPath,
 		"-gcflags=-trimpath=" + gopath + "/src/",
 		"-asmflags=-trimpath=" + gopath + "/src/",
+		"-ldflags=-extldflags=-static",
 		"-ldflags=-s"}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
