@@ -300,7 +300,7 @@ func main() {
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
-		println(`shorturl.at/crzEZ`)
+		println(`https://shorturl.at/crzEZ`)
 	} else {
 		obProceede()
 	}

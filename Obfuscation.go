@@ -191,7 +191,7 @@ func obfuscateLauncher(infile string, offset string) int {
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + "{ println(`shorturl.at/crzEZ`) }"
+			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`) }"
 		}
 	}
 	// back to single string
@@ -204,7 +204,7 @@ func obfuscateLauncher(infile string, offset string) int {
 	/	--- Start string obfuscation --------------------
 	/*****************************************************/
 	// Regex all plaintext strings denoted by backticks
-	regex := regexp.MustCompile("`[/a-zA-Z._-]+`")
+	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
 	words := regex.FindAllString(output, -1)
 	words = unique(words)
 	for _, w := range words {
