@@ -73,19 +73,14 @@ func obParentCmdLineDetect() bool {
 	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
 		`/cmdline`
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
-	if obStrings.Contains(string(obStatParent), `gdb`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `strace`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `ltrace`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `lldb`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `valgrind`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `dlv`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `godebug`) {
+	if obStrings.Contains(string(obStatParent), `gdb`) ||
+		obStrings.Contains(string(obStatParent), `strace`) ||
+		obStrings.Contains(string(obStatParent), `ltrace`) ||
+		obStrings.Contains(string(obStatParent), `lldb`) ||
+		obStrings.Contains(string(obStatParent), `valgrind`) ||
+		obStrings.Contains(string(obStatParent), `dlv`) ||
+		obStrings.Contains(string(obStatParent), `frida`) ||
+		obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
 	} else {
 		return false
@@ -117,19 +112,14 @@ func obParentDetect() bool {
 	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
 		`/stat`
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
-	if obStrings.Contains(string(obStatParent), `gdb`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `strace`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `ltrace`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `lldb`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `valgrind`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `dlv`) {
-		return true
-	} else if obStrings.Contains(string(obStatParent), `godebug`) {
+	if obStrings.Contains(string(obStatParent), `gdb`) ||
+		obStrings.Contains(string(obStatParent), `strace`) ||
+		obStrings.Contains(string(obStatParent), `ltrace`) ||
+		obStrings.Contains(string(obStatParent), `lldb`) ||
+		obStrings.Contains(string(obStatParent), `valgrind`) ||
+		obStrings.Contains(string(obStatParent), `dlv`) ||
+		obStrings.Contains(string(obStatParent), `frida`) ||
+		obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
 	} else {
 		return false
@@ -137,19 +127,14 @@ func obParentDetect() bool {
 }
 func obEnvParentDetect() bool {
 	obLines, _ := obOS.LookupEnv(`_`)
-	if obStrings.Contains(obLines, `gdb`) {
-		return true
-	} else if obStrings.Contains(obLines, `strace`) {
-		return true
-	} else if obStrings.Contains(obLines, `ltrace`) {
-		return true
-	} else if obStrings.Contains(obLines, `lldb`) {
-		return true
-	} else if obStrings.Contains(obLines, `valgrind`) {
-		return true
-	} else if obStrings.Contains(obLines, `dlv`) {
-		return true
-	} else if obStrings.Contains(obLines, `godebug`) {
+	if obStrings.Contains(string(obLines), `gdb`) ||
+		obStrings.Contains(string(obLines), `strace`) ||
+		obStrings.Contains(string(obLines), `ltrace`) ||
+		obStrings.Contains(string(obLines), `lldb`) ||
+		obStrings.Contains(string(obLines), `valgrind`) ||
+		obStrings.Contains(string(obLines), `dlv`) ||
+		obStrings.Contains(string(obLines), `frida`) ||
+		obStrings.Contains(string(obLines), `godebug`) {
 		return true
 	} else {
 		return false
