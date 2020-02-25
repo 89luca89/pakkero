@@ -230,7 +230,7 @@ func obfuscateLauncher(infile string, offset string) int {
 	/	--- Start function name obfuscation -------------
 	/*****************************************************/
 	// obfuscate functions and variables names
-	regex = regexp.MustCompile(`ob[a-zA-Z0-9_]+`)
+	regex = regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
 	words = regex.FindAllString(output, -1)
 	words = reverseStringArray(words)
 	words = unique(words)
