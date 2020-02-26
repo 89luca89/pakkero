@@ -41,7 +41,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	err := ioutil.WriteFile(infile+".go", launcherStub, 0644)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed writing to file: %s", err))
+		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		os.Exit(1)
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
@@ -110,7 +111,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed writing to file: %s", err))
+		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		os.Exit(1)
 	}
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
@@ -122,8 +124,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if offset <= encFileSize {
 		ExecCommand("rm", []string{"-f", outfile})
 		fmt.Printf(ErrorColor, "\t[ ERR ]\n")
-		panic("ERROR! Calculated offset is lower than launcher size: " +
+		fmt.Println("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
+		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t[ OK ]\n")
 
@@ -138,7 +141,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	_, err = encFile.WriteString(GenerateRandomGarbage(blockCount))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed writing to file: %s", err))
+		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
@@ -152,7 +156,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed reading file: %s", err))
+		fmt.Println(fmt.Sprintf("failed reading file: %s", err))
+		os.Exit(1)
 	}
 	content := string(byteContent)
 
@@ -175,7 +180,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	_, err = encFile.WriteString(ciphertext)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed writing to file: %s", err))
+		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
@@ -205,7 +211,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	_, err = encFile.WriteString(GenerateRandomGarbage(finalPadding))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		panic(fmt.Sprintf("failed writing to file: %s", err))
+		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
