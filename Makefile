@@ -10,7 +10,7 @@ all:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/packngo;
+		-o dist/packngo; mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
 	strip \
 		-sxXwSgd \
 		--remove-section=.bss \
@@ -28,9 +28,8 @@ all:
 		--remove-section=.note.go.buildid \
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
-		dist/packngo
+		dist/packngo;
 	upx -q -9 dist/packngo > /dev/null
-	mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
 clean:
 	rm -rf dist/;
 	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
@@ -44,7 +43,7 @@ clean:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/packngo;
+		-o dist/packngo; mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
 	strip \
 		-sxXwSgd \
 		--remove-section=.bss \
@@ -64,4 +63,3 @@ clean:
 		--remove-section=.typelink \
 		dist/packngo
 	upx -q -9 dist/packngo > /dev/null
-	mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go;
