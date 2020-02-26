@@ -1,7 +1,6 @@
 package packngo
 
 import (
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
@@ -93,11 +92,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// ------------------------------------------------------------------------
 	// calculate where to put garbage and where to put the payload
 	blockCount := offset - encFileSize
-	// create some random garbage to rise entropy
-	randomGarbage := make([]byte, blockCount)
-	rand.Read(randomGarbage)
 	// append randomness to the runner itself
-	_, err = encFile.WriteString(string(randomGarbage))
+	_, err = encFile.WriteString(GenerateRandomGarbage(blockCount))
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
@@ -144,13 +140,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 		finalPadding = finalPadding * -1
 	}
 
-	// create another random garbage to rise entropy
-	randomEndGarbage := make([]byte, finalPadding)
-	rand.Read(randomEndGarbage)
-
 	// append random garbage equal to bit-reverse of the offset
 	// at the end of the payload
-	_, err = encFile.WriteString(string(randomEndGarbage))
+	_, err = encFile.WriteString(GenerateRandomGarbage(finalPadding))
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}

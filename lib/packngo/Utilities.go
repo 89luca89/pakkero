@@ -3,6 +3,7 @@ package packngo
 import (
 	"bytes"
 	"compress/zlib"
+	"crypto/rand"
 	"fmt"
 	mrand "math/rand"
 	"os/exec"
@@ -91,6 +92,15 @@ func ExecCommand(name string, args []string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
 	}
+}
+
+/*
+GenerateRandomGarbage creates random garbage to rise entropy
+*/
+func GenerateRandomGarbage(size int64) string {
+	randomGarbage := make([]byte, size)
+	rand.Read(randomGarbage)
+	return string(randomGarbage)
 }
 
 /*
