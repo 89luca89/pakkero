@@ -30,9 +30,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
-	// copy the stup from where to start.
-	ExecCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
-
+	// copy the stub from where to start.
+	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
+	err := ioutil.WriteFile(infile+".go", launcherStub, 0644)
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
 	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))

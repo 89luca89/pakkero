@@ -14,6 +14,8 @@ import (
 // Secrets are the group of strings that we want to obfuscate
 var Secrets = map[string][]string{}
 
+const LauncherStub = "LAUNCHERSTUB"
+
 /*
 StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
