@@ -11,7 +11,7 @@ import (
 )
 
 /*
-Wrapper around AESGCM encryption
+EncryptAESReversed Wrapper around AESGCM encryption
 
 this will not only encrypt the payload but:
 - generate a password using the randomized UPX Binary's md5sum

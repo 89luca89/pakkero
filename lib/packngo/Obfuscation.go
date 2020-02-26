@@ -2,7 +2,6 @@ package packngo
 
 import (
 	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -12,11 +11,11 @@ import (
 	"time"
 )
 
+// Secrets are the group of strings that we want to obfuscate
 var Secrets = map[string][]string{}
 
 /*
-Using UPX To shrink the binary is good
-this will ensure no trace of UPX headers are left
+StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
 simple attempts like "upx -d"
 */
@@ -53,7 +52,34 @@ func StripUPXHeaders(infile string) {
 }
 
 /*
-Typosquat name generator
+StripFile will strip out all unneeded headers from and ELF
+file in input
+*/
+func StripFile(infile string) {
+
+	// strip symbols and headers
+	ExecCommand("strip",
+		[]string{"-sxXwSgd",
+			"--remove-section=.bss",
+			"--remove-section=.comment",
+			"--remove-section=.eh_frame",
+			"--remove-section=.eh_frame_hdr",
+			"--remove-section=.fini",
+			"--remove-section=.fini_array",
+			"--remove-section=.gnu.build.attributes",
+			"--remove-section=.gnu.hash",
+			"--remove-section=.gnu.version",
+			"--remove-section=.got",
+			"--remove-section=.note.ABI-tag",
+			"--remove-section=.note.gnu.build-id",
+			"--remove-section=.note.go.buildid",
+			"--remove-section=.shstrtab",
+			"--remove-section=.typelink",
+			infile})
+}
+
+/*
+GenerateTyposquatName is a gyposquat name generator
 based on a lenght (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
@@ -77,8 +103,8 @@ func GenerateTyposquatName() string {
 }
 
 /*
-	Obfuscates a string creating a function that returns
-	that value as a string encoded with a series og byteshift operations
+ObfuscateString will hide a string creating a function that returns
+that value as a string encoded with a series og byteshift operations
 */
 func ObfuscateString(txt string, function string) string {
 	lines := []string{}
@@ -94,10 +120,10 @@ func ObfuscateString(txt string, function string) string {
 }
 
 /*
-	Transform a char/byte in a series of operations on value 1
+GetOnecodedChar will transform a char/byte in a series of operations on value 1
 
-	thanks to:
-	https://github.com/GH0st3rs/obfus/blob/master/obfus.go
+thanks to:
+https://github.com/GH0st3rs/obfus/blob/master/obfus.go
 */
 func GetOnecodedChar(n byte) (buf string) {
 	var arr []byte
@@ -126,24 +152,7 @@ func GetOnecodedChar(n byte) (buf string) {
 }
 
 /*
-Generate an obfuscated string from input:
-    - reverse it
-    - b64 it
-    - bit fot bit endianess
-*/
-func GenerateBinaryReversedString(in string) []byte {
-	in = ReverseString(in)
-	result := []byte(base64.StdEncoding.EncodeToString([]byte(in)))
-	for index := range result {
-		result[index] = ReverseByte(result[index])
-	}
-	return result
-}
-
-/*
-
-This part will attempt to ObfuscateLauncher the go code of the runner before
-compiling it.
+ObfuscateLauncher the go code of the runner before compiling it.
 
 Basic techniques are applied:
 - Insert anti-debug checks in random order to ensure binaries generated are

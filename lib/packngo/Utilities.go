@@ -1,16 +1,16 @@
 package packngo
 
 import (
+	"bytes"
+	"compress/zlib"
 	"fmt"
 	mrand "math/rand"
 	"os/exec"
 	"time"
 )
 
-var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
-
 /*
-Deduplicate a given slice
+Unique will deduplicate a given slice
 */
 func Unique(slice []string) []string {
 	keys := make(map[string]bool)
@@ -25,7 +25,7 @@ func Unique(slice []string) []string {
 }
 
 /*
-Reverse a slice of bytes
+ReverseByteArray will reverse a slice of bytes
 */
 func ReverseByteArray(input []byte) []byte {
 	reversed := []byte{}
@@ -37,7 +37,7 @@ func ReverseByteArray(input []byte) []byte {
 }
 
 /*
-Change a byte endianess
+ReverseByte will change a byte endianess
 */
 func ReverseByte(b byte) byte {
 	var d byte
@@ -50,7 +50,7 @@ func ReverseByte(b byte) byte {
 }
 
 /*
-Reverse a slice of strings
+ReverseStringArray reverse a slice of strings
 */
 func ReverseStringArray(ss []string) []string {
 	last := len(ss) - 1
@@ -61,7 +61,7 @@ func ReverseStringArray(ss []string) []string {
 }
 
 /*
-Reverse a string
+ReverseString reverse a string
 */
 func ReverseString(input string) string {
 	var result string
@@ -72,7 +72,7 @@ func ReverseString(input string) string {
 }
 
 /*
-Shuffle a slice.
+ShuffleSlice will shuffle a slice.
 */
 func ShuffleSlice(in []string) []string {
 	mrand.Seed(time.Now().UnixNano())
@@ -81,7 +81,7 @@ func ShuffleSlice(in []string) []string {
 }
 
 /*
-Wrapper arount exec.Command to execute a command
+ExecCommand is a wrapper arount exec.Command to execute a command
 and ensure it's result is not err.
 Else panic.
 */
@@ -94,12 +94,14 @@ func ExecCommand(name string, args []string) {
 }
 
 /*
-Test if all dependencies are present
-in the system
+GzipContent an input byte slice and return it compressed
 */
-func TestDependencies() error {
-	for _, v := range dependencies {
-		ExecCommand("which", []string{v})
-	}
-	return nil
+func GzipContent(input []byte) []byte {
+	// GZIP before encrypt
+	var zlibPlaintext bytes.Buffer
+	zlibWriter := zlib.NewWriter(&zlibPlaintext)
+	zlibWriter.Write(input)
+	zlibWriter.Close()
+
+	return zlibPlaintext.Bytes()
 }

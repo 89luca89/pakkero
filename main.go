@@ -7,8 +7,21 @@ import (
 	"./lib/packngo"
 )
 
-const programName = "PackNGo"
+const programName = "packngo"
 const version = "0.2.0"
+
+var dependencies = []string{"ls", "sed", "go", "strip"} // optional upx
+
+/*
+TestDependencies if all dependencies are present
+in the system
+*/
+func testDependencies() error {
+	for _, v := range dependencies {
+		packngo.ExecCommand("which", []string{v})
+	}
+	return nil
+}
 
 /*
 Print version.
@@ -22,16 +35,16 @@ func printVersion() {
 Print Help.
 */
 func help() {
-	println("Usage: ./encrypt -file /path/to/file -offset OFFSET")
+	println("Usage: " + programName + " -file /path/to/file -offset OFFSET -o /path/to/output")
 	println("  -file <file>			Target file to Pack")
 	println("  -o   <file>			Place the output into <file> (default is <inputfile>.enc)")
 	println("  -offset			Offset where to start the payload (Bytes)")
-	println("				Offset minimal recommended value is 600000")
+	println("				Offset minimal recommended value is 1800000")
 	println("  -v				Check " + programName + " version")
 }
 func main() {
 	// fist test if all dependencies are present
-	if packngo.TestDependencies() == nil {
+	if testDependencies() == nil {
 		if len(os.Args) == 1 {
 			help()
 			os.Exit(1)

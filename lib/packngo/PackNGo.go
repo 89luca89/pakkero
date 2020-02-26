@@ -1,8 +1,6 @@
 package packngo
 
 import (
-	"bytes"
-	"compress/zlib"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -61,33 +59,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, infile+".go")
 	ExecCommand("go", flags)
 
-	// strip symbols and headers
-	ExecCommand("strip",
-		[]string{"-sxXwSgd",
-			"--remove-section=.bss",
-			"--remove-section=.comment",
-			"--remove-section=.eh_frame",
-			"--remove-section=.eh_frame_hdr",
-			"--remove-section=.fini",
-			"--remove-section=.fini_array",
-			"--remove-section=.gnu.build.attributes",
-			"--remove-section=.gnu.hash",
-			"--remove-section=.gnu.version",
-			"--remove-section=.got",
-			"--remove-section=.note.ABI-tag",
-			"--remove-section=.note.gnu.build-id",
-			"--remove-section=.note.go.buildid",
-			"--remove-section=.shstrtab",
-			"--remove-section=.typelink",
-			outfile})
-
-	/*
-		// run UPX to shrink output size
-		ExecCommand("upx",
-			[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
-		// strip UPX headers to make it difficult to unpack
-		stripUpxHeaders(outfile)
-	*/
+	// Strip File of excess headers
+	StripFile(outfile)
 
 	// remove unused file
 	ExecCommand("rm", []string{"-f", infile + ".go"})
@@ -107,9 +80,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}
+
 	// calculate where to put garbage and where to put the payload
 	blockCount := offset - encFileSize
-
 	// create some random garbage to rise entropy
 	randomGarbage := make([]byte, blockCount)
 	rand.Read(randomGarbage)
@@ -127,13 +100,10 @@ func PackNGo(infile string, offset int64, outfile string) {
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
 	// GZIP before encrypt
-	var zlibPlaintext bytes.Buffer
-	zlibWriter := zlib.NewWriter(&zlibPlaintext)
-	zlibWriter.Write(plaintext)
-	zlibWriter.Close()
+	plaintext = GzipContent(plaintext)
 
 	// encrypt aes256-gcm
-	ciphertext := EncryptAESReversed(zlibPlaintext.Bytes(), outfile)
+	ciphertext := EncryptAESReversed(plaintext, outfile)
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
@@ -145,11 +115,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	finalPaddingArray := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(finalPaddingArray, offset)
 	finalPaddingB := finalPaddingArray[:n]
+	// change endianess to every byte composing
+	// the offset
 	for i := range finalPaddingB {
 		finalPaddingB[i] = ReverseByte(finalPaddingB[i])
 	}
 	finalPadding, _ := binary.Varint(finalPaddingB)
-	// make it positive!
+	// and ensure it is positive!
 	if finalPadding < 0 {
 		finalPadding = finalPadding * -1
 	}
