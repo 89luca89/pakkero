@@ -16,6 +16,8 @@ const offsetPlaceholder = "9999999"
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string) {
 
+	println(" → Randomizing offset...")
+
 	// get the current script path
 	selfPath := filepath.Dir(os.Args[0])
 	// declare outfile as original filename + .enc
@@ -30,6 +32,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
+	println(" → Creating Launcher Stub...")
+
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
 	err := ioutil.WriteFile(infile+".go", launcherStub, 0644)
@@ -37,6 +41,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// obfuscate the launcher
 	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
 	// ------------------------------------------------------------------------
+
+	println(" → Compiling Launcher...")
 
 	// ------------------------------------------------------------------------
 	// compile the launcher binary
@@ -63,11 +69,15 @@ func PackNGo(infile string, offset int64, outfile string) {
 	ExecCommand("go", flags)
 	// ------------------------------------------------------------------------
 
+	println(" → Stripping Launcher...")
+
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
 	// ------------------------------------------------------------------------
 	StripFile(outfile)
 	// ------------------------------------------------------------------------
+
+	println(" → Compressing Launcher...")
 
 	// ------------------------------------------------------------------------
 	// Compress File of occupy less space
@@ -76,6 +86,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	ExecCommand("upx", []string{"-9", outfile})
 	StripUPXHeaders(outfile)
 	// ------------------------------------------------------------------------
+
+	println(" → Cleaning up...")
 
 	// remove unused file
 	ExecCommand("rm", []string{"-f", infile + ".go"})
@@ -89,12 +101,16 @@ func PackNGo(infile string, offset int64, outfile string) {
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
 
+	println(" → Verifying offset correctness...")
+
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
 		ExecCommand("rm", []string{"-f", outfile})
 		panic("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}
+
+	println(" → Adding garbage...")
 
 	// ------------------------------------------------------------------------
 	// Pre-Payload Garbage
@@ -108,6 +124,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// ------------------------------------------------------------------------
 
+	println(" → Preparing payload...")
+
 	// ------------------------------------------------------------------------
 	// Encryption and compression of the payload
 	// ------------------------------------------------------------------------
@@ -118,8 +136,12 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// plaintext content
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
+	println(" → Compressing payload...")
+
 	// GZIP before encrypt
 	plaintext = GzipContent(plaintext)
+
+	println(" → Encrypting payload...")
 
 	// encrypt aes256-gcm
 	ciphertext := EncryptAESReversed(plaintext, outfile)
@@ -130,6 +152,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 	// ------------------------------------------------------------------------
+
+	println(" → Adding garbage to payload...")
 
 	// ------------------------------------------------------------------------
 	// Post-Payload Garbage
@@ -156,4 +180,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 	// ------------------------------------------------------------------------
+
+	println(" → Done!")
 }
