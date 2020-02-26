@@ -34,13 +34,16 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// copy the stup from where to start.
 	ExecCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
 
+	// ------------------------------------------------------------------------
 	// obfuscate the launcher
 	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
 	// compile the launcher binary
+	// ------------------------------------------------------------------------
 	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
-
 	os.Setenv("CGO_CFLAGS",
 		"-static -Wall -fPIE -O0 -fomit-frame-pointer -finline-small-functions"+
 			" -fcrossjumping -fdata-sections -ffunction-sections")
@@ -58,9 +61,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, outfile)
 	flags = append(flags, infile+".go")
 	ExecCommand("go", flags)
+	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
 	// Strip File of excess headers
+	// ------------------------------------------------------------------------
 	StripFile(outfile)
+	// ------------------------------------------------------------------------
 
 	// remove unused file
 	ExecCommand("rm", []string{"-f", infile + ".go"})
@@ -81,6 +88,9 @@ func PackNGo(infile string, offset int64, outfile string) {
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}
 
+	// ------------------------------------------------------------------------
+	// Pre-Payload Garbage
+	// ------------------------------------------------------------------------
 	// calculate where to put garbage and where to put the payload
 	blockCount := offset - encFileSize
 	// create some random garbage to rise entropy
@@ -91,7 +101,11 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
+	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
+	// Encryption and compression of the payload
+	// ------------------------------------------------------------------------
 	// get file to encrypt argument
 	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
 	content := string(byteContent)
@@ -110,7 +124,11 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
+	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
+	// Post-Payload Garbage
+	// ------------------------------------------------------------------------
 	// calculate final padding
 	finalPaddingArray := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(finalPaddingArray, offset)
@@ -136,4 +154,5 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
+	// ------------------------------------------------------------------------
 }
