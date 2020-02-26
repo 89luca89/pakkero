@@ -5,7 +5,6 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
-	"fmt"
 	"io"
 	"io/ioutil"
 )
@@ -19,7 +18,7 @@ this will not only encrypt the payload but:
 - swap endianess on all the encrypted bytes
 - reverse the complete payload
 */
-func EncryptAESReversed(plaintext []byte, outfile string) string {
+func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 	// generate a password using the randomized UPX Binary's md5sum
 	/*
 			    the aes-256 psk is the md5sum of the whole executable
@@ -29,7 +28,7 @@ func EncryptAESReversed(plaintext []byte, outfile string) string {
 	*/
 	b, err := ioutil.ReadFile(outfile)
 	if err != nil {
-		panic(fmt.Sprintf("failed reading file: %s", err))
+		return "", err
 	}
 	key := md5.Sum(b)
 	//	generate new cipher
@@ -59,5 +58,5 @@ func EncryptAESReversed(plaintext []byte, outfile string) string {
 
 	// reverse the complete payload
 	ciphertext = string(ReverseByteArray([]byte(ciphertext)))
-	return ciphertext
+	return ciphertext, nil
 }

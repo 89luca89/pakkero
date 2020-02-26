@@ -46,7 +46,12 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	err = ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	if err != nil {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
+		os.Exit(1)
+	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
@@ -174,7 +179,12 @@ func PackNGo(infile string, offset int64, outfile string) {
 	fmt.Print(" → Encrypting payload...")
 
 	// encrypt aes256-gcm
-	ciphertext := EncryptAESReversed(plaintext, outfile)
+	ciphertext, err := EncryptAESReversed(plaintext, outfile)
+	if err != nil {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		fmt.Println(fmt.Sprintf("failed encrypting file: %s", err))
+		os.Exit(1)
+	}
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)

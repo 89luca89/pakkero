@@ -168,11 +168,11 @@ Basic techniques are applied:
       replace all string with that
 - insert in the runner the chosen offset
 */
-func ObfuscateLauncher(infile string, offset string) int {
+func ObfuscateLauncher(infile string, offset string) error {
 
 	content, err := ioutil.ReadFile(infile)
 	if err != nil {
-		panic(fmt.Sprintf("failed reading file: %s", err))
+		return err
 	}
 	lines := strings.Split(string(content), "\n")
 
@@ -250,5 +250,5 @@ func ObfuscateLauncher(infile string, offset string) int {
 	// save.
 	ioutil.WriteFile(infile, []byte(output), 0644)
 
-	return 0
+	return nil
 }
