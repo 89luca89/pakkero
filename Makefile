@@ -11,6 +11,25 @@ all:
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
 		-o dist/packngo;
+	strip \
+		-sxXwSgd \
+		--remove-section=.bss \
+		--remove-section=.comment \
+		--remove-section=.eh_frame \
+		--remove-section=.eh_frame_hdr \
+		--remove-section=.fini \
+		--remove-section=.fini_array \
+		--remove-section=.gnu.build.attributes \
+		--remove-section=.gnu.hash \
+		--remove-section=.gnu.version \
+		--remove-section=.got \
+		--remove-section=.note.ABI-tag \
+		--remove-section=.note.gnu.build-id \
+		--remove-section=.note.go.buildid \
+		--remove-section=.shstrtab \
+		--remove-section=.typelink \
+		dist/packngo
+	upx -q -9 dist/packngo > /dev/null
 	mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
 clean:
 	rm -rf dist/;
@@ -26,4 +45,23 @@ clean:
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
 		-o dist/packngo;
+	strip \
+		-sxXwSgd \
+		--remove-section=.bss \
+		--remove-section=.comment \
+		--remove-section=.eh_frame \
+		--remove-section=.eh_frame_hdr \
+		--remove-section=.fini \
+		--remove-section=.fini_array \
+		--remove-section=.gnu.build.attributes \
+		--remove-section=.gnu.hash \
+		--remove-section=.gnu.version \
+		--remove-section=.got \
+		--remove-section=.note.ABI-tag \
+		--remove-section=.note.gnu.build-id \
+		--remove-section=.note.go.buildid \
+		--remove-section=.shstrtab \
+		--remove-section=.typelink \
+		dist/packngo
+	upx -q -9 dist/packngo > /dev/null
 	mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go;
