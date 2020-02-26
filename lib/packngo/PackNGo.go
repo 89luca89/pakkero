@@ -16,7 +16,7 @@ const offsetPlaceholder = "9999999"
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string) {
 
-	println(" → Randomizing offset...")
+	print(" → Randomizing offset...")
 
 	// get the current script path
 	selfPath := filepath.Dir(os.Args[0])
@@ -32,17 +32,24 @@ func PackNGo(infile string, offset int64, outfile string) {
 	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
-	println(" → Creating Launcher Stub...")
+	fmt.Printf(SuccessColor, "[ OK ]\n")
+
+	print(" → Creating Launcher Stub...")
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
 	err := ioutil.WriteFile(infile+".go", launcherStub, 0644)
+	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
+		panic(fmt.Sprintf("failed writing to file: %s", err))
+	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
 	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Compiling Launcher...")
+	print(" → Compiling Launcher...")
 
 	// ------------------------------------------------------------------------
 	// compile the launcher binary
@@ -67,17 +74,19 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, outfile)
 	flags = append(flags, infile+".go")
 	ExecCommand("go", flags)
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Stripping Launcher...")
+	print(" → Stripping Launcher...")
 
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
 	// ------------------------------------------------------------------------
 	StripFile(outfile)
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Compressing Launcher...")
+	print(" → Compressing Launcher...")
 
 	// ------------------------------------------------------------------------
 	// Compress File of occupy less space
@@ -85,32 +94,37 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// ------------------------------------------------------------------------
 	ExecCommand("upx", []string{"-9", outfile})
 	StripUPXHeaders(outfile)
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Cleaning up...")
+	print(" → Cleaning up...")
 
 	// remove unused file
 	ExecCommand("rm", []string{"-f", infile + ".go"})
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 	defer encFile.Close()
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
 
-	println(" → Verifying offset correctness...")
+	print(" → Verifying offset correctness...")
 
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
 		ExecCommand("rm", []string{"-f", outfile})
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
 		panic("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 
-	println(" → Adding garbage...")
+	print(" → Adding garbage...")
 
 	// ------------------------------------------------------------------------
 	// Pre-Payload Garbage
@@ -120,28 +134,36 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// append randomness to the runner itself
 	_, err = encFile.WriteString(GenerateRandomGarbage(blockCount))
 	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Preparing payload...")
+	print(" → Preparing payload...")
 
 	// ------------------------------------------------------------------------
 	// Encryption and compression of the payload
 	// ------------------------------------------------------------------------
 	// get file to encrypt argument
 	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
+	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
+		panic(fmt.Sprintf("failed reading file: %s", err))
+	}
 	content := string(byteContent)
 
 	// plaintext content
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
-	println(" → Compressing payload...")
+	fmt.Printf(SuccessColor, "[ OK ]\n")
+	print(" → Compressing payload...")
 
 	// GZIP before encrypt
 	plaintext = GzipContent(plaintext)
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 
-	println(" → Encrypting payload...")
+	print(" → Encrypting payload...")
 
 	// encrypt aes256-gcm
 	ciphertext := EncryptAESReversed(plaintext, outfile)
@@ -149,11 +171,13 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
 	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
+	fmt.Printf(SuccessColor, "[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	println(" → Adding garbage to payload...")
+	print(" → Adding garbage to payload...")
 
 	// ------------------------------------------------------------------------
 	// Post-Payload Garbage
@@ -177,9 +201,10 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// at the end of the payload
 	_, err = encFile.WriteString(GenerateRandomGarbage(finalPadding))
 	if err != nil {
+		fmt.Printf(ErrorColor, "[ ERR ]\n")
 		panic(fmt.Sprintf("failed writing to file: %s", err))
 	}
 	// ------------------------------------------------------------------------
 
-	println(" → Done!")
+	fmt.Printf(SuccessColor, "Done! \n")
 }

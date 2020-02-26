@@ -10,6 +10,13 @@ import (
 	"time"
 )
 
+// Colors for strings
+const (
+	SuccessColor = "\033[1;32m%s\033[0m"
+	WarningColor = "\033[1;33m%s\033[0m"
+	ErrorColor   = "\033[1;31m%s\033[0m"
+)
+
 /*
 Unique will deduplicate a given slice
 */
