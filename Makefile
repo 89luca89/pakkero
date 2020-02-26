@@ -8,7 +8,7 @@ all:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/PackNGo;
+		-o dist/packngo
 	cp -r data/ dist/
 clean:
 	rm -rf dist/;
@@ -21,5 +21,5 @@ clean:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/PackNGo;
+		-o dist/packngo;
 	cp -r data/ dist/
