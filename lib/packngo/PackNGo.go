@@ -55,7 +55,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-gcflags=-trimpath=" + gopath + "/src/",
 		"-asmflags=-trimpath=" + gopath + "/src/",
 		"-ldflags=-extldflags=-static",
-		"-ldflags=-s"}
+		"-ldflags=-s",
+		"-ldflags=-w"}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
 	flags = append(flags, infile+".go")
@@ -66,6 +67,14 @@ func PackNGo(infile string, offset int64, outfile string) {
 	// Strip File of excess headers
 	// ------------------------------------------------------------------------
 	StripFile(outfile)
+	// ------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------
+	// Compress File of occupy less space
+	// Then remove UPX headers from file.
+	// ------------------------------------------------------------------------
+	ExecCommand("upx", []string{"-9", outfile})
+	StripUPXHeaders(outfile)
 	// ------------------------------------------------------------------------
 
 	// remove unused file
