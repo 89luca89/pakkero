@@ -1,4 +1,4 @@
-package main
+package packngo
 
 import (
 	"crypto/aes"
@@ -19,7 +19,7 @@ this will not only encrypt the payload but:
 - swap endianess on all the encrypted bytes
 - reverse the complete payload
 */
-func encryptAESReversed(plaintext []byte, outfile string) string {
+func EncryptAESReversed(plaintext []byte, outfile string) string {
 	// generate a password using the randomized UPX Binary's md5sum
 	/*
 			    the aes-256 psk is the md5sum of the whole executable
@@ -52,12 +52,12 @@ func encryptAESReversed(plaintext []byte, outfile string) string {
 
 	// swap endianess on all the encrypted bytes
 	for i := range bCiphertext {
-		bCiphertext[i] = reverseByte(bCiphertext[i])
+		bCiphertext[i] = ReverseByte(bCiphertext[i])
 	}
 
 	ciphertext := string(bCiphertext)
 
 	// reverse the complete payload
-	ciphertext = string(reverseByteArray([]byte(ciphertext)))
+	ciphertext = string(ReverseByteArray([]byte(ciphertext)))
 	return ciphertext
 }

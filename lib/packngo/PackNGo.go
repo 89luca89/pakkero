@@ -1,4 +1,4 @@
-package main
+package packngo
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	mrand "math/rand"
@@ -31,14 +30,14 @@ func PackNGo(infile string, offset int64, outfile string) {
 	offset = offset + (mrand.Int63n(4096-128) + 128)
 
 	// add offset to the secrets!
-	secrets[generateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
+	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
 	// copy the stup from where to start.
-	execCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
+	ExecCommand("cp", []string{selfPath + "/data/Launcher.go.stub", infile + ".go"})
 
 	// obfuscate the launcher
-	obfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
 
 	// compile the launcher binary
 	gopath, _ := os.LookupEnv("GOPATH")
@@ -60,10 +59,10 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
 	flags = append(flags, infile+".go")
-	execCommand("go", flags)
+	ExecCommand("go", flags)
 
 	// strip symbols and headers
-	execCommand("strip",
+	ExecCommand("strip",
 		[]string{"-sxXwSgd",
 			"--remove-section=.bss",
 			"--remove-section=.comment",
@@ -84,14 +83,14 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	/*
 		// run UPX to shrink output size
-		execCommand("upx",
+		ExecCommand("upx",
 			[]string{"-q", "-f", "--overlay=strip", "--ultra-brute", outfile})
 		// strip UPX headers to make it difficult to unpack
 		stripUpxHeaders(outfile)
 	*/
 
 	// remove unused file
-	execCommand("rm", []string{"-f", infile + ".go"})
+	ExecCommand("rm", []string{"-f", infile + ".go"})
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -104,7 +103,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
-		execCommand("rm", []string{"-f", outfile})
+		ExecCommand("rm", []string{"-f", outfile})
 		panic("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 	}
@@ -134,7 +133,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	zlibWriter.Close()
 
 	// encrypt aes256-gcm
-	ciphertext := encryptAESReversed(zlibPlaintext.Bytes(), outfile)
+	ciphertext := EncryptAESReversed(zlibPlaintext.Bytes(), outfile)
 
 	// append payload to the runner itself
 	_, err = encFile.WriteString(ciphertext)
@@ -147,7 +146,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	n := binary.PutVarint(finalPaddingArray, offset)
 	finalPaddingB := finalPaddingArray[:n]
 	for i := range finalPaddingB {
-		finalPaddingB[i] = reverseByte(finalPaddingB[i])
+		finalPaddingB[i] = ReverseByte(finalPaddingB[i])
 	}
 	finalPadding, _ := binary.Varint(finalPaddingB)
 	// make it positive!
@@ -164,36 +163,5 @@ func PackNGo(infile string, offset int64, outfile string) {
 	_, err = encFile.WriteString(string(randomEndGarbage))
 	if err != nil {
 		panic(fmt.Sprintf("failed writing to file: %s", err))
-	}
-}
-
-func main() {
-	// fist test if all dependencies are present
-	if testDependencies() == nil {
-		if len(os.Args) == 1 {
-			help()
-			os.Exit(1)
-		}
-		flag.Usage = func() {
-			help()
-		}
-		file := flag.String("file", "", "")
-		output := flag.String("o", "", "")
-		offset := flag.Int64("offset", 0, "")
-		flag.Bool("v", false, "")
-		flag.Parse()
-
-		switch os.Args[1] {
-		case "-v":
-			printVersion()
-		default:
-			if *file != "" && *offset >= 0 {
-				PackNGo(*file, *offset, *output)
-			} else {
-				println("Missing arguments or invalid arguments!")
-				help()
-				os.Exit(1)
-			}
-		}
 	}
 }

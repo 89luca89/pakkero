@@ -1,4 +1,4 @@
-package main
+package packngo
 
 import (
 	"crypto/rand"
@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var secrets = map[string][]string{}
+var Secrets = map[string][]string{}
 
 /*
 Using UPX To shrink the binary is good
@@ -20,7 +20,7 @@ this will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
 simple attempts like "upx -d"
 */
-func stripUpxHeaders(infile string) {
+func StripUPXHeaders(infile string) {
 	// Bit sequence of UPX copyright and header infos
 	header := []string{
 		`\x49\x6e\x66\x6f\x3a\x20\x54\x68\x69\x73`,
@@ -48,7 +48,7 @@ func stripUpxHeaders(infile string) {
 			sedString += `\x` + hex.EncodeToString(replace)
 		}
 		// replace UPX sequence with random garbage
-		execCommand("sed", []string{"-i", `s/` + v + `/` + sedString + `/g`, infile})
+		ExecCommand("sed", []string{"-i", `s/` + v + `/` + sedString + `/g`, infile})
 	}
 }
 
@@ -57,7 +57,7 @@ Typosquat name generator
 based on a lenght (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
-func generateTyposquatName() string {
+func GenerateTyposquatName() string {
 	// We divide between an alphabet with number
 	// and one without, because function/variable names
 	// must not start with a number.
@@ -80,11 +80,11 @@ func generateTyposquatName() string {
 	Obfuscates a string creating a function that returns
 	that value as a string encoded with a series og byteshift operations
 */
-func obfuscateString(txt string, function string) string {
+func ObfuscateString(txt string, function string) string {
 	lines := []string{}
 	for _, item := range []byte(txt) {
 		lines = append(
-			lines, getOnecodedChar(item),
+			lines, GetOnecodedChar(item),
 		)
 	}
 	return fmt.Sprintf("func "+
@@ -99,7 +99,7 @@ func obfuscateString(txt string, function string) string {
 	thanks to:
 	https://github.com/GH0st3rs/obfus/blob/master/obfus.go
 */
-func getOnecodedChar(n byte) (buf string) {
+func GetOnecodedChar(n byte) (buf string) {
 	var arr []byte
 	var x uint8
 	for n > 1 {
@@ -131,18 +131,18 @@ Generate an obfuscated string from input:
     - b64 it
     - bit fot bit endianess
 */
-func generateBinaryReversedString(in string) []byte {
-	in = reverseString(in)
+func GenerateBinaryReversedString(in string) []byte {
+	in = ReverseString(in)
 	result := []byte(base64.StdEncoding.EncodeToString([]byte(in)))
 	for index := range result {
-		result[index] = reverseByte(result[index])
+		result[index] = ReverseByte(result[index])
 	}
 	return result
 }
 
 /*
 
-This part will attempt to obfuscateLauncher the go code of the runner before
+This part will attempt to ObfuscateLauncher the go code of the runner before
 compiling it.
 
 Basic techniques are applied:
@@ -157,7 +157,7 @@ Basic techniques are applied:
       replace all string with that
 - insert in the runner the chosen offset
 */
-func obfuscateLauncher(infile string, offset string) int {
+func ObfuscateLauncher(infile string, offset string) int {
 
 	content, err := ioutil.ReadFile(infile)
 	if err != nil {
@@ -184,7 +184,7 @@ func obfuscateLauncher(infile string, offset string) int {
 		if strings.Contains(v, "// OB_CHECK") {
 			sedString := ""
 			// randomize order of check to replace
-			for j, v := range shuffleSlice(randomChecks) {
+			for j, v := range ShuffleSlice(randomChecks) {
 				sedString = sedString + v
 				if j != (len(randomChecks) - 1) {
 					sedString = sedString + `||`
@@ -206,17 +206,17 @@ func obfuscateLauncher(infile string, offset string) int {
 	// Regex all plaintext strings denoted by backticks
 	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
 	words := regex.FindAllString(output, -1)
-	words = unique(words)
+	words = Unique(words)
 	for _, w := range words {
 		// add string to the secrets!
 		secret := w[1 : len(w)-1]
-		secrets[generateTyposquatName()] = []string{secret, w}
+		Secrets[GenerateTyposquatName()] = []string{secret, w}
 	}
 	// create function call
 	sedString := ""
 	// replace all secrects with the respective obfuscated string
-	for k, w := range secrets {
-		sedString = sedString + obfuscateString(w[0], k) + "\n"
+	for k, w := range Secrets {
+		sedString = sedString + ObfuscateString(w[0], k) + "\n"
 		output = strings.ReplaceAll(output, w[1], k+"()")
 	}
 	// insert all the functions before the main
@@ -232,11 +232,11 @@ func obfuscateLauncher(infile string, offset string) int {
 	// obfuscate functions and variables names
 	regex = regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
 	words = regex.FindAllString(output, -1)
-	words = reverseStringArray(words)
-	words = unique(words)
+	words = ReverseStringArray(words)
+	words = Unique(words)
 	for _, w := range words {
 		// generate random name for each matching string
-		output = strings.ReplaceAll(output, w, generateTyposquatName())
+		output = strings.ReplaceAll(output, w, GenerateTyposquatName())
 	}
 	/******************************************************
 	/	--- End function name obfuscation ---------------
