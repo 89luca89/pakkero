@@ -13,7 +13,7 @@ import (
 const programName = "packngo"
 const version = "0.2.0"
 
-var dependencies = []string{"ls", "sed", "go", "strip"} // optional upx
+var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 
 /*
 TestDependencies if all dependencies are present
