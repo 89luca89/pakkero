@@ -49,6 +49,7 @@ import (
 	obMD5 "crypto/md5"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
+	obIO "io"
 	obUtilio "io/ioutil"
 	obOS "os"
 	obExec "os/exec"
@@ -292,22 +293,34 @@ func obProceede() {
 		obStrconv.Itoa(obOS.Getpid()) +
 		`/fd/` +
 		obStrconv.Itoa(int(obFileDescriptor))
-	if obStrings.Contains(string(obPayload[:4]), `ELF`) {
+	// OB_CHECK
+	obCommand := obExec.Command(obFDPath)
+	// OB_CHECK
+	obCommand.Args = obOS.Args
+	// OB_CHECK
+	obStdoutIn, _ := obCommand.StdoutPipe()
+	obStderrIn, _ := obCommand.StderrPipe()
+	// OB_CHECK
+	var obStdoutBuf, obStderrBuf obBytes.Buffer
+	// OB_CHECK
+	stdout := obIO.MultiWriter(obOS.Stdout, &obStdoutBuf)
+	stderr := obIO.MultiWriter(obOS.Stderr, &obStderrBuf)
+	// OB_CHECK
+	obCommand.Start()
+	go func() {
 		// OB_CHECK
-		_ = obSyscall.Exec(obFDPath, obOS.Args, obOS.Args)
-	} else {
+		obIO.Copy(stdout, obStdoutIn)
+	}()
+	go func() {
 		// OB_CHECK
-		obCommand := obExec.Command(obFDPath)
-		obCommand.Args = obOS.Args
-		var obSTDOut obBytes.Buffer
-		obCommand.Stdout = &obSTDOut
-		// OB_CHECK
-		obCommand.Run()
-		print(string(obSTDOut.Bytes()))
-	}
+		obIO.Copy(stderr, obStderrIn)
+	}()
+	// OB_CHECK
+	obCommand.Wait()
 }
 
 func main() {
+	//	if obPtraceDetect() ||
 	if obPtraceNearHeap() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
