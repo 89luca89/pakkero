@@ -60,8 +60,11 @@ import (
 )
 
 // check_block_start
-func obPtraceDetect() bool {
-	return C.ptrace_detect() < 0
+func obPtraceDetect() {
+	if C.ptrace_detect() < 0 {
+		println(`https://shorturl.at/crzEZ`)
+		obOS.Exit(127)
+	}
 }
 
 func obPtraceNearHeap() bool {
@@ -320,7 +323,7 @@ func obProceede() {
 }
 
 func main() {
-	//	if obPtraceDetect() ||
+	go obPtraceDetect()
 	if obPtraceNearHeap() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
