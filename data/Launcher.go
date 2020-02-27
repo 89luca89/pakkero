@@ -85,9 +85,8 @@ func obParentCmdLineDetect() bool {
 		obStrings.Contains(string(obStatParent), `ida`) ||
 		obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 func obParentTracerDetect() bool {
 	obPidParent := obOS.Getppid()
@@ -127,10 +126,15 @@ func obParentDetect() bool {
 		obStrings.Contains(string(obStatParent), `ida`) ||
 		obStrings.Contains(string(obStatParent), `godebug`) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
+
+func obEnvArgsDetect() bool {
+	obLines, _ := obOS.LookupEnv(`_`)
+	return obLines != obOS.Args[0]
+}
+
 func obEnvParentDetect() bool {
 	obLines, _ := obOS.LookupEnv(`_`)
 	if obStrings.Contains(string(obLines), `gdb`) ||
@@ -145,9 +149,8 @@ func obEnvParentDetect() bool {
 		obStrings.Contains(string(obLines), `ida`) ||
 		obStrings.Contains(string(obLines), `godebug`) {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 func obEnvDetect() bool {
 	_, obLines := obOS.LookupEnv(`LINES`)
@@ -305,7 +308,7 @@ func obProceede() {
 }
 
 func main() {
-	if obPtraceDetect() || obPtraceNearHeap() ||
+	if obPtraceNearHeap() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
