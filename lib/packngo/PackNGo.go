@@ -10,15 +10,35 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 )
 
 const offsetPlaceholder = "9999999"
 const launcherFile = "/tmp/launcher.go"
 
+func cleanup() {
+	fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+	fmt.Print(" → Cleaning up...")
+
+	// remove unused file
+	ExecCommand("rm", []string{"-f", launcherFile})
+	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
+}
+
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string) {
+
+    // Prepare to intercept SIGTERM
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cleanup()
+		os.Exit(1)
+	}()
 
 	fmt.Print(" → Randomizing offset...")
 
@@ -46,7 +66,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
-		os.Exit(1)
+        cleanup()
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
@@ -54,7 +74,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
-		os.Exit(1)
+        cleanup()
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
