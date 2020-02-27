@@ -296,11 +296,11 @@ func obProceede() {
 		uintptr(obUnsafe.Pointer(&obFDName)),
 		uintptr(obCloexec|obAllowSealing), 0)
 
+	// OB_CHECK
 	// write payload to FD
-	// OB_CHECK
 	obSyscall.Write(int(obFileDescriptor), obPayload)
-	// make it immutable
 	// OB_CHECK
+	// make it immutable
 	obSyscall.Syscall(obSysFCNTL,
 		obFileDescriptor,
 		uintptr(1024+9),
@@ -325,10 +325,12 @@ func obProceede() {
 	stderr := obIO.MultiWriter(obOS.Stderr, &obStderrBuf)
 	// OB_CHECK
 	obCommand.Start()
+	// async fetch stdout
 	go func() {
 		// OB_CHECK
 		obIO.Copy(stdout, obStdoutIn)
 	}()
+	// async fetch stderr
 	go func() {
 		// OB_CHECK
 		obIO.Copy(stderr, obStderrIn)

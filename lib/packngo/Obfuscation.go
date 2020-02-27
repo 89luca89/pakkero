@@ -94,8 +94,8 @@ func GenerateTyposquatName() string {
 	// We divide between an alphabet with number
 	// and one without, because function/variable names
 	// must not start with a number.
-	letterRunes := []rune("OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
-	mixedRunes := []rune("0OÓÕÔÒÖØŌŎŐƠǑȌȎȪȬΌΘΟϴ")
+	letterRunes := []rune("OÓÕÔÒÖŌŎŐƠΘΟ")
+	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
 	lenght := 128
 	b := make([]rune, lenght)
 	// ensure we do not start with a number or we will break code.
@@ -159,6 +159,31 @@ func GenerateBitshift(n byte) (buf string) {
 }
 
 /*
+ObfuscateStrings will extract all plaintext strings denotet with
+backticks and obfuscate them using byteshift wise operations
+*/
+func ObfuscateStrings(input string) string {
+	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
+	words := regex.FindAllString(input, -1)
+	words = Unique(words)
+	for _, w := range words {
+		// add string to the secrets!
+		secret := w[1 : len(w)-1]
+		Secrets[GenerateTyposquatName()] = []string{secret, w}
+	}
+	// create function call
+	sedString := ""
+	// replace all secrects with the respective obfuscated string
+	for k, w := range Secrets {
+		sedString = sedString + ObfuscateString(w[0], k) + "\n"
+		input = strings.ReplaceAll(input, w[1], k+"()")
+	}
+	// insert all the functions before the main
+	input = input + "\n" + sedString
+	return input
+}
+
+/*
 GenerateRandomAntiDebug will Insert random order of anti-debug check
 together with inline compilation to induce big number
 of instructions in random order
@@ -191,31 +216,6 @@ func GenerateRandomAntiDebug(input string) string {
 	}
 	// back to single string
 	return strings.Join(lines, "\n")
-}
-
-/*
-ObfuscateStrings will extract all plaintext strings denotet with
-backticks and obfuscate them using byteshift wise operations
-*/
-func ObfuscateStrings(input string) string {
-	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
-	words := regex.FindAllString(input, -1)
-	words = Unique(words)
-	for _, w := range words {
-		// add string to the secrets!
-		secret := w[1 : len(w)-1]
-		Secrets[GenerateTyposquatName()] = []string{secret, w}
-	}
-	// create function call
-	sedString := ""
-	// replace all secrects with the respective obfuscated string
-	for k, w := range Secrets {
-		sedString = sedString + ObfuscateString(w[0], k) + "\n"
-		input = strings.ReplaceAll(input, w[1], k+"()")
-	}
-	// insert all the functions before the main
-	input = input + "\n" + sedString
-	return input
 }
 
 /*
