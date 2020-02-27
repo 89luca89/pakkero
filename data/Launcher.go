@@ -43,16 +43,16 @@ import (
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
-	var offset = 0
-	_, _, res := obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
-	if res == 0 {
-		offset = 5
+	var obOffset = 0
+	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	if obResult == 0 {
+		obOffset = 5
 	}
-	_, _, res = obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
-	if res == 1 {
-		offset *= 3
+	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	if obResult == 1 {
+		obOffset *= 3
 	}
-	if offset != 15 {
+	if obOffset != 15 {
 		obOS.Exit(127)
 	}
 }
