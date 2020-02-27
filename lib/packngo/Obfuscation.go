@@ -159,11 +159,11 @@ func GetOnecodedChar(n byte) (buf string) {
 }
 
 /*
-Insert random order of anti-debug check
+GenerateRandomAntiDebug will Insert random order of anti-debug check
 together with inline compilation to induce big number
 of instructions in random order
 */
-func generateRandomAntiDebug(input string) string {
+func GenerateRandomAntiDebug(input string) string {
 	lines := strings.Split(string(input), "\n")
 	randomChecks := []string{
 		`obEnvArgsDetect()`,
@@ -194,10 +194,10 @@ func generateRandomAntiDebug(input string) string {
 }
 
 /*
-extract all plaintext strings denotet with backticks and obfuscate them
-using byteshift wise operations
+GenerateStringObfuscation will extract all plaintext strings denotet with
+backticks and obfuscate them using byteshift wise operations
 */
-func generateStringObfuscation(input string) string {
+func GenerateStringObfuscation(input string) string {
 	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
 	words := regex.FindAllString(input, -1)
 	words = Unique(words)
@@ -243,13 +243,13 @@ func ObfuscateLauncher(infile string, offset string) error {
 	// ------------------------------------------------------------------------
 	//	--- Start anti-debug checks
 	// ------------------------------------------------------------------------
-	content = generateRandomAntiDebug(content)
+	content = GenerateRandomAntiDebug(content)
 	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
 	//	--- Start string obfuscation
 	// ------------------------------------------------------------------------
-	content = generateStringObfuscation(content)
+	content = GenerateStringObfuscation(content)
 
 	// ------------------------------------------------------------------------
 	//	--- Start function name obfuscation
