@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	mrand "math/rand"
+	mathRand "math/rand"
 	"regexp"
 	"strings"
 	"time"
@@ -99,11 +99,11 @@ func GenerateTyposquatName() string {
 	lenght := 128
 	b := make([]rune, lenght)
 	// ensure we do not start with a number or we will break code.
-	b[0] = letterRunes[mrand.Intn(len(letterRunes))]
+	b[0] = letterRunes[mathRand.Intn(len(letterRunes))]
 	for i := range b {
 		if i != 0 {
-			mrand.Seed(time.Now().UnixNano())
-			b[i] = mixedRunes[mrand.Intn(len(mixedRunes))]
+			mathRand.Seed(time.Now().UnixNano())
+			b[i] = mixedRunes[mathRand.Intn(len(mixedRunes))]
 		}
 	}
 	return string(b)
@@ -144,12 +144,12 @@ func GenerateBitshift(n byte) (buf string) {
 		n = n >> 1
 	}
 	buf = "1"
-	mrand.Seed(time.Now().Unix())
+	mathRand.Seed(time.Now().Unix())
 	for i := len(arr) - 1; i >= 0; i-- {
 		buf = fmt.Sprintf("%s<<%s", buf, "1")
 		if arr[i] == 1 {
 			op := "(%s|%s)"
-			if mrand.Intn(2) == 0 {
+			if mathRand.Intn(2) == 0 {
 				op = "(%s^%s)"
 			}
 			buf = fmt.Sprintf(op, buf, "1")

@@ -9,7 +9,7 @@ import (
 	"compress/zlib"
 	"crypto/rand"
 	"fmt"
-	mrand "math/rand"
+	mathRand "math/rand"
 	"os/exec"
 	"time"
 )
@@ -87,8 +87,8 @@ func ReverseString(input string) string {
 ShuffleSlice will shuffle a slice.
 */
 func ShuffleSlice(in []string) []string {
-	mrand.Seed(time.Now().UnixNano())
-	mrand.Shuffle(len(in), func(i, j int) { in[i], in[j] = in[j], in[i] })
+	mathRand.Seed(time.Now().UnixNano())
+	mathRand.Shuffle(len(in), func(i, j int) { in[i], in[j] = in[j], in[i] })
 	return in
 }
 
