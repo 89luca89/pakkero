@@ -1,3 +1,6 @@
+/*
+Package packngo will pack, compress and encrypt any type of executable.
+*/
 package packngo
 
 import (
@@ -110,7 +113,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	fmt.Print(" → Cleaning up...")
 
 	// remove unused file
-	ExecCommand("rm", []string{"-f", infile + ".go"})
+	ExecCommand("rm", []string{"-f", launcherFile})
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 
 	// read compiled file

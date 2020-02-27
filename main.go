@@ -1,3 +1,6 @@
+/*
+Package main, calls all the libraries needed and handles cli flags.
+*/
 package main
 
 import (

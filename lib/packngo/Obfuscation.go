@@ -1,3 +1,7 @@
+/*
+Package packngo will pack, compress and encrypt any type of executable.
+Obfuscation library
+*/
 package packngo
 
 import (
@@ -14,6 +18,7 @@ import (
 // Secrets are the group of strings that we want to obfuscate
 var Secrets = map[string][]string{}
 
+// LauncherStub Stub of the Launcher.go, put here during compilation time
 const LauncherStub = "LAUNCHERSTUB"
 
 /*

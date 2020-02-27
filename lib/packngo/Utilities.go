@@ -1,3 +1,7 @@
+/*
+Package packngo will pack, compress and encrypt any type of executable.
+Utilities library
+*/
 package packngo
 
 import (
