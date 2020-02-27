@@ -183,6 +183,7 @@ func ObfuscateLauncher(infile string, offset string) error {
 	// together with inline compilation to induce big number
 	// of instructions in random order
 	randomChecks := []string{
+		`obEnvArgsDetect()`,
 		`obPtraceNearHeap()`,
 		`obParentTracerDetect()`,
 		`obParentCmdLineDetect()`,
@@ -202,7 +203,7 @@ func ObfuscateLauncher(infile string, offset string) error {
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`) }"
+			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`); return }"
 		}
 	}
 	// back to single string
