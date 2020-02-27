@@ -12,6 +12,7 @@ import (
 )
 
 const offsetPlaceholder = "9999999"
+const launcherFile = "/tmp/launcher.go"
 
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string) {
@@ -38,7 +39,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
-	err := ioutil.WriteFile(infile+".go", launcherStub, 0644)
+	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
@@ -46,7 +47,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	err = ObfuscateLauncher(infile+".go", fmt.Sprintf("%d", offset))
+	err = ObfuscateLauncher(launcherFile, fmt.Sprintf("%d", offset))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
@@ -81,7 +82,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		"-ldflags=-w"}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
-	flags = append(flags, infile+".go")
+	flags = append(flags, launcherFile)
 	ExecCommand("go", flags)
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
