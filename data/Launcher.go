@@ -194,6 +194,17 @@ func obByteReverse(obBar byte) byte {
 	return obFoo
 }
 
+const (
+	obCloexec uint = 1
+	// allow seal operations to be performed
+	obAllowSealing uint = 2
+	// memfd is now immutable
+	obSealAll = 0x0001 | 0x0002 | 0x0004 | 0x0008
+	// amd64 specific
+	obSysFCNTL       = obSyscall.SYS_FCNTL
+	obSysMEMFDCreate = 319
+)
+
 func obProceede() {
 	// OB_CHECK
 	obNameFile, _ := obOS.Executable()
@@ -277,9 +288,19 @@ func obProceede() {
 
 	// OB_CHECK
 	obFDName := ``
-	obFileDescriptor, _, _ := obSyscall.Syscall(319, uintptr(obUnsafe.Pointer(&obFDName)),
-		uintptr(0x0001), 0)
+	obFileDescriptor, _, _ := obSyscall.Syscall(obSysMEMFDCreate,
+		uintptr(obUnsafe.Pointer(&obFDName)),
+		uintptr(obCloexec|obAllowSealing), 0)
+
+	// write payload to FD
+	// OB_CHECK
 	obSyscall.Write(int(obFileDescriptor), obPayload)
+	// make it immutable
+	// OB_CHECK
+	obSyscall.Syscall(obSysFCNTL,
+		obFileDescriptor,
+		uintptr(1024+9),
+		uintptr(obSealAll))
 
 	// OB_CHECK
 	obFDPath := `/proc/` +
