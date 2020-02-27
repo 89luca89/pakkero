@@ -44,11 +44,17 @@ import (
 // against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
 	var obOffset = 0
-	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
 	if obResult == 0 {
 		obOffset = 5
 	}
-	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
 	if obResult == 1 {
 		obOffset *= 3
 	}
@@ -168,8 +174,6 @@ func obLdPreloadDetect() bool {
 	}
 	return false
 }
-
-// check_block_end
 
 /*
 Reverse a slice of bytes
