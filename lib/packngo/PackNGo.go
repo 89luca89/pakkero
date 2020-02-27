@@ -8,7 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
-	mrand "math/rand"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,8 +29,8 @@ func PackNGo(infile string, offset int64, outfile string) {
 		outfile = infile + ".enc"
 	}
 	// offset Hysteresis, this will prevent easy key retrieving
-	mrand.Seed(time.Now().UTC().UnixNano())
-	offset = offset + (mrand.Int63n(4096-128) + 128)
+	rand.Seed(time.Now().UTC().UnixNano())
+	offset = offset + (rand.Int63n(4096-128) + 128)
 
 	// add offset to the secrets!
 	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
