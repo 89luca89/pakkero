@@ -159,34 +159,12 @@ func GetOnecodedChar(n byte) (buf string) {
 }
 
 /*
-ObfuscateLauncher the go code of the runner before compiling it.
-
-Basic techniques are applied:
-- Insert anti-debug checks in random order to ensure binaries generated are
-  always different
-- Insert those anti-debug checks whenever in the code a "// OB_CHECK" is present
-- extract all plaintext strings denotet with backticks and obfuscate them
-	using byteshift wise operations
-- extract all obfuscation-enabled func and var names:
-    - those start with ob_* and will bel isted
-    - for each matching string generate a typosquatted random string and
-      replace all string with that
-- insert in the runner the chosen offset
+Insert random order of anti-debug check
+together with inline compilation to induce big number
+of instructions in random order
 */
-func ObfuscateLauncher(infile string, offset string) error {
-
-	content, err := ioutil.ReadFile(infile)
-	if err != nil {
-		return err
-	}
-	lines := strings.Split(string(content), "\n")
-
-	// ------------------------------------------------------------------------
-	//	--- Start anti-debug
-	// ------------------------------------------------------------------------
-	// Insert random order of anti-debug check
-	// together with inline compilation to induce big number
-	// of instructions in random order
+func generateRandomAntiDebug(input string) string {
+	lines := strings.Split(string(input), "\n")
 	randomChecks := []string{
 		`obEnvArgsDetect()`,
 		`obPtraceNearHeap()`,
@@ -212,15 +190,16 @@ func ObfuscateLauncher(infile string, offset string) error {
 		}
 	}
 	// back to single string
-	output := strings.Join(lines, "\n")
-	// ------------------------------------------------------------------------
+	return strings.Join(lines, "\n")
+}
 
-	// ------------------------------------------------------------------------
-	//	--- Start string obfuscation
-	// ------------------------------------------------------------------------
-	// Regex all plaintext strings denoted by backticks
+/*
+extract all plaintext strings denotet with backticks and obfuscate them
+using byteshift wise operations
+*/
+func generateStringObfuscation(input string) string {
 	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
-	words := regex.FindAllString(output, -1)
+	words := regex.FindAllString(input, -1)
 	words = Unique(words)
 	for _, w := range words {
 		// add string to the secrets!
@@ -232,29 +211,62 @@ func ObfuscateLauncher(infile string, offset string) error {
 	// replace all secrects with the respective obfuscated string
 	for k, w := range Secrets {
 		sedString = sedString + ObfuscateString(w[0], k) + "\n"
-		output = strings.ReplaceAll(output, w[1], k+"()")
+		input = strings.ReplaceAll(input, w[1], k+"()")
 	}
 	// insert all the functions before the main
 	sedString = sedString + "func main() {\n"
-	output = strings.ReplaceAll(output, "func main() {", sedString)
+	return strings.ReplaceAll(input, "func main() {", sedString)
+}
+
+/*
+ObfuscateLauncher the go code of the runner before compiling it.
+
+Basic techniques are applied:
+- Insert anti-debug checks in random order to ensure binaries generated are
+  always different
+- Insert those anti-debug checks whenever in the code a "// OB_CHECK" is present
+- extract all plaintext strings denotet with backticks and obfuscate them
+	using byteshift wise operations
+- extract all obfuscation-enabled func and var names:
+    - those start with ob_* and will bel isted
+    - for each matching string generate a typosquatted random string and
+      replace all string with that
+- insert in the runner the chosen offset
+*/
+func ObfuscateLauncher(infile string, offset string) error {
+
+	byteContent, err := ioutil.ReadFile(infile)
+	if err != nil {
+		return err
+	}
+	content := string(byteContent)
 	// ------------------------------------------------------------------------
+	//	--- Start anti-debug checks
+	// ------------------------------------------------------------------------
+	content = generateRandomAntiDebug(content)
+	// ------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------
+	//	--- Start string obfuscation
+	// ------------------------------------------------------------------------
+	content = generateStringObfuscation(content)
 
 	// ------------------------------------------------------------------------
 	//	--- Start function name obfuscation
 	// ------------------------------------------------------------------------
 	// obfuscate functions and variables names
-	regex = regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
-	words = regex.FindAllString(output, -1)
+	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
+	words := regex.FindAllString(content, -1)
 	words = ReverseStringArray(words)
 	words = Unique(words)
 	for _, w := range words {
 		// generate random name for each matching string
-		output = strings.ReplaceAll(output, w, GenerateTyposquatName())
+		content = strings.ReplaceAll(content, w, GenerateTyposquatName())
 	}
 	// ------------------------------------------------------------------------
 
 	// save.
-	ioutil.WriteFile(infile, []byte(output), 0644)
+	ioutil.WriteFile(infile, []byte(content), 0644)
 
 	return nil
 }

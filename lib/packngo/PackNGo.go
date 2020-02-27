@@ -113,7 +113,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	fmt.Print(" → Cleaning up...")
 
 	// remove unused file
-	ExecCommand("rm", []string{"-f", launcherFile})
+	//ExecCommand("rm", []string{"-f", launcherFile})
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 
 	// read compiled file
