@@ -6,27 +6,6 @@ package main
 #include <stdlib.h>
 #include <sys/ptrace.h>
 
-// attach to PTRACE, register if successful
-// attach A G A I N , register if unsuccessful
-// this protects against custom ptrace (always returning 0)
-// against NOP attacks and LD_PRELOAD attacks
-int ptrace_detect () {
-	int offset = 0;
-
-	if (ptrace(PTRACE_TRACEME, 0, 1, 0) == 0){
-		offset = 2;
-	}
-	if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1){
-		offset = offset * 3;
-	}
-
-	if (offset == 2 * 3){
-		return 0;
-	} else {
-		return -1;
-	}
-}
-
 // GDB relocates the heap to the end of the bss section
 int near_heap() {
 	static unsigned char bss;
@@ -59,10 +38,21 @@ import (
 	obUnsafe "unsafe"
 )
 
-// check_block_start
+// attach to PTRACE, register if successful
+// attach A G A I N , register if unsuccessful
+// this protects against custom ptrace (always returning 0)
+// against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
-	if C.ptrace_detect() < 0 {
-		println(`https://shorturl.at/crzEZ`)
+	var offset = 0
+	_, _, res := obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	if res == 0 {
+		offset = 5
+	}
+	_, _, res = obSyscall.RawSyscall(obSyscall.SYS_PTRACE, uintptr(obSyscall.PTRACE_TRACEME), 0, 0)
+	if res == 1 {
+		offset *= 3
+	}
+	if offset != 15 {
 		obOS.Exit(127)
 	}
 }
@@ -329,6 +319,7 @@ func main() {
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
 		println(`https://shorturl.at/crzEZ`)
+		obOS.Exit(127)
 	} else {
 		obProceede()
 	}

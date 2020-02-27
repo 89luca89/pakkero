@@ -203,7 +203,7 @@ func ObfuscateLauncher(infile string, offset string) error {
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`); return }"
+			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`); obOS.Exit(127) }"
 		}
 	}
 	// back to single string
