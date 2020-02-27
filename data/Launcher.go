@@ -158,9 +158,9 @@ func obEnvDetect() bool {
 
 func obLdPreloadDetect() bool {
 	if obEnvDetect() == false {
-		obOS.Setenv(`LD_PRELOAD`, `/stat`)
+		obOS.Setenv(`LD_PRELOAD`, `obstring`)
 		obLineLdPreload, _ := obOS.LookupEnv(`LD_PRELOAD`)
-		if obLineLdPreload == `/stat` {
+		if obLineLdPreload == `obstring` {
 			obOS.Unsetenv(`LD_PRELOAD`)
 			return false
 		}
