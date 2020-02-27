@@ -50,7 +50,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	err = ObfuscateLauncher(launcherFile, fmt.Sprintf("%d", offset))
+	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
@@ -113,7 +113,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	fmt.Print(" → Cleaning up...")
 
 	// remove unused file
-	//ExecCommand("rm", []string{"-f", launcherFile})
+	ExecCommand("rm", []string{"-f", launcherFile})
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 
 	// read compiled file

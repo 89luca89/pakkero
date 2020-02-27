@@ -117,7 +117,7 @@ func ObfuscateString(txt string, function string) string {
 	lines := []string{}
 	for _, item := range []byte(txt) {
 		lines = append(
-			lines, GetOnecodedChar(item),
+			lines, GenerateBitshift(item),
 		)
 	}
 	return fmt.Sprintf("func "+
@@ -127,12 +127,12 @@ func ObfuscateString(txt string, function string) string {
 }
 
 /*
-GetOnecodedChar will transform a char/byte in a series of operations on value 1
+GenerateBitshift will transform a char/byte in a series of operations on value 1
 
 thanks to:
 https://github.com/GH0st3rs/obfus/blob/master/obfus.go
 */
-func GetOnecodedChar(n byte) (buf string) {
+func GenerateBitshift(n byte) (buf string) {
 	var arr []byte
 	var x uint8
 	for n > 1 {
@@ -194,10 +194,10 @@ func GenerateRandomAntiDebug(input string) string {
 }
 
 /*
-GenerateStringObfuscation will extract all plaintext strings denotet with
+ObfuscateStrings will extract all plaintext strings denotet with
 backticks and obfuscate them using byteshift wise operations
 */
-func GenerateStringObfuscation(input string) string {
+func ObfuscateStrings(input string) string {
 	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
 	words := regex.FindAllString(input, -1)
 	words = Unique(words)
@@ -214,26 +214,39 @@ func GenerateStringObfuscation(input string) string {
 		input = strings.ReplaceAll(input, w[1], k+"()")
 	}
 	// insert all the functions before the main
-	sedString = sedString + "func main() {\n"
-	return strings.ReplaceAll(input, "func main() {", sedString)
+	input = input + "\n" + sedString
+	return input
+}
+
+/*
+ObfuscateFuncVars will:
+  - extract all obfuscation-enabled func and var names:
+  - those start with ob_* and will bel isted
+  - for each matching string generate a typosquatted random string and
+    replace all string with that
+*/
+func ObfuscateFuncVars(input string) string {
+	// obfuscate functions and variables names
+	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
+	words := regex.FindAllString(input, -1)
+	words = ReverseStringArray(words)
+	words = Unique(words)
+	for _, w := range words {
+		// generate random name for each matching string
+		input = strings.ReplaceAll(input, w, GenerateTyposquatName())
+	}
+	return input
 }
 
 /*
 ObfuscateLauncher the go code of the runner before compiling it.
 
 Basic techniques are applied:
-- Insert anti-debug checks in random order to ensure binaries generated are
-  always different
-- Insert those anti-debug checks whenever in the code a "// OB_CHECK" is present
-- extract all plaintext strings denotet with backticks and obfuscate them
-	using byteshift wise operations
-- extract all obfuscation-enabled func and var names:
-    - those start with ob_* and will bel isted
-    - for each matching string generate a typosquatted random string and
-      replace all string with that
-- insert in the runner the chosen offset
+- GenerateRandomAntiDebug
+- ObfuscateStrings
+- ObfuscateFuncVars
 */
-func ObfuscateLauncher(infile string, offset string) error {
+func ObfuscateLauncher(infile string) error {
 
 	byteContent, err := ioutil.ReadFile(infile)
 	if err != nil {
@@ -249,20 +262,12 @@ func ObfuscateLauncher(infile string, offset string) error {
 	// ------------------------------------------------------------------------
 	//	--- Start string obfuscation
 	// ------------------------------------------------------------------------
-	content = GenerateStringObfuscation(content)
+	content = ObfuscateStrings(content)
 
 	// ------------------------------------------------------------------------
 	//	--- Start function name obfuscation
 	// ------------------------------------------------------------------------
-	// obfuscate functions and variables names
-	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
-	words := regex.FindAllString(content, -1)
-	words = ReverseStringArray(words)
-	words = Unique(words)
-	for _, w := range words {
-		// generate random name for each matching string
-		content = strings.ReplaceAll(content, w, GenerateTyposquatName())
-	}
+	content = ObfuscateFuncVars(content)
 	// ------------------------------------------------------------------------
 
 	// save.
