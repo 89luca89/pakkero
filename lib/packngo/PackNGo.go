@@ -138,7 +138,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 			ExecCommand("rm", []string{"-f", outfile})
 			cleanup()
-		os.Exit(1)
+			os.Exit(1)
 		}
 	} else {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")

@@ -22,9 +22,9 @@ in the system
 func testDependencies() error {
 	for _, v := range dependencies {
 		if !packngo.ExecCommand("which", []string{v}) {
-            println("Missing Dependency: " + v)
-            os.Exit(1)
-        }
+			println("Missing Dependency: " + v)
+			os.Exit(1)
+		}
 	}
 	return nil
 }
