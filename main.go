@@ -21,7 +21,10 @@ in the system
 */
 func testDependencies() error {
 	for _, v := range dependencies {
-		packngo.ExecCommand("which", []string{v})
+		if !packngo.ExecCommand("which", []string{v}) {
+            println("Missing Dependency: " + v)
+            os.Exit(1)
+        }
 	}
 	return nil
 }

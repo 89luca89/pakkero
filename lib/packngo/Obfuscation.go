@@ -26,7 +26,7 @@ StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
 simple attempts like "upx -d"
 */
-func StripUPXHeaders(infile string) {
+func StripUPXHeaders(infile string) bool{
 	// Bit sequence of UPX copyright and header infos
 	header := []string{
 		`\x49\x6e\x66\x6f\x3a\x20\x54\x68\x69\x73`,
@@ -45,6 +45,7 @@ func StripUPXHeaders(infile string) {
 		`\x41\x6c\x6c\x20\x52\x69\x67\x68\x74\x73`,
 		`\x20\x52\x65\x73\x65\x72\x76\x65\x64\x2e`,
 		`\x55\x50\x58\x21`}
+        result := true
 	for _, v := range header {
 		sedString := ""
 		// generate random byte sequence
@@ -54,18 +55,22 @@ func StripUPXHeaders(infile string) {
 			sedString += `\x` + hex.EncodeToString(replace)
 		}
 		// replace UPX sequence with random garbage
-		ExecCommand("sed", []string{"-i", `s/` + v + `/` + sedString + `/g`, infile})
+		result = ExecCommand("sed", []string{"-i", `s/` + v + `/` + sedString + `/g`, infile})
+	    if !result {
+            return result
+        }
 	}
+	return result
 }
 
 /*
 StripFile will strip out all unneeded headers from and ELF
 file in input
 */
-func StripFile(infile string) {
+func StripFile(infile string) bool{
 
 	// strip symbols and headers
-	ExecCommand("strip",
+	return ExecCommand("strip",
 		[]string{"-sxXwSgd",
 			"--remove-section=.bss",
 			"--remove-section=.comment",

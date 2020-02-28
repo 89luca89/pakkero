@@ -29,7 +29,6 @@ all:
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
 		dist/packngo;
-	upx -q -9 dist/packngo > /dev/null
 clean:
 	rm -rf dist/;
 	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
@@ -62,4 +61,3 @@ clean:
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
 		dist/packngo
-	upx -q -9 dist/packngo > /dev/null

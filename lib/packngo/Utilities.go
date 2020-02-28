@@ -97,12 +97,14 @@ ExecCommand is a wrapper arount exec.Command to execute a command
 and ensure it's result is not err.
 Else panic.
 */
-func ExecCommand(name string, args []string) {
+func ExecCommand(name string, args []string) bool{
 	cmd := exec.Command(name, args...)
 	err := cmd.Run()
 	if err != nil {
-		panic(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
+		fmt.Println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
+		return false
 	}
+	return true
 }
 
 /*

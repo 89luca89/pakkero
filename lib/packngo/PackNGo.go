@@ -63,6 +63,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
 		cleanup()
+		os.Exit(1)
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
@@ -71,6 +72,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
 		cleanup()
+		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
@@ -102,35 +104,59 @@ func PackNGo(infile string, offset int64, outfile string) {
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
 	flags = append(flags, launcherFile)
-	ExecCommand("go", flags)
-	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-	// ------------------------------------------------------------------------
-
-	fmt.Print(" → Stripping Launcher...")
+	if ExecCommand("go", flags) {
+		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	} else {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		ExecCommand("rm", []string{"-f", outfile})
+		cleanup()
+		os.Exit(1)
+	}
 
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
 	// ------------------------------------------------------------------------
-	StripFile(outfile)
-	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-	// ------------------------------------------------------------------------
-
-	fmt.Print(" → Compressing Launcher...")
+	fmt.Print(" → Stripping Launcher...")
+	if StripFile(outfile) {
+		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	} else {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		ExecCommand("rm", []string{"-f", outfile})
+		cleanup()
+		os.Exit(1)
+	}
 
 	// ------------------------------------------------------------------------
 	// Compress File of occupy less space
 	// Then remove UPX headers from file.
 	// ------------------------------------------------------------------------
-	ExecCommand("upx", []string{"-9", outfile})
-	StripUPXHeaders(outfile)
-	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-	// ------------------------------------------------------------------------
+	fmt.Print(" → Compressing Launcher...")
+	if ExecCommand("upx", []string{"-9", outfile}) {
+		if StripUPXHeaders(outfile) {
+			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+		} else {
+			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+			ExecCommand("rm", []string{"-f", outfile})
+			cleanup()
+		os.Exit(1)
+		}
+	} else {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		ExecCommand("rm", []string{"-f", outfile})
+		cleanup()
+		os.Exit(1)
+	}
 
 	fmt.Print(" → Cleaning up...")
-
 	// remove unused file
-	ExecCommand("rm", []string{"-f", launcherFile})
-	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
+	if ExecCommand("rm", []string{"-f", launcherFile}) {
+		fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
+	} else {
+		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
+		ExecCommand("rm", []string{"-f", outfile})
+		cleanup()
+		os.Exit(1)
+	}
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
