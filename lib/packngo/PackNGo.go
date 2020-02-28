@@ -12,11 +12,16 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 )
 
 const offsetPlaceholder = "9999999"
+const depNamePlaceholder = "DEPNAME1"
+const depSizePlaceholder = "DEPSIZE2"
+const depElfPlaceholder = "DEPELF3"
 const launcherFile = "/tmp/launcher.go"
 
 func cleanup() {
@@ -29,7 +34,7 @@ func cleanup() {
 }
 
 // PackNGo will Encrypt and pack the payload for a secure execution
-func PackNGo(infile string, offset int64, outfile string) {
+func PackNGo(infile string, offset int64, outfile string, dependency string) {
 
 	// Prepare to intercept SIGTERM
 	c := make(chan os.Signal)
@@ -54,6 +59,38 @@ func PackNGo(infile string, offset int64, outfile string) {
 
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 
+	fmt.Print(" → Registering Dependencies...")
+
+	// add offset to the secrets!
+	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
+		offsetPlaceholder + "`"}
+
+	// If a dependency check is present, register it.
+	if dependency != "" {
+		dependencyFile, _ := os.Open(dependency)
+		dependencyStats, _ := dependencyFile.Stat()
+		depenencyLinkStats, _ := os.Lstat(dependency)
+		if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
+			cleanup()
+			fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
+			os.Exit(1)
+		}
+
+		ELF := make([]byte, 4)
+		dependencyFile.Read(ELF)
+		// add Dependency data to the secrets
+		Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
+			depNamePlaceholder + "`"}
+		Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d",
+			dependencyStats.Size()), "`" +
+			depSizePlaceholder + "`"}
+		Secrets[GenerateTyposquatName()] = []string{
+			strconv.FormatBool(strings.Contains(string(ELF), `ELF`)),
+			"`" + depElfPlaceholder + "`"}
+	}
+
+	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+
 	fmt.Print(" → Creating Launcher Stub...")
 
 	// copy the stub from where to start.
@@ -67,7 +104,7 @@ func PackNGo(infile string, offset int64, outfile string) {
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	err = ObfuscateLauncher(launcherFile, fmt.Sprintf("%d", offset))
+	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
@@ -154,7 +191,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	} else {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
 		ExecCommand("rm", []string{"-f", outfile})
-		cleanup()
 		os.Exit(1)
 	}
 

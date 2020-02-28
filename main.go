@@ -45,6 +45,7 @@ func help() {
 	println("  -file <file>			Target file to Pack")
 	println("  -o   <file>			Place the output into <file> (default is <inputfile>.enc)")
 	println("  -offset			Offset where to start the payload (Bytes)")
+	println("  -register-dep			/path/to/dependency to analyze and use as fingerprint (absolute)")
 	println("				Offset minimal recommended value is 1800000")
 	println("  -v				Check " + programName + " version")
 }
@@ -59,6 +60,7 @@ func main() {
 			help()
 		}
 		file := flag.String("file", "", "")
+		dependency := flag.String("register-dep", "", "")
 		output := flag.String("o", "", "")
 		offset := flag.Int64("offset", 0, "")
 		flag.Bool("v", false, "")
@@ -69,7 +71,7 @@ func main() {
 			printVersion()
 		default:
 			if *file != "" && *offset >= 0 {
-				packngo.PackNGo(*file, *offset, *output)
+				packngo.PackNGo(*file, *offset, *output, *dependency)
 			} else {
 				println("Missing arguments or invalid arguments!")
 				help()

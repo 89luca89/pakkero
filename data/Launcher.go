@@ -38,6 +38,12 @@ import (
 	obUnsafe "unsafe"
 )
 
+type obDependency struct {
+	obDepSize string
+	obDepName string
+	obDepELF  string
+}
+
 /*
 attach to PTRACE, register if successful
 attach A G A I N , register if unsuccessful
@@ -63,6 +69,52 @@ func obPtraceDetect() {
 	if obOffset != 15 {
 		obOS.Exit(127)
 	}
+}
+
+func obDependencyCheck() bool {
+	obStrControl1 := `_DEP`
+	obStrControl2 := `_NAME`
+	obStrControl3 := `_SIZE`
+	obDep := obDependency{
+		obDepName: `DEPNAME1`,
+		obDepSize: `DEPSIZE2`,
+		obDepELF:  `DEPELF3`}
+	// control that we effectively want to control the dependencies
+	if (obDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
+		(obDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+
+		// check if the file is a symbolic link
+		obLTargetStats, _ := obOS.Lstat(obDep.obDepName)
+		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
+			return true
+		}
+		// open dependency in current environment and check it's size
+		obFile, err := obOS.Open(obDep.obDepName)
+		if err != nil {
+			return true
+		}
+
+		obExpected, _ := obStrconv.ParseBool(obDep.obDepELF)
+		// check if the header is valid and we expect it to be
+        // equivalent to the one we registered
+		obELF := make([]byte, 4)
+		obFile.Read(obELF)
+		if obExpected != obStrings.Contains(string(obELF), `ELF`) {
+			return true
+		}
+
+		obStatsFile, _ := obFile.Stat()
+		obTargetDepSize, _ := obStrconv.ParseInt(obDep.obDepSize, 10, 64)
+		obTargetTreshold := (obTargetDepSize / 100) * 15
+		// first check if file size is +/- 15% of registered size
+		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
+			(obStatsFile.Size()-obTargetDepSize) > obTargetTreshold {
+			return true
+		}
+
+        // TODO: Check if entropy is roughly the same??
+	}
+	return false
 }
 
 func obPtraceNearHeap() bool {
@@ -342,7 +394,7 @@ func obProceede() {
 
 func main() {
 	go obPtraceDetect()
-	if obPtraceNearHeap() || obEnvArgsDetect() ||
+	if obDependencyCheck() || obPtraceNearHeap() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {

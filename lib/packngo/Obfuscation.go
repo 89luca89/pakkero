@@ -196,6 +196,7 @@ of instructions in random order
 func GenerateRandomAntiDebug(input string) string {
 	lines := strings.Split(string(input), "\n")
 	randomChecks := []string{
+	    `obDependencyCheck()`,
 		`obEnvArgsDetect()`,
 		`obPtraceNearHeap()`,
 		`obParentTracerDetect()`,
@@ -251,11 +252,7 @@ Basic techniques are applied:
 - ObfuscateStrings
 - ObfuscateFuncVars
 */
-func ObfuscateLauncher(infile string, offset string) error {
-
-	// add offset to the secrets!
-	Secrets[GenerateTyposquatName()] = []string{offset, "`" +
-		offsetPlaceholder + "`"}
+func ObfuscateLauncher(infile string) error {
 
 	byteContent, err := ioutil.ReadFile(infile)
 	if err != nil {
