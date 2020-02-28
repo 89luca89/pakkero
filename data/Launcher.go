@@ -248,7 +248,7 @@ func obProceede() {
 	obCiphertext = obReverseByteArray(obCiphertext)
 
 	// OB_CHECK
-	// de caeserize
+	// restore endianess
 	for obIndex := range obCiphertext {
 		obCiphertext[obIndex] = obByteReverse(obCiphertext[obIndex])
 	}
