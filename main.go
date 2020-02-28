@@ -11,7 +11,7 @@ import (
 )
 
 const programName = "packngo"
-const version = "0.2.0"
+const version = "0.3.0"
 
 var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 
