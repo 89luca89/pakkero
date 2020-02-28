@@ -246,7 +246,11 @@ Basic techniques are applied:
 - ObfuscateStrings
 - ObfuscateFuncVars
 */
-func ObfuscateLauncher(infile string) error {
+func ObfuscateLauncher(infile string, offset string) error {
+
+	// add offset to the secrets!
+	Secrets[GenerateTyposquatName()] = []string{offset, "`" +
+		offsetPlaceholder + "`"}
 
 	byteContent, err := ioutil.ReadFile(infile)
 	if err != nil {

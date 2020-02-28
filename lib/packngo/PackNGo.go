@@ -31,7 +31,7 @@ func cleanup() {
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string) {
 
-    // Prepare to intercept SIGTERM
+	// Prepare to intercept SIGTERM
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -52,10 +52,6 @@ func PackNGo(infile string, offset int64, outfile string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (rand.Int63n(4096-128) + 128)
 
-	// add offset to the secrets!
-	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
-		offsetPlaceholder + "`"}
-
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 
 	fmt.Print(" → Creating Launcher Stub...")
@@ -66,15 +62,15 @@ func PackNGo(infile string, offset int64, outfile string) {
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
-        cleanup()
+		cleanup()
 	}
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	err = ObfuscateLauncher(launcherFile)
+	err = ObfuscateLauncher(launcherFile, fmt.Sprintf("%d", offset))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
-        cleanup()
+		cleanup()
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
