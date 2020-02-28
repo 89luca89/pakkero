@@ -96,7 +96,7 @@ func obDependencyCheck() bool {
 
 		obExpected, _ := obStrconv.ParseBool(obDep.obDepELF)
 		// check if the header is valid and we expect it to be
-        // equivalent to the one we registered
+		// equivalent to the one we registered
 		obELF := make([]byte, 4)
 		obFile.Read(obELF)
 		if obExpected != obStrings.Contains(string(obELF), `ELF`) {
@@ -112,7 +112,7 @@ func obDependencyCheck() bool {
 			return true
 		}
 
-        // TODO: Check if entropy is roughly the same??
+		// TODO: Check if entropy is roughly the same??
 	}
 	return false
 }

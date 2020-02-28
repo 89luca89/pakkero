@@ -65,6 +65,9 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
 		offsetPlaceholder + "`"}
 
+	// ------------------------------------------------------------------------
+	// Register eventual dependency passed by cli
+	// ------------------------------------------------------------------------
 	// If a dependency check is present, register it.
 	if dependency != "" {
 		dependencyFile, _ := os.Open(dependency)
@@ -75,21 +78,24 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 			fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
 			os.Exit(1)
 		}
-
+		// register if it was an ELF or not
 		ELF := make([]byte, 4)
 		dependencyFile.Read(ELF)
 		// add Dependency data to the secrets
+		// register name
 		Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
 			depNamePlaceholder + "`"}
+		// register size
 		Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d",
 			dependencyStats.Size()), "`" +
 			depSizePlaceholder + "`"}
+		// register if it was an ELF or not
 		Secrets[GenerateTyposquatName()] = []string{
 			strconv.FormatBool(strings.Contains(string(ELF), `ELF`)),
 			"`" + depElfPlaceholder + "`"}
 	}
-
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// ------------------------------------------------------------------------
 
 	fmt.Print(" → Creating Launcher Stub...")
 
@@ -102,8 +108,10 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 		cleanup()
 		os.Exit(1)
 	}
+
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
+	// ------------------------------------------------------------------------
 	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")

@@ -196,7 +196,7 @@ of instructions in random order
 func GenerateRandomAntiDebug(input string) string {
 	lines := strings.Split(string(input), "\n")
 	randomChecks := []string{
-	    `obDependencyCheck()`,
+		`obDependencyCheck()`,
 		`obEnvArgsDetect()`,
 		`obPtraceNearHeap()`,
 		`obParentTracerDetect()`,
