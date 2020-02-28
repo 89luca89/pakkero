@@ -38,10 +38,12 @@ import (
 	obUnsafe "unsafe"
 )
 
-// attach to PTRACE, register if successful
-// attach A G A I N , register if unsuccessful
-// this protects against custom ptrace (always returning 0)
-// against NOP attacks and LD_PRELOAD attacks
+/*
+attach to PTRACE, register if successful
+attach A G A I N , register if unsuccessful
+this protects against custom ptrace (always returning 0)
+against NOP attacks and LD_PRELOAD attacks
+*/
 func obPtraceDetect() {
 	var obOffset = 0
 	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
@@ -254,12 +256,11 @@ func obProceede() {
 	}
 
 	// OB_CHECK
-	//
-	//		    the aes-256 psk is the md5sum of the whole executable
-	//		 	        this is also useful to protect against NOP attacks to the anti-debug
-	//		 	        features in the binary.
-	//		 	        This doubles also as anti-tamper measure.
-	//
+	/*		    the aes-256 psk is the md5sum of the whole executable
+	 	        this is also useful to protect against NOP attacks to the anti-debug
+	 	        features in the binary.
+	 	        This doubles also as anti-tamper measure.
+	*/
 	obPassword := obMD5.Sum([]byte(obKey))
 	// OB_CHECK
 	obCipherBlock, _ := obAES.NewCipher(obPassword[:])
