@@ -28,7 +28,6 @@ import (
 	obMD5 "crypto/md5"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
-	"fmt"
 	obIO "io"
 	obUtilio "io/ioutil"
 	obMath "math"
