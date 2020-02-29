@@ -242,6 +242,7 @@ func obDependencyCheck() bool {
 		if obErr != nil {
 			return true
 		}
+		defer obFile.Close()
 
 		obExpected, _ := obStrconv.ParseBool(obInstanceDep.obDepELF)
 		// check if the header is valid and we expect it to be

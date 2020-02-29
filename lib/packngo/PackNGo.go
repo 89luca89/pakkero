@@ -36,6 +36,7 @@ func cleanup() {
 
 func registerDependency(dependency string) {
 	dependencyFile, _ := os.Open(dependency)
+	defer dependencyFile.Close()
 	dependencyStats, _ := dependencyFile.Stat()
 	depenencyLinkStats, _ := os.Lstat(dependency)
 	if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
