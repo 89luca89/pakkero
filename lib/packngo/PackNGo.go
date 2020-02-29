@@ -22,6 +22,7 @@ const offsetPlaceholder = "9999999"
 const depNamePlaceholder = "DEPNAME1"
 const depSizePlaceholder = "DEPSIZE2"
 const depElfPlaceholder = "DEPELF3"
+const depBFDPlaceholder = "DEPBFD4"
 const launcherFile = "/tmp/launcher.go"
 
 func cleanup() {
@@ -29,7 +30,7 @@ func cleanup() {
 	fmt.Print(" → Cleaning up...")
 
 	// remove unused file
-	ExecCommand("rm", []string{"-f", launcherFile})
+	// ExecCommand("rm", []string{"-f", launcherFile})
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 }
 
@@ -81,6 +82,23 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 		// register if it was an ELF or not
 		ELF := make([]byte, 4)
 		dependencyFile.Read(ELF)
+
+		// calculate BFD (byte frequency distribution) for the input dependency
+		bytes, _ := ioutil.ReadFile(dependency)
+
+		bfd := make([]int64, 256)
+		for _, b := range bytes {
+			bfd[b] = bfd[b] + 1
+		}
+		// make a string out of it
+		bfdString := "[]int64{"
+		for _, v := range bfd {
+			bfdString += fmt.Sprintf("%d",v) + ","
+		}
+		bfdString += "}"
+
+		Secrets["leaveBFD"] = []string{bfdString, "`" +
+			depBFDPlaceholder + "`"}
 		// add Dependency data to the secrets
 		// register name
 		Secrets[GenerateTyposquatName()] = []string{dependency, "`" +

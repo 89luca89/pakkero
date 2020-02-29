@@ -1,6 +1,6 @@
 all:
 	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
-	sed -i "s/LAUNCHERSTUB/$$(base64 -w0 data/Launcher.go)/g" lib/packngo/Obfuscation.go;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/packngo/Obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \
@@ -32,7 +32,7 @@ all:
 clean:
 	rm -rf dist/;
 	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
-	sed -i "s/LAUNCHERSTUB/$$(base64 -w0 data/Launcher.go)/g" lib/packngo/Obfuscation.go;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/packngo/Obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \

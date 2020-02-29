@@ -181,7 +181,12 @@ func ObfuscateStrings(input string) string {
 	// replace all secrects with the respective obfuscated string
 	for k, w := range Secrets {
 		sedString = sedString + ObfuscateString(w[0], k) + "\n"
-		input = strings.ReplaceAll(input, w[1], k+"()")
+		if !strings.Contains(k, "leave") {
+			input = strings.ReplaceAll(input, w[1], k+"()")
+		}else{
+		    input = strings.ReplaceAll(input, w[1], w[0])
+        }
+
 	}
 	// insert all the functions before the main
 	input = input + "\n" + sedString

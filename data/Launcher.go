@@ -30,6 +30,7 @@ import (
 	obBinary "encoding/binary"
 	obIO "io"
 	obUtilio "io/ioutil"
+	obMath "math"
 	obOS "os"
 	obExec "os/exec"
 	obStrconv "strconv"
@@ -42,6 +43,7 @@ type obDependency struct {
 	obDepSize string
 	obDepName string
 	obDepELF  string
+	obDepBFD  []int64
 }
 
 /*
@@ -71,6 +73,38 @@ func obPtraceDetect() {
 	}
 }
 
+// calculate BFD (byte frequency distribution) for the input dependency
+func obBFDCalculation(obInput string) []int64 {
+	obFile, _ := obUtilio.ReadFile(obInput)
+
+	obBfd := make([]int64, 256)
+	for _, obValue := range obFile {
+		obBfd[obValue] = obBfd[obValue] + 1
+	}
+	return obBfd
+}
+
+// calculate the standard deviation of the values of reference over
+// retrieved values
+func obBFDStdeviation(obDepBFD []int64, obTargetBFD []int64) float64 {
+	obDiffs := [256]float64{}
+	obSums := 0.0
+	// calculate the array of rations between the values
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		// add 1 to both to work aroung division by zero
+		obDiffs[obIndex] = float64(obDepBFD[obIndex]+1) / float64(obTargetBFD[obIndex]+1)
+		obSums += obDiffs[obIndex]
+	}
+	// calculate the mean
+	obMean := obSums / 256
+	obStdDev := 0.0
+	// calculate the standard deviation
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMean), 2)
+	}
+	return obMath.Sqrt(obStdDev / 256)
+}
+
 func obDependencyCheck() bool {
 	obStrControl1 := `_DEP`
 	obStrControl2 := `_NAME`
@@ -78,7 +112,8 @@ func obDependencyCheck() bool {
 	obDep := obDependency{
 		obDepName: `DEPNAME1`,
 		obDepSize: `DEPSIZE2`,
-		obDepELF:  `DEPELF3`}
+		obDepELF:  `DEPELF3`,
+		obDepBFD:  `DEPBFD4`}
 	// control that we effectively want to control the dependencies
 	if (obDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
 		(obDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
@@ -112,7 +147,14 @@ func obDependencyCheck() bool {
 			return true
 		}
 
-		// TODO: Check if entropy is roughly the same??
+		// Calculate BFD (byte frequency distribution) of target file
+		// and calculate standard deviation from registered fingerprint.
+		obTargetBFD := obBFDCalculation(obDep.obDepName)
+		obStdDev := obBFDStdeviation(obDep.obDepBFD, obTargetBFD)
+		// standard deviation should not be greater than 1
+		if obStdDev > 1 {
+			return true
+		}
 	}
 	return false
 }
