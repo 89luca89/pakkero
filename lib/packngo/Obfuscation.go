@@ -183,9 +183,9 @@ func ObfuscateStrings(input string) string {
 		sedString = sedString + ObfuscateString(w[0], k) + "\n"
 		if !strings.Contains(k, "leave") {
 			input = strings.ReplaceAll(input, w[1], k+"()")
-		}else{
-		    input = strings.ReplaceAll(input, w[1], w[0])
-        }
+		} else {
+			input = strings.ReplaceAll(input, w[1], w[0])
+		}
 
 	}
 	// insert all the functions before the main

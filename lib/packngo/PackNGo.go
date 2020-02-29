@@ -30,8 +30,52 @@ func cleanup() {
 	fmt.Print(" → Cleaning up...")
 
 	// remove unused file
-	// ExecCommand("rm", []string{"-f", launcherFile})
+	ExecCommand("rm", []string{"-f", launcherFile})
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
+}
+
+func registerDependency(dependency string) {
+	dependencyFile, _ := os.Open(dependency)
+	dependencyStats, _ := dependencyFile.Stat()
+	depenencyLinkStats, _ := os.Lstat(dependency)
+	if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
+		cleanup()
+		fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
+		os.Exit(1)
+	}
+	// register if it was an ELF or not
+	ELF := make([]byte, 4)
+	dependencyFile.Read(ELF)
+
+	// calculate BFD (byte frequency distribution) for the input dependency
+	bytes, _ := ioutil.ReadFile(dependency)
+
+	bfd := make([]int64, 256)
+	for _, b := range bytes {
+		bfd[b] = bfd[b] + 1
+	}
+	// make a string out of it
+	bfdString := "[]int64{"
+	for _, v := range bfd {
+		bfdString += fmt.Sprintf("%d", v) + ","
+	}
+	bfdString += "}"
+
+	// add Dependency data to the secrets
+	// register BFD
+	Secrets["leaveBFD"] = []string{bfdString, "`" +
+		depBFDPlaceholder + "`"}
+	// register name
+	Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
+		depNamePlaceholder + "`"}
+	// register size
+	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d",
+		dependencyStats.Size()), "`" +
+		depSizePlaceholder + "`"}
+	// register if it was an ELF or not
+	Secrets[GenerateTyposquatName()] = []string{
+		strconv.FormatBool(strings.Contains(string(ELF), `ELF`)),
+		"`" + depElfPlaceholder + "`"}
 }
 
 // PackNGo will Encrypt and pack the payload for a secure execution
@@ -71,46 +115,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// ------------------------------------------------------------------------
 	// If a dependency check is present, register it.
 	if dependency != "" {
-		dependencyFile, _ := os.Open(dependency)
-		dependencyStats, _ := dependencyFile.Stat()
-		depenencyLinkStats, _ := os.Lstat(dependency)
-		if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
-			cleanup()
-			fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
-			os.Exit(1)
-		}
-		// register if it was an ELF or not
-		ELF := make([]byte, 4)
-		dependencyFile.Read(ELF)
-
-		// calculate BFD (byte frequency distribution) for the input dependency
-		bytes, _ := ioutil.ReadFile(dependency)
-
-		bfd := make([]int64, 256)
-		for _, b := range bytes {
-			bfd[b] = bfd[b] + 1
-		}
-		// make a string out of it
-		bfdString := "[]int64{"
-		for _, v := range bfd {
-			bfdString += fmt.Sprintf("%d",v) + ","
-		}
-		bfdString += "}"
-
-		Secrets["leaveBFD"] = []string{bfdString, "`" +
-			depBFDPlaceholder + "`"}
-		// add Dependency data to the secrets
-		// register name
-		Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
-			depNamePlaceholder + "`"}
-		// register size
-		Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d",
-			dependencyStats.Size()), "`" +
-			depSizePlaceholder + "`"}
-		// register if it was an ELF or not
-		Secrets[GenerateTyposquatName()] = []string{
-			strconv.FormatBool(strings.Contains(string(ELF), `ELF`)),
-			"`" + depElfPlaceholder + "`"}
+		registerDependency(dependency)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
