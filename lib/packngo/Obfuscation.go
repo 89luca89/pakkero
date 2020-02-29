@@ -205,7 +205,6 @@ func GenerateRandomAntiDebug(input string) string {
 	randomChecks := []string{
 		`obDependencyCheck()`,
 		`obEnvArgsDetect()`,
-		`obPtraceNearHeap()`,
 		`obParentTracerDetect()`,
 		`obParentCmdLineDetect()`,
 		`obEnvDetect()`,

@@ -1,25 +1,6 @@
 //go:binary-only-package
 package main
 
-/*
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/ptrace.h>
-
-// GDB relocates the heap to the end of the bss section
-int near_heap() {
-	static unsigned char bss;
-	unsigned char *testmem = malloc(0x10);
-
-	if (testmem - &bss > 0x20000) {
-		return 0;
-	} else {
-		return -1;
-	}
-
-}
-*/
-import "C"
 import (
 	obBytes "bytes"
 	obZlib "compress/zlib"
@@ -82,10 +63,6 @@ func obPtraceDetect() {
 	if obOffset != 15 {
 		obOS.Exit(127)
 	}
-}
-
-func obPtraceNearHeap() bool {
-	return C.near_heap() < 0
 }
 
 func obParentCmdLineDetect() bool {
@@ -466,7 +443,7 @@ func main() {
 	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGILL)
 	go obSigTrap(obChannel)
 	go obPtraceDetect()
-	if obDependencyCheck() || obPtraceNearHeap() || obEnvArgsDetect() ||
+	if obDependencyCheck() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
