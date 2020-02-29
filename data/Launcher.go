@@ -28,6 +28,7 @@ import (
 	obMD5 "crypto/md5"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
+	"fmt"
 	obIO "io"
 	obUtilio "io/ioutil"
 	obMath "math"
@@ -84,17 +85,30 @@ func obBFDCalculation(obInput string) []int64 {
 	return obBfd
 }
 
+// Abs returns the absolute value of obInput.
+func obAbs(obInput int64) int64 {
+	if obInput < 0 {
+		return -obInput
+	}
+	return obInput
+}
+
 // calculate the standard deviation of the values of reference over
 // retrieved values
 func obBFDStdeviation(obDepBFD []int64, obTargetBFD []int64) float64 {
 	obDiffs := [256]float64{}
 	obSums := 0.0
+	obDepSums := 0.0
 	// calculate the array of rations between the values
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		// add 1 to both to work aroung division by zero
-		obDiffs[obIndex] = float64(obDepBFD[obIndex]+1) / float64(obTargetBFD[obIndex]+1)
+		obDiffs[obIndex] = float64(obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex]))
 		obSums += obDiffs[obIndex]
+		// increase obDep to calculate mean value of registered distribution
+		obDepSums += float64(obDepBFD[obIndex])
 	}
+	// calculate the mean
+	obDepSums = obDepSums / 256
 	// calculate the mean
 	obMean := obSums / 256
 	obStdDev := 0.0
@@ -102,7 +116,8 @@ func obBFDStdeviation(obDepBFD []int64, obTargetBFD []int64) float64 {
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMean), 2)
 	}
-	return obMath.Sqrt(obStdDev / 256)
+	obStdDev = (obMath.Sqrt(obStdDev / 256)) / obDepSums
+	return obStdDev
 }
 
 func obDependencyCheck() bool {
