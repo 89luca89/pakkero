@@ -103,7 +103,7 @@ func obBFDStdeviation(obDepBFD []int64, obTargetBFD []int64) float64 {
 		// add 1 to both to work aroung division by zero
 		obDiffs[obIndex] = float64(obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex]))
 		obSums += obDiffs[obIndex]
-		// increase obDep to calculate mean value of registered distribution
+		// increase obInstanceDep to calculate mean value of registered distribution
 		obDepSums += float64(obDepBFD[obIndex])
 	}
 	// calculate the mean
@@ -123,27 +123,27 @@ func obDependencyCheck() bool {
 	obStrControl1 := `_DEP`
 	obStrControl2 := `_NAME`
 	obStrControl3 := `_SIZE`
-	obDep := obDependency{
+	obInstanceDep := obDependency{
 		obDepName: `DEPNAME1`,
 		obDepSize: `DEPSIZE2`,
 		obDepELF:  `DEPELF3`,
 		obDepBFD:  `DEPBFD4`}
 	// control that we effectively want to control the dependencies
-	if (obDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
-		(obDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
+		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
 
 		// check if the file is a symbolic link
-		obLTargetStats, _ := obOS.Lstat(obDep.obDepName)
+		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
 		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
 			return true
 		}
 		// open dependency in current environment and check it's size
-		obFile, err := obOS.Open(obDep.obDepName)
-		if err != nil {
+		obFile, obErr := obOS.Open(obInstanceDep.obDepName)
+		if obErr != nil {
 			return true
 		}
 
-		obExpected, _ := obStrconv.ParseBool(obDep.obDepELF)
+		obExpected, _ := obStrconv.ParseBool(obInstanceDep.obDepELF)
 		// check if the header is valid and we expect it to be
 		// equivalent to the one we registered
 		obELF := make([]byte, 4)
@@ -153,7 +153,7 @@ func obDependencyCheck() bool {
 		}
 
 		obStatsFile, _ := obFile.Stat()
-		obTargetDepSize, _ := obStrconv.ParseInt(obDep.obDepSize, 10, 64)
+		obTargetDepSize, _ := obStrconv.ParseInt(obInstanceDep.obDepSize, 10, 64)
 		obTargetTreshold := (obTargetDepSize / 100) * 15
 		// first check if file size is +/- 15% of registered size
 		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
@@ -163,8 +163,8 @@ func obDependencyCheck() bool {
 
 		// Calculate BFD (byte frequency distribution) of target file
 		// and calculate standard deviation from registered fingerprint.
-		obTargetBFD := obBFDCalculation(obDep.obDepName)
-		obStdDev := obBFDStdeviation(obDep.obDepBFD, obTargetBFD)
+		obTargetBFD := obBFDCalculation(obInstanceDep.obDepName)
+		obStdDev := obBFDStdeviation(obInstanceDep.obDepBFD, obTargetBFD)
 		// standard deviation should not be greater than 1
 		if obStdDev > 1 {
 			return true
@@ -388,9 +388,9 @@ func obProceede() {
 	// the payload was compressed!
 	obBufferPlaintext := obBytes.NewReader(obCompressedPlaintext)
 	// OB_CHECK
-	obZlibReader, err := obZlib.NewReader(obBufferPlaintext)
-	if err != nil {
-		println(err)
+	obZlibReader, obErr := obZlib.NewReader(obBufferPlaintext)
+	if obErr != nil {
+		println(obErr)
 	}
 	// OB_CHECK
 	obPlaintext, _ := obUtilio.ReadAll(obZlibReader)
@@ -430,19 +430,19 @@ func obProceede() {
 	// OB_CHECK
 	var obStdoutBuf, obStderrBuf obBytes.Buffer
 	// OB_CHECK
-	stdout := obIO.MultiWriter(obOS.Stdout, &obStdoutBuf)
-	stderr := obIO.MultiWriter(obOS.Stderr, &obStderrBuf)
+	obWriterStdout := obIO.MultiWriter(obOS.Stdout, &obStdoutBuf)
+	obWriterStderr := obIO.MultiWriter(obOS.Stderr, &obStderrBuf)
 	// OB_CHECK
 	obCommand.Start()
 	// async fetch stdout
 	go func() {
 		// OB_CHECK
-		obIO.Copy(stdout, obStdoutIn)
+		obIO.Copy(obWriterStdout, obStdoutIn)
 	}()
 	// async fetch stderr
 	go func() {
 		// OB_CHECK
-		obIO.Copy(stderr, obStderrIn)
+		obIO.Copy(obWriterStderr, obStderrIn)
 	}()
 	// OB_CHECK
 	obCommand.Wait()
