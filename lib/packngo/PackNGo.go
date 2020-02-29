@@ -189,15 +189,15 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
 	// ------------------------------------------------------------------------
-	fmt.Print(" → Stripping Launcher...")
-	if StripFile(outfile) {
-		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-	} else {
-		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		ExecCommand("rm", []string{"-f", outfile})
-		cleanup()
-		os.Exit(1)
-	}
+	// fmt.Print(" → Stripping Launcher...")
+	// if StripFile(outfile) {
+	// 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// } else {
+	// 	fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+	// 	ExecCommand("rm", []string{"-f", outfile})
+	// 	cleanup()
+	// 	os.Exit(1)
+	// }
 
 	// ------------------------------------------------------------------------
 	// Compress File of occupy less space
