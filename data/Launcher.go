@@ -33,6 +33,7 @@ import (
 	obMath "math"
 	obOS "os"
 	obExec "os/exec"
+	obSignal "os/signal"
 	obStrconv "strconv"
 	obStrings "strings"
 	obSyscall "syscall"
@@ -44,6 +45,16 @@ type obDependency struct {
 	obDepName string
 	obDepELF  string
 	obDepBFD  []int64
+}
+
+/*
+Breakpoint on linux are 0xCC and will be interpreted as a
+SIGTRAP, we will intercept them.
+*/
+func obSigTrap(obInput chan obOS.Signal) {
+	<-obInput
+	println(`https://shorturl.at/crzEZ`)
+	obOS.Exit(127)
 }
 
 /*
@@ -71,106 +82,6 @@ func obPtraceDetect() {
 	if obOffset != 15 {
 		obOS.Exit(127)
 	}
-}
-
-// calculate BFD (byte frequency distribution) for the input dependency
-func obBFDCalculation(obInput string) []int64 {
-	obFile, _ := obUtilio.ReadFile(obInput)
-
-	obBfd := make([]int64, 256)
-	for _, obValue := range obFile {
-		obBfd[obValue] = obBfd[obValue] + 1
-	}
-	return obBfd
-}
-
-// Abs returns the absolute value of obInput.
-func obAbs(obInput int64) int64 {
-	if obInput < 0 {
-		return -obInput
-	}
-	return obInput
-}
-
-// calculate the standard deviation of the values of reference over
-// retrieved values
-func obBFDStdeviation(obDepBFD []int64, obTargetBFD []int64) float64 {
-	obDiffs := [256]float64{}
-	obSums := 0.0
-	obDepSums := 0.0
-	// calculate the array of rations between the values
-	for obIndex := 0; obIndex < 256; obIndex++ {
-		// add 1 to both to work aroung division by zero
-		obDiffs[obIndex] = float64(obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex]))
-		obSums += obDiffs[obIndex]
-		// increase obInstanceDep to calculate mean value of registered distribution
-		obDepSums += float64(obDepBFD[obIndex])
-	}
-	// calculate the mean
-	obDepSums = obDepSums / 256
-	// calculate the mean
-	obMean := obSums / 256
-	obStdDev := 0.0
-	// calculate the standard deviation
-	for obIndex := 0; obIndex < 256; obIndex++ {
-		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMean), 2)
-	}
-	obStdDev = (obMath.Sqrt(obStdDev / 256)) / obDepSums
-	return obStdDev
-}
-
-func obDependencyCheck() bool {
-	obStrControl1 := `_DEP`
-	obStrControl2 := `_NAME`
-	obStrControl3 := `_SIZE`
-	obInstanceDep := obDependency{
-		obDepName: `DEPNAME1`,
-		obDepSize: `DEPSIZE2`,
-		obDepELF:  `DEPELF3`,
-		obDepBFD:  `DEPBFD4`}
-	// control that we effectively want to control the dependencies
-	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
-		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
-
-		// check if the file is a symbolic link
-		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
-		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
-			return true
-		}
-		// open dependency in current environment and check it's size
-		obFile, obErr := obOS.Open(obInstanceDep.obDepName)
-		if obErr != nil {
-			return true
-		}
-
-		obExpected, _ := obStrconv.ParseBool(obInstanceDep.obDepELF)
-		// check if the header is valid and we expect it to be
-		// equivalent to the one we registered
-		obELF := make([]byte, 4)
-		obFile.Read(obELF)
-		if obExpected != obStrings.Contains(string(obELF), `ELF`) {
-			return true
-		}
-
-		obStatsFile, _ := obFile.Stat()
-		obTargetDepSize, _ := obStrconv.ParseInt(obInstanceDep.obDepSize, 10, 64)
-		obTargetTreshold := (obTargetDepSize / 100) * 15
-		// first check if file size is +/- 15% of registered size
-		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
-			(obStatsFile.Size()-obTargetDepSize) > obTargetTreshold {
-			return true
-		}
-
-		// Calculate BFD (byte frequency distribution) of target file
-		// and calculate standard deviation from registered fingerprint.
-		obTargetBFD := obBFDCalculation(obInstanceDep.obDepName)
-		obStdDev := obBFDStdeviation(obInstanceDep.obDepBFD, obTargetBFD)
-		// standard deviation should not be greater than 1
-		if obStdDev > 1 {
-			return true
-		}
-	}
-	return false
 }
 
 func obPtraceNearHeap() bool {
@@ -281,6 +192,106 @@ func obLdPreloadDetect() bool {
 			return false
 		}
 		return true
+	}
+	return false
+}
+
+// calculate BFD (byte frequency distribution) for the input dependency
+func obUtilBFDCalc(obInput string) []int64 {
+	obFile, _ := obUtilio.ReadFile(obInput)
+
+	obBfd := make([]int64, 256)
+	for _, obValue := range obFile {
+		obBfd[obValue] = obBfd[obValue] + 1
+	}
+	return obBfd
+}
+
+// Abs returns the absolute value of obInput.
+func obAbs(obInput int64) int64 {
+	if obInput < 0 {
+		return -obInput
+	}
+	return obInput
+}
+
+// calculate the standard deviation of the values of reference over
+// retrieved values
+func obUtilBFDStandardDeviationCalc(obDepBFD []int64, obTargetBFD []int64) float64 {
+	obDiffs := [256]float64{}
+	obSums := 0.0
+	obDepSums := 0.0
+	// calculate the array of rations between the values
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		// add 1 to both to work aroung division by zero
+		obDiffs[obIndex] = float64(obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex]))
+		obSums += obDiffs[obIndex]
+		// increase obInstanceDep to calculate mean value of registered distribution
+		obDepSums += float64(obDepBFD[obIndex])
+	}
+	// calculate the mean
+	obDepSums = obDepSums / 256
+	// calculate the mean
+	obMean := obSums / 256
+	obStdDev := 0.0
+	// calculate the standard deviation
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMean), 2)
+	}
+	obStdDev = (obMath.Sqrt(obStdDev / 256)) / obDepSums
+	return obStdDev
+}
+
+func obDependencyCheck() bool {
+	obStrControl1 := `_DEP`
+	obStrControl2 := `_NAME`
+	obStrControl3 := `_SIZE`
+	obInstanceDep := obDependency{
+		obDepName: `DEPNAME1`,
+		obDepSize: `DEPSIZE2`,
+		obDepELF:  `DEPELF3`,
+		obDepBFD:  `DEPBFD4`}
+	// control that we effectively want to control the dependencies
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
+		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+
+		// check if the file is a symbolic link
+		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
+		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
+			return true
+		}
+		// open dependency in current environment and check it's size
+		obFile, obErr := obOS.Open(obInstanceDep.obDepName)
+		if obErr != nil {
+			return true
+		}
+
+		obExpected, _ := obStrconv.ParseBool(obInstanceDep.obDepELF)
+		// check if the header is valid and we expect it to be
+		// equivalent to the one we registered
+		obELF := make([]byte, 4)
+		obFile.Read(obELF)
+		if obExpected != obStrings.Contains(string(obELF), `ELF`) {
+			return true
+		}
+
+		obStatsFile, _ := obFile.Stat()
+		obTargetDepSize, _ := obStrconv.ParseInt(obInstanceDep.obDepSize, 10, 64)
+		obTargetTreshold := (obTargetDepSize / 100) * 15
+		// first check if file size is +/- 15% of registered size
+		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
+			(obStatsFile.Size()-obTargetDepSize) > obTargetTreshold {
+			return true
+		}
+
+		// Calculate BFD (byte frequency distribution) of target file
+		// and calculate standard deviation from registered fingerprint.
+		obTargetBFD := obUtilBFDCalc(obInstanceDep.obDepName)
+		obStdDev := obUtilBFDStandardDeviationCalc(obInstanceDep.obDepBFD, obTargetBFD)
+		// standard deviation should not be greater than 1
+		if obStdDev > 1 {
+			return true
+		}
 	}
 	return false
 }
@@ -449,6 +460,10 @@ func obProceede() {
 }
 
 func main() {
+	// Prepare to intercept SIGTRAP
+	obChannel := make(chan obOS.Signal)
+	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGTRAP)
+	go obSigTrap(obChannel)
 	go obPtraceDetect()
 	if obDependencyCheck() || obPtraceNearHeap() || obEnvArgsDetect() ||
 		obParentTracerDetect() || obParentCmdLineDetect() ||
