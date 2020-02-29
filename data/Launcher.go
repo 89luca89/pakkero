@@ -463,6 +463,7 @@ func main() {
 	// Prepare to intercept SIGTRAP
 	obChannel := make(chan obOS.Signal)
 	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGTRAP)
+	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGILL)
 	go obSigTrap(obChannel)
 	go obPtraceDetect()
 	if obDependencyCheck() || obPtraceNearHeap() || obEnvArgsDetect() ||
