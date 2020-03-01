@@ -30,6 +30,12 @@ type obDependency struct {
 }
 
 /*
+TODO:
+    missing an int3 scanner (golang runtime is full of them...)
+    missing nearheap check (must be done in C)
+*/
+
+/*
 Breakpoint on linux are 0xCC and will be interpreted as a
 SIGTRAP, we will intercept them.
 */
