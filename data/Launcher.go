@@ -363,10 +363,11 @@ func obProceede() {
 	}
 
 	// OB_CHECK
-	/*		    the aes-256 psk is the md5sum of the whole executable
-	this is also useful to protect against NOP attacks to the anti-debug
-	features in the binary.
-	This doubles also as anti-tamper measure.
+	/*
+		the aes-256 psk is the md5sum of the whole executable
+		this is also useful to protect against NOP attacks to the anti-debug
+		features in the binary.
+		This doubles also as anti-tamper measure.
 	*/
 	obPassword := obMD5.Sum([]byte(obKey))
 	// OB_CHECK
