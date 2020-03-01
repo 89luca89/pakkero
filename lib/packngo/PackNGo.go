@@ -205,7 +205,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// Then remove UPX headers from file.
 	// ------------------------------------------------------------------------
 	fmt.Print(" → Compressing Launcher...")
-	if ExecCommand("upx", []string{"-9", outfile}) {
+	if ExecCommand("upx", []string{outfile}) {
 		if StripUPXHeaders(outfile) {
 			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 		} else {
