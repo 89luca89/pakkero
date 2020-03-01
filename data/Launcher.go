@@ -17,6 +17,7 @@ import (
 	obSignal "os/signal"
 	obStrconv "strconv"
 	obStrings "strings"
+	obSync "sync"
 	obSyscall "syscall"
 	obUnsafe "unsafe"
 )
@@ -33,9 +34,17 @@ Breakpoint on linux are 0xCC and will be interpreted as a
 SIGTRAP, we will intercept them.
 */
 func obSigTrap(obInput chan obOS.Signal) {
-	<-obInput
-	println(`https://shorturl.at/crzEZ`)
-	obOS.Exit(127)
+	obMySignal := <-obInput
+	switch obMySignal {
+	case obSyscall.SIGILL:
+		println(`https://shorturl.at/crzEZ`)
+		obOS.Exit(1)
+	case obSyscall.SIGTRAP:
+		println(`https://shorturl.at/crzEZ`)
+		obOS.Exit(1)
+	default:
+		return
+	}
 }
 
 /*
@@ -61,7 +70,7 @@ func obPtraceDetect() {
 		obOffset *= 3
 	}
 	if obOffset != 15 {
-		obOS.Exit(127)
+		obOS.Exit(2)
 	}
 }
 
@@ -416,6 +425,8 @@ func obProceede() {
 	// OB_CHECK
 	obStdoutIn, _ := obCommand.StdoutPipe()
 	obStderrIn, _ := obCommand.StderrPipe()
+	defer obStdoutIn.Close()
+	defer obStderrIn.Close()
 	// OB_CHECK
 	var obStdoutBuf, obStderrBuf obBytes.Buffer
 	// OB_CHECK
@@ -424,24 +435,28 @@ func obProceede() {
 	// OB_CHECK
 	obCommand.Start()
 	// async fetch stdout
+	var obWaitGroup obSync.WaitGroup
+	obWaitGroup.Add(2)
 	go func() {
 		// OB_CHECK
+		defer obWaitGroup.Done()
 		obIO.Copy(obWriterStdout, obStdoutIn)
 	}()
 	// async fetch stderr
 	go func() {
 		// OB_CHECK
+		defer obWaitGroup.Done()
 		obIO.Copy(obWriterStderr, obStderrIn)
 	}()
 	// OB_CHECK
+	obWaitGroup.Wait()
 	obCommand.Wait()
 }
 
 func main() {
 	// Prepare to intercept SIGTRAP
-	obChannel := make(chan obOS.Signal)
-	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGTRAP)
-	obSignal.Notify(obChannel, obOS.Interrupt, obSyscall.SIGILL)
+	obChannel := make(chan obOS.Signal, 1)
+	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)
 	go obSigTrap(obChannel)
 	go obPtraceDetect()
 	if obDependencyCheck() || obEnvArgsDetect() ||
