@@ -81,6 +81,9 @@ func obPtraceDetect() {
 	return
 }
 
+/*
+Check the process cmdline to spot if a debugger is inline
+*/
 func obParentCmdLineDetect() bool {
 	obPidParent := obOS.Getppid()
 
@@ -102,6 +105,10 @@ func obParentCmdLineDetect() bool {
 	}
 	return false
 }
+
+/*
+Check the process status to spot if a debugger is active using the TracePid key
+*/
 func obParentTracerDetect() bool {
 	obPidParent := obOS.Getppid()
 
@@ -122,6 +129,9 @@ func obParentTracerDetect() bool {
 	return false
 }
 
+/*
+Check the process cmdline to spot if a debugger is the PPID of our process
+*/
 func obParentDetect() bool {
 	obPidParent := obOS.Getppid()
 
@@ -144,11 +154,19 @@ func obParentDetect() bool {
 	return false
 }
 
+/*
+Check the process cmdline to spot if a debugger is launcher
+"_" and Args[0] should match otherwise
+*/
 func obEnvArgsDetect() bool {
 	obLines, _ := obOS.LookupEnv(`_`)
 	return obLines != obOS.Args[0]
 }
 
+/*
+Check the process cmdline to spot if a debugger is inline
+"_" should not contain the name of any debugger
+*/
 func obEnvParentDetect() bool {
 	obLines, _ := obOS.LookupEnv(`_`)
 	if obStrings.Contains(string(obLines), `gdb`) ||
@@ -166,6 +184,12 @@ func obEnvParentDetect() bool {
 	}
 	return false
 }
+
+/*
+Check the process cmdline to spot if a debugger is active
+most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
+to function, we try to spot this
+*/
 func obEnvDetect() bool {
 	_, obLines := obOS.LookupEnv(`LINES`)
 	_, obColumns := obOS.LookupEnv(`COLUMNS`)
@@ -176,6 +200,11 @@ func obEnvDetect() bool {
 	return false
 }
 
+/*
+Check the process is launcher with a LD_PRELOAD set.
+This can be an injection attack (like on frida) to try and circumvent
+various restrictions (like ptrace checks)
+*/
 func obLdPreloadDetect() bool {
 	if obEnvDetect() == false {
 		obOS.Setenv(`LD_PRELOAD`, `obstring`)
