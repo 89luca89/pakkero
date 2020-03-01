@@ -2,6 +2,7 @@
 package main
 
 import (
+	obBufio "bufio"
 	obBytes "bytes"
 	obZlib "compress/zlib"
 	obAES "crypto/aes"
@@ -9,7 +10,6 @@ import (
 	obMD5 "crypto/md5"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
-	obIO "io"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
@@ -72,6 +72,7 @@ func obPtraceDetect() {
 	if obOffset != 15 {
 		obOS.Exit(2)
 	}
+	return
 }
 
 func obParentCmdLineDetect() bool {
@@ -428,29 +429,33 @@ func obProceede() {
 	defer obStdoutIn.Close()
 	defer obStderrIn.Close()
 	// OB_CHECK
-	var obStdoutBuf, obStderrBuf obBytes.Buffer
-	// OB_CHECK
-	obWriterStdout := obIO.MultiWriter(obOS.Stdout, &obStdoutBuf)
-	obWriterStderr := obIO.MultiWriter(obOS.Stderr, &obStderrBuf)
-	// OB_CHECK
 	obCommand.Start()
-	// async fetch stdout
 	var obWaitGroup obSync.WaitGroup
 	obWaitGroup.Add(2)
+	obStdoutScan := obBufio.NewScanner(obStdoutIn)
+	obStderrScan := obBufio.NewScanner(obStderrIn)
+	// OB_CHECK
+	// async fetch stdout
 	go func() {
 		// OB_CHECK
 		defer obWaitGroup.Done()
-		obIO.Copy(obWriterStdout, obStdoutIn)
+		for obStdoutScan.Scan() {
+			// OB_CHECK
+			println(obStdoutScan.Text())
+		}
 	}()
+	// OB_CHECK
 	// async fetch stderr
 	go func() {
 		// OB_CHECK
 		defer obWaitGroup.Done()
-		obIO.Copy(obWriterStderr, obStderrIn)
+		for obStderrScan.Scan() {
+			// OB_CHECK
+			println(obStderrScan.Text())
+		}
 	}()
 	// OB_CHECK
 	obWaitGroup.Wait()
-	obCommand.Wait()
 }
 
 func main() {
