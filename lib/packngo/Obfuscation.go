@@ -170,29 +170,49 @@ ObfuscateStrings will extract all plaintext strings denotet with
 backticks and obfuscate them using byteshift wise operations
 */
 func ObfuscateStrings(input string) string {
-	regex := regexp.MustCompile("`[/a-zA-Z.:_-]+`")
-	words := regex.FindAllString(input, -1)
-	words = Unique(words)
-	for _, w := range words {
-		// add string to the secrets!
-		secret := w[1 : len(w)-1]
-		Secrets[GenerateTyposquatName()] = []string{secret, w}
+	imports := strings.Index(input, "import (")
+	endimports := strings.Index(input[imports:], ")")
+
+	import_section := input[:imports+endimports+1]
+	body := input[imports+endimports+1:]
+
+	tickTypes := []string{"`", `'`, `"`}
+
+	for _, v := range tickTypes {
+		println(v)
+		regex := regexp.MustCompile(v + ".*?" + v)
+		words := regex.FindAllString(body, -1)
+		words = Unique(words)
+		for _, w := range words {
+			// string not void, accounting for quotes
+			if len(w) > 2 && !strings.Contains(w, `\`) {
+				// add string to the secrets! if not present
+				_, present := Secrets[w]
+				if !present {
+					fmt.Printf("for tick %s, value %s \n", v, w)
+					secret := w[1 : len(w)-1]
+					Secrets[w] = []string{secret, GenerateTyposquatName()}
+				}
+			}
+		}
 	}
 	// create function call
-	sedString := ""
+	funcString := ""
 	// replace all secrects with the respective obfuscated string
 	for k, w := range Secrets {
-		if !strings.Contains(k, "leave") {
-			sedString = sedString + ObfuscateString(w[0], k) + "\n"
-			input = strings.ReplaceAll(input, w[1], k+"()")
+		// in case we manually added some secrets that we want to leave
+		if !strings.Contains(w[1], "leave") {
+			funcString = funcString + ObfuscateString(w[0], w[1]) + "\n"
+			body = strings.ReplaceAll(body, k, w[1]+"()")
 		} else {
-			input = strings.ReplaceAll(input, w[1], w[0])
+			body = strings.ReplaceAll(body, k, w[0])
 		}
 
 	}
+	// reconstruct the program correctly and
 	// insert all the functions before the main
-	input = input + "\n" + sedString
-	return input
+	body = body + "\n" + funcString
+	return import_section + body
 }
 
 /*

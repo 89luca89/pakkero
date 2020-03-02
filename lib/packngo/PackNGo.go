@@ -12,16 +12,14 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 )
 
-const offsetPlaceholder = "9999999"
-const depNamePlaceholder = "DEPNAME1"
-const depSizePlaceholder = "DEPSIZE2"
-const depElfPlaceholder = "DEPELF3"
+const offsetPlaceholder = `"9999999"`
+const depNamePlaceholder = `"DEPNAME1"`
+const depSizePlaceholder = `"DEPSIZE2"`
+const depElfPlaceholder = `"DEPELF3"`
 const depBFDPlaceholder = "[]float64{1, 2, 3, 4}"
 const launcherFile = "/tmp/launcher.go"
 
@@ -44,10 +42,6 @@ func registerDependency(dependency string) {
 		fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
 		os.Exit(1)
 	}
-	// register if it was an ELF or not
-	ELF := make([]byte, 4)
-	dependencyFile.Read(ELF)
-
 	// calculate BFD (byte frequency distribution) for the input dependency
 	bytes, _ := ioutil.ReadFile(dependency)
 
@@ -64,19 +58,12 @@ func registerDependency(dependency string) {
 
 	// add Dependency data to the secrets
 	// register BFD
-	Secrets["leaveBFD"] = []string{bfdString,
-		depBFDPlaceholder}
+	Secrets[depBFDPlaceholder] = []string{bfdString, "leaveBFD"}
 	// register name
-	Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
-		depNamePlaceholder + "`"}
+	Secrets[depNamePlaceholder] = []string{dependency, GenerateTyposquatName()}
 	// register size
-	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d",
-		dependencyStats.Size()), "`" +
-		depSizePlaceholder + "`"}
-	// register if it was an ELF or not
-	Secrets[GenerateTyposquatName()] = []string{
-		strconv.FormatBool(strings.Contains(string(ELF), `ELF`)),
-		"`" + depElfPlaceholder + "`"}
+	Secrets[depSizePlaceholder] = []string{
+		fmt.Sprintf("%d", dependencyStats.Size()), GenerateTyposquatName()}
 }
 
 // PackNGo will Encrypt and pack the payload for a secure execution
@@ -108,9 +95,8 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	fmt.Print(" → Registering Dependencies...")
 
 	// add offset to the secrets!
-	Secrets[GenerateTyposquatName()] = []string{fmt.Sprintf("%d", offset), "`" +
-		offsetPlaceholder + "`"}
-
+	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
+		GenerateTyposquatName()}
 	// ------------------------------------------------------------------------
 	// Register eventual dependency passed by cli
 	// ------------------------------------------------------------------------
@@ -119,8 +105,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 		registerDependency(dependency)
 	} else {
 		// in case of missing dependency add an empty variable for BFD
-		Secrets["leaveBFD"] = []string{"[]int64{}", "`" +
-			depBFDPlaceholder + "`"}
+		Secrets[depBFDPlaceholder] = []string{"[]int64[]", "leaveBFD"}
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
