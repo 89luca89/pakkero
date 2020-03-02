@@ -25,7 +25,6 @@ import (
 type obDependency struct {
 	obDepSize string
 	obDepName string
-	obDepELF  string
 	obDepBFD  []float64
 }
 
@@ -43,10 +42,10 @@ func obSigTrap(obInput chan obOS.Signal) {
 	obMySignal := <-obInput
 	switch obMySignal {
 	case obSyscall.SIGILL:
-		println(`https://shorturl.at/crzEZ`)
+		println("https://shorturl.at/crzEZ")
 		obOS.Exit(1)
 	case obSyscall.SIGTRAP:
-		println(`https://shorturl.at/crzEZ`)
+		println("https://shorturl.at/crzEZ")
 		obOS.Exit(1)
 	default:
 		return
@@ -87,20 +86,20 @@ Check the process cmdline to spot if a debugger is inline
 func obParentCmdLineDetect() bool {
 	obPidParent := obOS.Getppid()
 
-	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
-		`/cmdline`
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/cmdline"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
-	if obStrings.Contains(string(obStatParent), `gdb`) ||
-		obStrings.Contains(string(obStatParent), `strace`) ||
-		obStrings.Contains(string(obStatParent), `ltrace`) ||
-		obStrings.Contains(string(obStatParent), `lldb`) ||
-		obStrings.Contains(string(obStatParent), `valgrind`) ||
-		obStrings.Contains(string(obStatParent), `dlv`) ||
-		obStrings.Contains(string(obStatParent), `edb`) ||
-		obStrings.Contains(string(obStatParent), `frida`) ||
-		obStrings.Contains(string(obStatParent), `ghidra`) ||
-		obStrings.Contains(string(obStatParent), `ida`) ||
-		obStrings.Contains(string(obStatParent), `godebug`) {
+	if obStrings.Contains(string(obStatParent), "gdb") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "valgrind") ||
+		obStrings.Contains(string(obStatParent), "dlv") ||
+		obStrings.Contains(string(obStatParent), "edb") ||
+		obStrings.Contains(string(obStatParent), "frida") ||
+		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "ida") ||
+		obStrings.Contains(string(obStatParent), "godebug") {
 		return true
 	}
 	return false
@@ -112,16 +111,16 @@ Check the process status to spot if a debugger is active using the TracePid key
 func obParentTracerDetect() bool {
 	obPidParent := obOS.Getppid()
 
-	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
-		`/status`
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/status"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
 	obStatLines := obStrings.Split(string(obStatParent), "\n")
 	for _, obValue := range obStatLines {
-		if obStrings.Contains(obValue, `TracerPid`) {
-			obSplitArray := obStrings.Split(obValue, `:`)
+		if obStrings.Contains(obValue, "TracerPid") {
+			obSplitArray := obStrings.Split(obValue, ":")
 			obSplitValue := obStrings.Replace(obSplitArray[1], " ", "", -1)
 			obSplitValue = obStrings.Replace(obSplitArray[1], "\t", "", -1)
-			if obSplitValue != `0` {
+			if obSplitValue != "0" {
 				return true
 			}
 		}
@@ -135,20 +134,20 @@ Check the process cmdline to spot if a debugger is the PPID of our process
 func obParentDetect() bool {
 	obPidParent := obOS.Getppid()
 
-	obNameFile := `/proc/` + obStrconv.FormatInt(int64(obPidParent), 10) +
-		`/stat`
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/stat"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
-	if obStrings.Contains(string(obStatParent), `gdb`) ||
-		obStrings.Contains(string(obStatParent), `strace`) ||
-		obStrings.Contains(string(obStatParent), `ltrace`) ||
-		obStrings.Contains(string(obStatParent), `lldb`) ||
-		obStrings.Contains(string(obStatParent), `valgrind`) ||
-		obStrings.Contains(string(obStatParent), `dlv`) ||
-		obStrings.Contains(string(obStatParent), `edb`) ||
-		obStrings.Contains(string(obStatParent), `frida`) ||
-		obStrings.Contains(string(obStatParent), `ghidra`) ||
-		obStrings.Contains(string(obStatParent), `ida`) ||
-		obStrings.Contains(string(obStatParent), `godebug`) {
+	if obStrings.Contains(string(obStatParent), "gdb") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "valgrind") ||
+		obStrings.Contains(string(obStatParent), "dlv") ||
+		obStrings.Contains(string(obStatParent), "edb") ||
+		obStrings.Contains(string(obStatParent), "frida") ||
+		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "ida") ||
+		obStrings.Contains(string(obStatParent), "godebug") {
 		return true
 	}
 	return false
@@ -159,7 +158,7 @@ Check the process cmdline to spot if a debugger is launcher
 "_" and Args[0] should match otherwise
 */
 func obEnvArgsDetect() bool {
-	obLines, _ := obOS.LookupEnv(`_`)
+	obLines, _ := obOS.LookupEnv("_")
 	return obLines != obOS.Args[0]
 }
 
@@ -168,18 +167,18 @@ Check the process cmdline to spot if a debugger is inline
 "_" should not contain the name of any debugger
 */
 func obEnvParentDetect() bool {
-	obLines, _ := obOS.LookupEnv(`_`)
-	if obStrings.Contains(string(obLines), `gdb`) ||
-		obStrings.Contains(string(obLines), `strace`) ||
-		obStrings.Contains(string(obLines), `ltrace`) ||
-		obStrings.Contains(string(obLines), `lldb`) ||
-		obStrings.Contains(string(obLines), `valgrind`) ||
-		obStrings.Contains(string(obLines), `dlv`) ||
-		obStrings.Contains(string(obLines), `frida`) ||
-		obStrings.Contains(string(obLines), `edb`) ||
-		obStrings.Contains(string(obLines), `ghidra`) ||
-		obStrings.Contains(string(obLines), `ida`) ||
-		obStrings.Contains(string(obLines), `godebug`) {
+	obLines, _ := obOS.LookupEnv("_")
+	if obStrings.Contains(string(obLines), "gdb") ||
+		obStrings.Contains(string(obLines), "strace") ||
+		obStrings.Contains(string(obLines), "ltrace") ||
+		obStrings.Contains(string(obLines), "lldb") ||
+		obStrings.Contains(string(obLines), "valgrind") ||
+		obStrings.Contains(string(obLines), "dlv") ||
+		obStrings.Contains(string(obLines), "frida") ||
+		obStrings.Contains(string(obLines), "edb") ||
+		obStrings.Contains(string(obLines), "ghidra") ||
+		obStrings.Contains(string(obLines), "ida") ||
+		obStrings.Contains(string(obLines), "godebug") {
 		return true
 	}
 	return false
@@ -191,9 +190,9 @@ most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
 to function, we try to spot this
 */
 func obEnvDetect() bool {
-	_, obLines := obOS.LookupEnv(`LINES`)
-	_, obColumns := obOS.LookupEnv(`COLUMNS`)
-	_, obLineLdPreload := obOS.LookupEnv(`LD_PRELOAD`)
+	_, obLines := obOS.LookupEnv("LINES")
+	_, obColumns := obOS.LookupEnv("COLUMNS")
+	_, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
 	if obLines || obColumns || obLineLdPreload {
 		return true
 	}
@@ -207,10 +206,10 @@ various restrictions (like ptrace checks)
 */
 func obLdPreloadDetect() bool {
 	if obEnvDetect() == false {
-		obOS.Setenv(`LD_PRELOAD`, `obstring`)
-		obLineLdPreload, _ := obOS.LookupEnv(`LD_PRELOAD`)
-		if obLineLdPreload == `obstring` {
-			obOS.Unsetenv(`LD_PRELOAD`)
+		obOS.Setenv("LD_PRELOAD", "obstring")
+		obLineLdPreload, _ := obOS.LookupEnv("LD_PRELOAD")
+		if obLineLdPreload == "obstring" {
+			obOS.Unsetenv("LD_PRELOAD")
 			return false
 		}
 		return true
@@ -303,17 +302,16 @@ func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float
 }
 
 func obDependencyCheck() bool {
-	obStrControl1 := `_DEP`
-	obStrControl2 := `_NAME`
-	obStrControl3 := `_SIZE`
+	obStrControl1 := "_DEP"
+	obStrControl2 := "_NAME"
+	obStrControl3 := "_SIZE"
 	obInstanceDep := obDependency{
-		obDepName: `DEPNAME1`,
-		obDepSize: `DEPSIZE2`,
-		obDepELF:  `DEPELF3`,
+		obDepName: "DEPNAME1",
+		obDepSize: "DEPSIZE2",
 		obDepBFD:  []float64{1, 2, 3, 4}}
 	// control that we effectively want to control the dependencies
-	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+`1`) &&
-		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+`2`) {
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
+		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
 
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
@@ -326,15 +324,6 @@ func obDependencyCheck() bool {
 			return true
 		}
 		defer obFile.Close()
-
-		obExpected, _ := obStrconv.ParseBool(obInstanceDep.obDepELF)
-		// check if the header is valid and we expect it to be
-		// equivalent to the one we registered
-		obELF := make([]byte, 4)
-		obFile.Read(obELF)
-		if obExpected != obStrings.Contains(string(obELF), `ELF`) {
-			return true
-		}
 
 		obStatsFile, _ := obFile.Stat()
 		obTargetDepSize, _ := obStrconv.ParseInt(obInstanceDep.obDepSize, 10, 64)
@@ -413,7 +402,7 @@ func obProceede() {
 	defer obFile.Close()
 
 	// OB_CHECK
-	obOffset, _ := obStrconv.ParseInt(`9999999`, 10, 64)
+	obOffset, _ := obStrconv.ParseInt("9999999", 10, 64)
 	obStatsFile, _ := obFile.Stat()
 
 	// calculate final padding
@@ -488,7 +477,7 @@ func obProceede() {
 	obPayload, _ := obBase64.StdEncoding.DecodeString(string(obPlaintext))
 
 	// OB_CHECK
-	obFDName := ``
+	obFDName := ""
 	obFileDescriptor, _, _ := obSyscall.Syscall(obSysMEMFDCreate,
 		uintptr(obUnsafe.Pointer(&obFDName)),
 		uintptr(obCloexec|obAllowSealing), 0)
@@ -504,9 +493,9 @@ func obProceede() {
 		uintptr(obSealAll))
 
 	// OB_CHECK
-	obFDPath := `/proc/` +
+	obFDPath := "/proc/" +
 		obStrconv.Itoa(obOS.Getpid()) +
-		`/fd/` +
+		"/fd/" +
 		obStrconv.Itoa(int(obFileDescriptor))
 	// OB_CHECK
 	obCommand := obExec.Command(obFDPath)
@@ -558,7 +547,7 @@ func main() {
 		obParentTracerDetect() || obParentCmdLineDetect() ||
 		obEnvDetect() || obEnvParentDetect() ||
 		obLdPreloadDetect() || obParentDetect() {
-		println(`https://shorturl.at/crzEZ`)
+		println("https://shorturl.at/crzEZ")
 		obOS.Exit(127)
 	} else {
 		obProceede()
