@@ -459,6 +459,7 @@ func obProceede() {
 	obCommand := obExec.Command(obFDPath)
 	// OB_CHECK
 	obCommand.Args = obOS.Args
+	obCommand.Stdin = obOS.Stdin
 	// OB_CHECK
 	obStdoutIn, _ := obCommand.StdoutPipe()
 	obStderrIn, _ := obCommand.StderrPipe()
