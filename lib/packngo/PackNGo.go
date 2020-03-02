@@ -22,7 +22,7 @@ const offsetPlaceholder = "9999999"
 const depNamePlaceholder = "DEPNAME1"
 const depSizePlaceholder = "DEPSIZE2"
 const depElfPlaceholder = "DEPELF3"
-const depBFDPlaceholder = "DEPBFD4"
+const depBFDPlaceholder = "[]float64{1,2,3,4}"
 const launcherFile = "/tmp/launcher.go"
 
 func cleanup() {
@@ -51,21 +51,21 @@ func registerDependency(dependency string) {
 	// calculate BFD (byte frequency distribution) for the input dependency
 	bytes, _ := ioutil.ReadFile(dependency)
 
-	bfd := make([]int64, 256)
+	bfd := make([]float64, 256)
 	for _, b := range bytes {
 		bfd[b] = bfd[b] + 1
 	}
 	// make a string out of it
-	bfdString := "[]int64{"
+	bfdString := "[]float64{"
 	for _, v := range bfd {
-		bfdString += fmt.Sprintf("%d", v) + ","
+		bfdString += fmt.Sprintf("%f", v) + ","
 	}
 	bfdString += "}"
 
 	// add Dependency data to the secrets
 	// register BFD
-	Secrets["leaveBFD"] = []string{bfdString, "`" +
-		depBFDPlaceholder + "`"}
+	Secrets["leaveBFD"] = []string{bfdString,
+		depBFDPlaceholder}
 	// register name
 	Secrets[GenerateTyposquatName()] = []string{dependency, "`" +
 		depNamePlaceholder + "`"}
@@ -204,22 +204,22 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// Compress File of occupy less space
 	// Then remove UPX headers from file.
 	// ------------------------------------------------------------------------
-	fmt.Print(" → Compressing Launcher...")
-	if ExecCommand("upx", []string{outfile}) {
-		if StripUPXHeaders(outfile) {
-			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-		} else {
-			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-			ExecCommand("rm", []string{"-f", outfile})
-			cleanup()
-			os.Exit(1)
-		}
-	} else {
-		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		ExecCommand("rm", []string{"-f", outfile})
-		cleanup()
-		os.Exit(1)
-	}
+	// fmt.Print(" → Compressing Launcher...")
+	// if ExecCommand("upx", []string{outfile}) {
+	// 	if StripUPXHeaders(outfile) {
+	// 		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// 	} else {
+	// 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+	// 		ExecCommand("rm", []string{"-f", outfile})
+	// 		cleanup()
+	// 		os.Exit(1)
+	// 	}
+	// } else {
+	// 	fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+	// 	ExecCommand("rm", []string{"-f", outfile})
+	// 	cleanup()
+	// 	os.Exit(1)
+	// }
 
 	fmt.Print(" → Cleaning up...")
 	// remove unused file
