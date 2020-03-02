@@ -12,7 +12,7 @@ all:
 		-ldflags="-s" \
 		-o dist/packngo; mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
 	strip \
-		-sxXwSgd \
+		-sxX \
 		--remove-section=.bss \
 		--remove-section=.comment \
 		--remove-section=.eh_frame \
