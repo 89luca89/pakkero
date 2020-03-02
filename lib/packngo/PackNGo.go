@@ -22,7 +22,7 @@ const offsetPlaceholder = "9999999"
 const depNamePlaceholder = "DEPNAME1"
 const depSizePlaceholder = "DEPSIZE2"
 const depElfPlaceholder = "DEPELF3"
-const depBFDPlaceholder = "[]float64{1,2,3,4}"
+const depBFDPlaceholder = "[]float64{1, 2, 3, 4}"
 const launcherFile = "/tmp/launcher.go"
 
 func cleanup() {

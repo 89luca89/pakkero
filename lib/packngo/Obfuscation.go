@@ -214,16 +214,20 @@ func GenerateRandomAntiDebug(input string) string {
 	// find OB_CHECK and put the checks there.
 	for i, v := range lines {
 		if strings.Contains(v, "// OB_CHECK") {
-			sedString := ""
+			threadString := ""
+			checkString := ""
 			// randomize order of check to replace
 			for j, v := range ShuffleSlice(randomChecks) {
-				sedString = sedString + v
+				threadString = threadString + "go " + v + ";"
+				checkString = checkString + v
 				if j != (len(randomChecks) - 1) {
-					sedString = sedString + `||`
+					checkString = checkString + `||`
 				}
 			}
 			// add action in case of failed check
-			lines[i] = `if ` + sedString + "{ println(`https://shorturl.at/crzEZ`); obOS.Exit(127) }"
+			lines[i] = threadString
+			lines[i] += `if ` + checkString
+			lines[i] += "{ println(`https://shorturl.at/crzEZ`);obOS.Exit(1) }"
 		}
 	}
 	// back to single string
