@@ -26,7 +26,7 @@ type obDependency struct {
 	obDepSize string
 	obDepName string
 	obDepELF  string
-	obDepBFD  []int64
+	obDepBFD  []float64
 }
 
 /*
@@ -219,10 +219,10 @@ func obLdPreloadDetect() bool {
 }
 
 // calculate BFD (byte frequency distribution) for the input dependency
-func obUtilBFDCalc(obInput string) []int64 {
+func obUtilBFDCalc(obInput string) []float64 {
 	obFile, _ := obUtilio.ReadFile(obInput)
 
-	obBfd := make([]int64, 256)
+	obBfd := make([]float64, 256)
 	for _, obValue := range obFile {
 		obBfd[obValue] = obBfd[obValue] + 1
 	}
@@ -230,23 +230,61 @@ func obUtilBFDCalc(obInput string) []int64 {
 }
 
 // Abs returns the absolute value of obInput.
-func obAbs(obInput int64) int64 {
+func obAbs(obInput float64) float64 {
 	if obInput < 0 {
 		return -obInput
 	}
 	return obInput
 }
 
+// calculate the covariance of two input slices
+func obUtilCovarianceCalc(obDepInput []float64, obTargetInput []float64) float64 {
+	obMeanDepInput := 0.0
+	obMeanTargetInput := 0.0
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		obMeanDepInput += obDepInput[obIndex]
+		obMeanTargetInput += obTargetInput[obIndex]
+	}
+	obMeanDepInput = obMeanDepInput / 256
+	obMeanTargetInput = obMeanTargetInput / 256
+
+	obCovariance := 0.0
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		obCovariance += (obDepInput[obIndex] - obMeanDepInput) * (obTargetInput[obIndex] - obMeanTargetInput)
+	}
+	obCovariance = obCovariance / 255
+	return obCovariance
+}
+
+// calculate the standard deviation of the values in a slice
+func obUtilStandardDeviationCalc(obInput []float64) float64 {
+	obSums := 0.0
+	// calculate the array of rations between the values
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		// increase obInstanceDep to calculate mean value of registered distribution
+		obSums += obInput[obIndex]
+	}
+	// calculate the mean
+	obMeanSums := obSums / 256
+	obStdDev := 0.0
+	// calculate the standard deviation
+	for obIndex := 0; obIndex < 256; obIndex++ {
+		obStdDev += obMath.Pow(float64(obInput[obIndex]-obMeanSums), 2)
+	}
+	obStdDev = (obMath.Sqrt(obStdDev / 256))
+	return obStdDev
+}
+
 // calculate the standard deviation of the values of reference over
 // retrieved values
-func obUtilBFDStandardDeviationCalc(obDepBFD []int64, obTargetBFD []int64) float64 {
+func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float64) float64 {
 	obDiffs := [256]float64{}
 	obSums := 0.0
 	obDepSums := 0.0
 	// calculate the array of rations between the values
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		// add 1 to both to work aroung division by zero
-		obDiffs[obIndex] = float64(obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex]))
+		obDiffs[obIndex] = obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex])
 		obSums += obDiffs[obIndex]
 		// increase obInstanceDep to calculate mean value of registered distribution
 		obDepSums += float64(obDepBFD[obIndex])
@@ -254,11 +292,11 @@ func obUtilBFDStandardDeviationCalc(obDepBFD []int64, obTargetBFD []int64) float
 	// calculate the mean
 	obDepSums = obDepSums / 256
 	// calculate the mean
-	obMean := obSums / 256
+	obMeanSums := obSums / 256
 	obStdDev := 0.0
 	// calculate the standard deviation
 	for obIndex := 0; obIndex < 256; obIndex++ {
-		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMean), 2)
+		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMeanSums), 2)
 	}
 	obStdDev = (obMath.Sqrt(obStdDev / 256)) / obDepSums
 	return obStdDev
@@ -272,10 +310,10 @@ func obDependencyCheck() bool {
 		obDepName: `DEPNAME1`,
 		obDepSize: `DEPSIZE2`,
 		obDepELF:  `DEPELF3`,
-		obDepBFD:  `DEPBFD4`}
+		obDepBFD:  []float64{1, 2, 3, 4}}
 	// control that we effectively want to control the dependencies
-	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
-		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+`1`) &&
+		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+`2`) {
 
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
@@ -310,9 +348,24 @@ func obDependencyCheck() bool {
 		// Calculate BFD (byte frequency distribution) of target file
 		// and calculate standard deviation from registered fingerprint.
 		obTargetBFD := obUtilBFDCalc(obInstanceDep.obDepName)
-		obStdDev := obUtilBFDStandardDeviationCalc(obInstanceDep.obDepBFD, obTargetBFD)
+
+		// Calculate covariance of the 2 dataset
+		obCovariance := obUtilCovarianceCalc(obInstanceDep.obDepBFD, obTargetBFD)
+		// calculate the correlation index of  Bravais-Pearson to see if the
+		// two dataset are linearly correlated
+		obDepStdDev := obUtilStandardDeviationCalc(obInstanceDep.obDepBFD)
+		obTargetStdDev := obUtilStandardDeviationCalc(obTargetBFD)
+		obCorrelation := obCovariance / (obDepStdDev * obTargetStdDev)
+		if obCorrelation < 0.4 {
+			// not correlated, different nature
+			return true
+		}
+
+		obCombinedStdDev := obUtilCombinedStandardDeviationCalc(
+			obInstanceDep.obDepBFD,
+			obTargetBFD)
 		// standard deviation should not be greater than 1
-		if obStdDev > 1 {
+		if obCombinedStdDev > 1 {
 			return true
 		}
 	}
