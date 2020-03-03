@@ -179,7 +179,6 @@ func ObfuscateStrings(input string) string {
 	tickTypes := []string{"`", `'`, `"`}
 
 	for _, v := range tickTypes {
-		println(v)
 		regex := regexp.MustCompile(v + ".*?" + v)
 		words := regex.FindAllString(body, -1)
 		words = Unique(words)
@@ -189,7 +188,6 @@ func ObfuscateStrings(input string) string {
 				// add string to the secrets! if not present
 				_, present := Secrets[w]
 				if !present {
-					fmt.Printf("for tick %s, value %s \n", v, w)
 					secret := w[1 : len(w)-1]
 					Secrets[w] = []string{secret, GenerateTyposquatName()}
 				}
@@ -246,8 +244,6 @@ func GenerateRandomAntiDebug(input string) string {
 			}
 			// add action in case of failed check
 			lines[i] = threadString
-			lines[i] += `if ` + checkString
-			lines[i] += "{ println(`https://shorturl.at/crzEZ`);obOS.Exit(1) }"
 		}
 	}
 	// back to single string

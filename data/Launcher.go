@@ -34,6 +34,15 @@ TODO:
     missing nearheap check (must be done in C)
 */
 
+func obExit() {
+	//	_, file, no, ok := runtime.Caller(1)
+	//	if ok {
+	//		fmt.Printf("called from %s#%d\n", file, no)
+	//	}
+	println("https://shorturl.at/crzEZ")
+	obOS.Exit(1)
+}
+
 /*
 Breakpoint on linux are 0xCC and will be interpreted as a
 SIGTRAP, we will intercept them.
@@ -42,11 +51,9 @@ func obSigTrap(obInput chan obOS.Signal) {
 	obMySignal := <-obInput
 	switch obMySignal {
 	case obSyscall.SIGILL:
-		println("https://shorturl.at/crzEZ")
-		obOS.Exit(1)
+		obExit()
 	case obSyscall.SIGTRAP:
-		println("https://shorturl.at/crzEZ")
-		obOS.Exit(1)
+		obExit()
 	default:
 		return
 	}
@@ -75,7 +82,7 @@ func obPtraceDetect() {
 		obOffset *= 3
 	}
 	if obOffset != 15 {
-		obOS.Exit(2)
+		obExit()
 	}
 	return
 }
@@ -83,7 +90,7 @@ func obPtraceDetect() {
 /*
 Check the process cmdline to spot if a debugger is inline
 */
-func obParentCmdLineDetect() bool {
+func obParentCmdLineDetect() {
 	obPidParent := obOS.Getppid()
 
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
@@ -100,15 +107,14 @@ func obParentCmdLineDetect() bool {
 		obStrings.Contains(string(obStatParent), "ghidra") ||
 		obStrings.Contains(string(obStatParent), "ida") ||
 		obStrings.Contains(string(obStatParent), "godebug") {
-		return true
+		obExit()
 	}
-	return false
 }
 
 /*
 Check the process status to spot if a debugger is active using the TracePid key
 */
-func obParentTracerDetect() bool {
+func obParentTracerDetect() {
 	obPidParent := obOS.Getppid()
 
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
@@ -121,17 +127,16 @@ func obParentTracerDetect() bool {
 			obSplitValue := obStrings.Replace(obSplitArray[1], " ", "", -1)
 			obSplitValue = obStrings.Replace(obSplitArray[1], "\t", "", -1)
 			if obSplitValue != "0" {
-				return true
+				obExit()
 			}
 		}
 	}
-	return false
 }
 
 /*
 Check the process cmdline to spot if a debugger is the PPID of our process
 */
-func obParentDetect() bool {
+func obParentDetect() {
 	obPidParent := obOS.Getppid()
 
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
@@ -148,25 +153,26 @@ func obParentDetect() bool {
 		obStrings.Contains(string(obStatParent), "ghidra") ||
 		obStrings.Contains(string(obStatParent), "ida") ||
 		obStrings.Contains(string(obStatParent), "godebug") {
-		return true
+		obExit()
 	}
-	return false
 }
 
 /*
 Check the process cmdline to spot if a debugger is launcher
 "_" and Args[0] should match otherwise
 */
-func obEnvArgsDetect() bool {
+func obEnvArgsDetect() {
 	obLines, _ := obOS.LookupEnv("_")
-	return obLines != obOS.Args[0]
+	if obLines != obOS.Args[0] {
+		obExit()
+	}
 }
 
 /*
 Check the process cmdline to spot if a debugger is inline
 "_" should not contain the name of any debugger
 */
-func obEnvParentDetect() bool {
+func obEnvParentDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obStrings.Contains(string(obLines), "gdb") ||
 		obStrings.Contains(string(obLines), "strace") ||
@@ -179,9 +185,8 @@ func obEnvParentDetect() bool {
 		obStrings.Contains(string(obLines), "ghidra") ||
 		obStrings.Contains(string(obLines), "ida") ||
 		obStrings.Contains(string(obLines), "godebug") {
-		return true
+		obExit()
 	}
-	return false
 }
 
 /*
@@ -189,14 +194,13 @@ Check the process cmdline to spot if a debugger is active
 most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
 to function, we try to spot this
 */
-func obEnvDetect() bool {
+func obEnvDetect() {
 	_, obLines := obOS.LookupEnv("LINES")
 	_, obColumns := obOS.LookupEnv("COLUMNS")
 	_, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
 	if obLines || obColumns || obLineLdPreload {
-		return true
+		obExit()
 	}
-	return false
 }
 
 /*
@@ -204,17 +208,14 @@ Check the process is launcher with a LD_PRELOAD set.
 This can be an injection attack (like on frida) to try and circumvent
 various restrictions (like ptrace checks)
 */
-func obLdPreloadDetect() bool {
-	if obEnvDetect() == false {
-		obOS.Setenv("LD_PRELOAD", "obstring")
-		obLineLdPreload, _ := obOS.LookupEnv("LD_PRELOAD")
-		if obLineLdPreload == "obstring" {
-			obOS.Unsetenv("LD_PRELOAD")
-			return false
-		}
-		return true
+func obLdPreloadDetect() {
+	obOS.Setenv("MY_ENV", "obstring")
+	obLineLdPreload, _ := obOS.LookupEnv("MY_ENV")
+	if obLineLdPreload == "obstring" {
+		obOS.Unsetenv("MY_ENV")
+	} else {
+		obExit()
 	}
-	return false
 }
 
 // calculate BFD (byte frequency distribution) for the input dependency
@@ -301,7 +302,7 @@ func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float
 	return obStdDev
 }
 
-func obDependencyCheck() bool {
+func obDependencyCheck() {
 	obStrControl1 := "_DEP"
 	obStrControl2 := "_NAME"
 	obStrControl3 := "_SIZE"
@@ -316,12 +317,12 @@ func obDependencyCheck() bool {
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
 		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
-			return true
+			obExit()
 		}
 		// open dependency in current environment and check it's size
 		obFile, obErr := obOS.Open(obInstanceDep.obDepName)
 		if obErr != nil {
-			return true
+			obExit()
 		}
 		defer obFile.Close()
 
@@ -331,7 +332,7 @@ func obDependencyCheck() bool {
 		// first check if file size is +/- 15% of registered size
 		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
 			(obStatsFile.Size()-obTargetDepSize) > obTargetTreshold {
-			return true
+			obExit()
 		}
 
 		// Calculate BFD (byte frequency distribution) of target file
@@ -347,7 +348,7 @@ func obDependencyCheck() bool {
 		obCorrelation := obCovariance / (obDepStdDev * obTargetStdDev)
 		if obCorrelation < 0.4 {
 			// not correlated, different nature
-			return true
+			obExit()
 		}
 
 		obCombinedStdDev := obUtilCombinedStandardDeviationCalc(
@@ -355,10 +356,9 @@ func obDependencyCheck() bool {
 			obTargetBFD)
 		// standard deviation should not be greater than 1
 		if obCombinedStdDev > 1 {
-			return true
+			obExit()
 		}
 	}
-	return false
 }
 
 /*
@@ -467,7 +467,7 @@ func obProceede() {
 	// OB_CHECK
 	obZlibReader, obErr := obZlib.NewReader(obBufferPlaintext)
 	if obErr != nil {
-		println(obErr)
+		obExit()
 	}
 	// OB_CHECK
 	obPlaintext, _ := obUtilio.ReadAll(obZlibReader)
@@ -516,20 +516,16 @@ func obProceede() {
 	// OB_CHECK
 	// async fetch stdout
 	go func() {
-		// OB_CHECK
 		defer obWaitGroup.Done()
 		for obStdoutScan.Scan() {
-			// OB_CHECK
 			println(obStdoutScan.Text())
 		}
 	}()
 	// OB_CHECK
 	// async fetch stderr
 	go func() {
-		// OB_CHECK
 		defer obWaitGroup.Done()
 		for obStderrScan.Scan() {
-			// OB_CHECK
 			println(obStderrScan.Text())
 		}
 	}()
@@ -543,13 +539,22 @@ func main() {
 	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)
 	go obSigTrap(obChannel)
 	go obPtraceDetect()
-	if obDependencyCheck() || obEnvArgsDetect() ||
-		obParentTracerDetect() || obParentCmdLineDetect() ||
-		obEnvDetect() || obEnvParentDetect() ||
-		obLdPreloadDetect() || obParentDetect() {
-		println("https://shorturl.at/crzEZ")
-		obOS.Exit(127)
-	} else {
-		obProceede()
-	}
+	// OB_CHECK
+	obDependencyCheck()
+	// OB_CHECK
+	obEnvArgsDetect()
+	// OB_CHECK
+	obParentTracerDetect()
+	// OB_CHECK
+	obParentCmdLineDetect()
+	// OB_CHECK
+	obEnvDetect()
+	// OB_CHECK
+	obEnvParentDetect()
+	// OB_CHECK
+	obLdPreloadDetect()
+	// OB_CHECK
+	obParentDetect()
+	// OB_CHECK
+	obProceede()
 }
