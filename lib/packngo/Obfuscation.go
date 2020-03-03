@@ -175,7 +175,7 @@ func ObfuscateStrings(input string) string {
 	imports := strings.Index(input, "import (")
 	endimports := strings.Index(input[imports:], ")")
 
-	import_section := input[:imports+endimports+1]
+	importSection := input[:imports+endimports+1]
 	body := input[imports+endimports+1:]
 
 	tickTypes := []string{"`", `'`, `"`}
@@ -220,7 +220,7 @@ func ObfuscateStrings(input string) string {
 	// reconstruct the program correctly and
 	// insert all the functions before the main
 	body = body + "\n" + funcString
-	return import_section + body
+	return importSection + body
 }
 
 /*
