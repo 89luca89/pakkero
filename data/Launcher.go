@@ -19,6 +19,7 @@ import (
 	obStrings "strings"
 	obSync "sync"
 	obSyscall "syscall"
+	obTime "time"
 	obUnsafe "unsafe"
 )
 
@@ -209,10 +210,12 @@ This can be an injection attack (like on frida) to try and circumvent
 various restrictions (like ptrace checks)
 */
 func obLdPreloadDetect() {
-	obOS.Setenv("MY_ENV", "obstring")
-	obLineLdPreload, _ := obOS.LookupEnv("MY_ENV")
-	if obLineLdPreload == "obstring" {
-		obOS.Unsetenv("MY_ENV")
+    obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+	obOS.Setenv(obKey, obValue)
+	obLineLdPreload, _ := obOS.LookupEnv(obKey)
+	if obLineLdPreload == obValue {
+		obOS.Unsetenv(obKey)
 	} else {
 		obExit()
 	}
@@ -230,7 +233,7 @@ func obUtilBFDCalc(obInput string) []float64 {
 }
 
 // Abs returns the absolute value of obInput.
-func obAbs(obInput float64) float64 {
+func obUtilAbsCalc(obInput float64) float64 {
 	if obInput < 0 {
 		return -obInput
 	}
@@ -284,7 +287,7 @@ func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float
 	// calculate the array of rations between the values
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		// add 1 to both to work aroung division by zero
-		obDiffs[obIndex] = obAbs(obDepBFD[obIndex] - obTargetBFD[obIndex])
+		obDiffs[obIndex] = obUtilAbsCalc(obDepBFD[obIndex] - obTargetBFD[obIndex])
 		obSums += obDiffs[obIndex]
 		// increase obInstanceDep to calculate mean value of registered distribution
 		obDepSums += float64(obDepBFD[obIndex])
