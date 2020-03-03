@@ -98,9 +98,10 @@ and ensure it's result is not err.
 */
 func ExecCommand(name string, args []string) bool {
 	cmd := exec.Command(name, args...)
-	err := cmd.Run()
+    errString, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
+		fmt.Println(string(errString))
 		return false
 	}
 	return true
