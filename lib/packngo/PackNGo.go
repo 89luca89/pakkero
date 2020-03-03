@@ -65,7 +65,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		GenerateTyposquatName()}
 	// ------------------------------------------------------------------------
 	// Register eventual dependency passed by cli
-	// ------------------------------------------------------------------------
 	// If a dependency check is present, register it.
 	if dependency != "" {
 		RegisterDependency(dependency)
@@ -83,7 +82,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		println(fmt.Sprintf("failed writing to file: %s", err))
 		cleanup()
 		os.Exit(1)
 	}
@@ -91,12 +90,11 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
-	// ------------------------------------------------------------------------
 	fmt.Print(" → Obfuscating Launcher Stub...")
 	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed obfuscating file file: %s", err))
+		println(fmt.Sprintf("failed obfuscating file file: %s", err))
 		cleanup()
 		os.Exit(1)
 	}
@@ -107,7 +105,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// compile the launcher binary
-	// ------------------------------------------------------------------------
 	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
 	os.Setenv("CGO_ENABLED", "0")
@@ -133,10 +130,10 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		cleanup()
 		os.Exit(1)
 	}
+	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
-	// ------------------------------------------------------------------------
 	fmt.Print(" → Stripping Launcher...")
 	if StripFile(outfile) {
 		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
@@ -146,22 +143,16 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		cleanup()
 		os.Exit(1)
 	}
+	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
 	// Compress File of occupy less space
 	// Then remove UPX headers from file.
-	// ------------------------------------------------------------------------
 	fmt.Print(" → Compressing Launcher...")
 	if compress {
-		if ExecCommand("upx", []string{outfile}) {
-			if StripUPXHeaders(outfile) {
-				fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-			} else {
-				fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-				ExecCommand("rm", []string{"-f", outfile})
-				cleanup()
-				os.Exit(1)
-			}
+		if ExecCommand("upx", []string{outfile}) &&
+			StripUPXHeaders(outfile) {
+			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 		} else {
 			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 			ExecCommand("rm", []string{"-f", outfile})
@@ -171,6 +162,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	} else {
 		fmt.Printf(WarningColor, "\t\t[ SKIPPING ]\n")
 	}
+	// ------------------------------------------------------------------------
 
 	fmt.Print(" → Cleaning up...")
 	// remove unused file
@@ -186,7 +178,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		println(fmt.Sprintf("failed writing to file: %s", err))
 		os.Exit(1)
 	}
 	defer encFile.Close()
@@ -199,7 +191,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	if offset <= encFileSize {
 		ExecCommand("rm", []string{"-f", outfile})
 		fmt.Printf(ErrorColor, "\t[ ERR ]\n")
-		fmt.Println("ERROR! Calculated offset is lower than launcher size: " +
+		println("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 		os.Exit(1)
 	}
@@ -209,14 +201,13 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// Pre-Payload Garbage
-	// ------------------------------------------------------------------------
 	// calculate where to put garbage and where to put the payload
 	blockCount := offset - encFileSize
 	// append randomness to the runner itself
 	_, err = encFile.WriteString(GenerateRandomGarbage(blockCount))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		println(fmt.Sprintf("failed writing to file: %s", err))
 		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
@@ -226,12 +217,11 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// Encryption and compression of the payload
-	// ------------------------------------------------------------------------
 	// get file to encrypt argument
 	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed reading file: %s", err))
+		println(fmt.Sprintf("failed reading file: %s", err))
 		os.Exit(1)
 	}
 	content := string(byteContent)
@@ -252,7 +242,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	ciphertext, err := EncryptAESReversed(plaintext, outfile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed encrypting file: %s", err))
+		println(fmt.Sprintf("failed encrypting file: %s", err))
 		os.Exit(1)
 	}
 
@@ -260,7 +250,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	_, err = encFile.WriteString(ciphertext)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		println(fmt.Sprintf("failed writing to file: %s", err))
 		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
@@ -270,7 +260,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// Post-Payload Garbage
-	// ------------------------------------------------------------------------
 	// calculate final padding
 	finalPaddingArray := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(finalPaddingArray, offset)
@@ -291,7 +280,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	_, err = encFile.WriteString(GenerateRandomGarbage(finalPadding))
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		fmt.Println(fmt.Sprintf("failed writing to file: %s", err))
+		println(fmt.Sprintf("failed writing to file: %s", err))
 		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")

@@ -102,8 +102,8 @@ func ExecCommand(name string, args []string) bool {
 	cmd := exec.Command(name, args...)
 	errString, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
-		fmt.Println(string(errString))
+		println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
+		println(string(errString))
 		return false
 	}
 	return true
