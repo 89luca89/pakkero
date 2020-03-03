@@ -210,7 +210,7 @@ This can be an injection attack (like on frida) to try and circumvent
 various restrictions (like ptrace checks)
 */
 func obLdPreloadDetect() {
-    obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obOS.Setenv(obKey, obValue)
 	obLineLdPreload, _ := obOS.LookupEnv(obKey)
