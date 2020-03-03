@@ -207,8 +207,8 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 			os.Exit(1)
 		}
 	} else {
-			fmt.Printf(WarningColor, "\t\t[ SKIPPING ]\n")
-    }
+		fmt.Printf(WarningColor, "\t\t[ SKIPPING ]\n")
+	}
 
 	fmt.Print(" → Cleaning up...")
 	// remove unused file
