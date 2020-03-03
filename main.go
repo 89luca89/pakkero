@@ -46,7 +46,7 @@ func help() {
 	println("  -o   <file>			Place the output into <file> (default is <inputfile>.enc)")
 	println("  -offset			Offset where to start the payload (Bytes)")
 	println("  -register-dep			/path/to/dependency to analyze and use as fingerprint (absolute)")
-	println("				Offset minimal recommended value is 1800000")
+	println("				Offset minimal recommended value is 700000")
 	println("  -v				Check " + programName + " version")
 }
 func main() {
