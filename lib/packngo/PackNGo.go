@@ -67,7 +67,7 @@ func registerDependency(dependency string) {
 }
 
 // PackNGo will Encrypt and pack the payload for a secure execution
-func PackNGo(infile string, offset int64, outfile string, dependency string) {
+func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
 
 	// Prepare to intercept SIGTERM
 	c := make(chan os.Signal)
@@ -190,9 +190,16 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// Then remove UPX headers from file.
 	// ------------------------------------------------------------------------
 	fmt.Print(" → Compressing Launcher...")
-	if ExecCommand("upx", []string{outfile}) {
-		if StripUPXHeaders(outfile) {
-			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	if compress {
+		if ExecCommand("upx", []string{outfile}) {
+			if StripUPXHeaders(outfile) {
+				fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+			} else {
+				fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+				ExecCommand("rm", []string{"-f", outfile})
+				cleanup()
+				os.Exit(1)
+			}
 		} else {
 			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 			ExecCommand("rm", []string{"-f", outfile})
@@ -200,11 +207,8 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 			os.Exit(1)
 		}
 	} else {
-		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-		ExecCommand("rm", []string{"-f", outfile})
-		cleanup()
-		os.Exit(1)
-	}
+			fmt.Printf(WarningColor, "\t\t[ SKIPPING ]\n")
+    }
 
 	fmt.Print(" → Cleaning up...")
 	// remove unused file
