@@ -398,7 +398,7 @@ const (
 	obSysMEMFDCreate = 319
 )
 
-func obProceede() {
+func obLauncher() {
 	// OB_CHECK
 	obNameFile, _ := obOS.Executable()
 	obFile, _ := obOS.Open(obNameFile)
@@ -559,5 +559,5 @@ func main() {
 	// OB_CHECK
 	obParentDetect()
 	// OB_CHECK
-	obProceede()
+	obLauncher()
 }
