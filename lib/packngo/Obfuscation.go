@@ -44,7 +44,8 @@ func StripUPXHeaders(infile string) bool {
 		`\x55\x50\x58\x20\x54\x65\x61\x6d\x2e\x20`,
 		`\x41\x6c\x6c\x20\x52\x69\x67\x68\x74\x73`,
 		`\x20\x52\x65\x73\x65\x72\x76\x65\x64\x2e`,
-		`\x55\x50\x58\x21`}
+		`\x55\x50\x58\x21`,
+	}
 	result := true
 	for _, v := range header {
 		sedString := ""
@@ -89,7 +90,8 @@ func StripFile(infile string) bool {
 			"--remove-section=.note.go.buildid",
 			"--remove-section=.shstrtab",
 			"--remove-section=.typelink",
-			infile})
+			infile,
+		})
 }
 
 /*
@@ -236,7 +238,8 @@ func GenerateRandomAntiDebug(input string) string {
 		`obEnvDetect()`,
 		`obEnvParentDetect() `,
 		`obLdPreloadDetect()`,
-		`obParentDetect()`}
+		`obParentDetect()`,
+	}
 	// find OB_CHECK and put the checks there.
 	for i, v := range lines {
 		if strings.Contains(v, "// OB_CHECK") {
