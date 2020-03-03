@@ -189,22 +189,22 @@ func PackNGo(infile string, offset int64, outfile string, dependency string) {
 	// Compress File of occupy less space
 	// Then remove UPX headers from file.
 	// ------------------------------------------------------------------------
-	// fmt.Print(" → Compressing Launcher...")
-	// if ExecCommand("upx", []string{outfile}) {
-	// 	if StripUPXHeaders(outfile) {
-	// 		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
-	// 	} else {
-	// 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-	// 		ExecCommand("rm", []string{"-f", outfile})
-	// 		cleanup()
-	// 		os.Exit(1)
-	// 	}
-	// } else {
-	// 	fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
-	// 	ExecCommand("rm", []string{"-f", outfile})
-	// 	cleanup()
-	// 	os.Exit(1)
-	// }
+	fmt.Print(" → Compressing Launcher...")
+	if ExecCommand("upx", []string{outfile}) {
+		if StripUPXHeaders(outfile) {
+			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+		} else {
+			fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+			ExecCommand("rm", []string{"-f", outfile})
+			cleanup()
+			os.Exit(1)
+		}
+	} else {
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
+		ExecCommand("rm", []string{"-f", outfile})
+		cleanup()
+		os.Exit(1)
+	}
 
 	fmt.Print(" → Cleaning up...")
 	// remove unused file
