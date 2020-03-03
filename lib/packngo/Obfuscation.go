@@ -119,7 +119,7 @@ func GenerateTyposquatName() string {
 }
 
 /*
-ObfuscateString will hide a string creating a function that returns
+GenerateStringFunc will hide a string creating a function that returns
 that value as a string encoded with a series og byteshift operations
 */
 func GenerateStringFunc(txt string, function string) string {

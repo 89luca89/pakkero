@@ -32,40 +32,6 @@ func cleanup() {
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 }
 
-func registerDependency(dependency string) {
-	dependencyFile, _ := os.Open(dependency)
-	defer dependencyFile.Close()
-	dependencyStats, _ := dependencyFile.Stat()
-	depenencyLinkStats, _ := os.Lstat(dependency)
-	if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
-		cleanup()
-		fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
-		os.Exit(1)
-	}
-	// calculate BFD (byte frequency distribution) for the input dependency
-	bytes, _ := ioutil.ReadFile(dependency)
-
-	bfd := make([]float64, 256)
-	for _, b := range bytes {
-		bfd[b] = bfd[b] + 1
-	}
-	// make a string out of it
-	bfdString := "[]float64{"
-	for _, v := range bfd {
-		bfdString += fmt.Sprintf("%f", v) + ","
-	}
-	bfdString += "}"
-
-	// add Dependency data to the secrets
-	// register BFD
-	Secrets[depBFDPlaceholder] = []string{bfdString, "leaveBFD"}
-	// register name
-	Secrets[depNamePlaceholder] = []string{dependency, GenerateTyposquatName()}
-	// register size
-	Secrets[depSizePlaceholder] = []string{
-		fmt.Sprintf("%d", dependencyStats.Size()), GenerateTyposquatName()}
-}
-
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
 
@@ -102,7 +68,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	// ------------------------------------------------------------------------
 	// If a dependency check is present, register it.
 	if dependency != "" {
-		registerDependency(dependency)
+		RegisterDependency(dependency)
 	} else {
 		// in case of missing dependency add an empty variable for BFD
 		Secrets[depBFDPlaceholder] = []string{"[]int64[]", "leaveBFD"}
@@ -121,10 +87,12 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		cleanup()
 		os.Exit(1)
 	}
+	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 
 	// ------------------------------------------------------------------------
 	// obfuscate the launcher
 	// ------------------------------------------------------------------------
+	fmt.Print(" → Obfuscating Launcher Stub...")
 	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
@@ -142,12 +110,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	// ------------------------------------------------------------------------
 	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
-	// os.Setenv("CGO_CFLAGS",
-	// 	"-static -Wall -fPIE "+
-	// 		" -O0 -fomit-frame-pointer "+
-	// 		"-finline-small-functions"+
-	// 		" -fcrossjumping -fdata-sections "+
-	// 		"-ffunction-sections")
 	os.Setenv("CGO_ENABLED", "0")
 	flags = []string{"build", "-a",
 		"-gcflags=-N",

@@ -9,7 +9,9 @@ import (
 	"compress/zlib"
 	"crypto/rand"
 	"fmt"
+	"io/ioutil"
 	mathRand "math/rand"
+	"os"
 	"os/exec"
 	"time"
 )
@@ -127,4 +129,43 @@ func GzipContent(input []byte) []byte {
 	zlibWriter.Close()
 
 	return zlibPlaintext.Bytes()
+}
+
+/*
+RegisterDependency will take a file in input and register the
+Binary Frequency Distribution (BFD) and some other data to let the launcher
+do statystical analysis of the found files
+*/
+func RegisterDependency(dependency string) {
+	dependencyFile, _ := os.Open(dependency)
+	defer dependencyFile.Close()
+	dependencyStats, _ := dependencyFile.Stat()
+	depenencyLinkStats, _ := os.Lstat(dependency)
+	if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
+		cleanup()
+		fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
+		os.Exit(1)
+	}
+	// calculate BFD (byte frequency distribution) for the input dependency
+	bytes, _ := ioutil.ReadFile(dependency)
+
+	bfd := make([]float64, 256)
+	for _, b := range bytes {
+		bfd[b] = bfd[b] + 1
+	}
+	// make a string out of it
+	bfdString := "[]float64{"
+	for _, v := range bfd {
+		bfdString += fmt.Sprintf("%f", v) + ","
+	}
+	bfdString += "}"
+
+	// add Dependency data to the secrets
+	// register BFD
+	Secrets[depBFDPlaceholder] = []string{bfdString, "leaveBFD"}
+	// register name
+	Secrets[depNamePlaceholder] = []string{dependency, GenerateTyposquatName()}
+	// register size
+	Secrets[depSizePlaceholder] = []string{
+		fmt.Sprintf("%d", dependencyStats.Size()), GenerateTyposquatName()}
 }
