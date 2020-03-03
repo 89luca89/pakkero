@@ -120,7 +120,7 @@ func GenerateTyposquatName() string {
 ObfuscateString will hide a string creating a function that returns
 that value as a string encoded with a series og byteshift operations
 */
-func ObfuscateString(txt string, function string) string {
+func GenerateStringFunc(txt string, function string) string {
 	lines := []string{}
 	for _, item := range []byte(txt) {
 		lines = append(
@@ -200,13 +200,21 @@ func ObfuscateStrings(input string) string {
 	for k, w := range Secrets {
 		// in case we manually added some secrets that we want to leave
 		if !strings.Contains(w[1], "leave") {
-			funcString = funcString + ObfuscateString(w[0], w[1]) + "\n"
+			funcString = funcString + GenerateStringFunc(w[0], w[1]) + "\n"
 			body = strings.ReplaceAll(body, k, w[1]+"()")
 		} else {
 			body = strings.ReplaceAll(body, k, w[0])
 		}
 
 	}
+	// remove any comment
+	bodySlice := strings.Split(body, "\n")
+	for index, line := range bodySlice {
+		if strings.Contains(line, "//") {
+			bodySlice[index] = ""
+		}
+	}
+	body = strings.Join(bodySlice, "\n")
 	// reconstruct the program correctly and
 	// insert all the functions before the main
 	body = body + "\n" + funcString
@@ -292,15 +300,15 @@ func ObfuscateLauncher(infile string) error {
 	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
-	//	--- Start string obfuscation
-	// ------------------------------------------------------------------------
-	content = ObfuscateStrings(content)
-
-	// ------------------------------------------------------------------------
 	//	--- Start function name obfuscation
 	// ------------------------------------------------------------------------
 	content = ObfuscateFuncVars(content)
 	// ------------------------------------------------------------------------
+
+	// ------------------------------------------------------------------------
+	//	--- Start string obfuscation
+	// ------------------------------------------------------------------------
+	content = ObfuscateStrings(content)
 
 	// save.
 	ioutil.WriteFile(infile, []byte(content), 0644)
