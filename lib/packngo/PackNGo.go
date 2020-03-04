@@ -46,7 +46,7 @@ func trap() {
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
 
-    trap()
+	trap()
 
 	fmt.Print(" → Randomizing offset...")
 
@@ -115,7 +115,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
-
 
 	// ------------------------------------------------------------------------
 	// compile the launcher binary
@@ -211,14 +210,13 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
 		ExecCommand("rm", []string{"-f", outfile})
-		fmt.Printf(ErrorColor, "\t[ ERR ]\n")
+		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		println("ERROR! Calculated offset is lower than launcher size: " +
 			fmt.Sprintf("offset=%d, filesize=%d", offset, encFileSize))
 		os.Exit(1)
 	}
-	fmt.Printf(SuccessColor, "\t[ OK ]\n")
+	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
-
 
 	// ------------------------------------------------------------------------
 	// Pre-Payload Garbage
@@ -235,7 +233,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	}
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
-
 
 	// ------------------------------------------------------------------------
 	// Encryption and compression of the payload
@@ -282,7 +279,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
-
 
 	// ------------------------------------------------------------------------
 	// Post-Payload Garbage
