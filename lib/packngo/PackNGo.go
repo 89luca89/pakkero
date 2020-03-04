@@ -32,9 +32,7 @@ func cleanup() {
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 }
 
-// PackNGo will Encrypt and pack the payload for a secure execution
-func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
-
+func trap() {
 	// Prepare to intercept SIGTERM
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -43,26 +41,36 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		cleanup()
 		os.Exit(1)
 	}()
+}
+
+// PackNGo will Encrypt and pack the payload for a secure execution
+func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
+
+    trap()
 
 	fmt.Print(" → Randomizing offset...")
 
 	// get the current script path
 	selfPath := filepath.Dir(os.Args[0])
+
 	// declare outfile as original filename + .enc
 	if len(outfile) <= 0 {
 		outfile = infile + ".enc"
 	}
+
+	// ------------------------------------------------------------------------
 	// offset Hysteresis, this will prevent easy key retrieving
 	rand.Seed(time.Now().UTC().UnixNano())
 	offset = offset + (rand.Int63n(4096-128) + 128)
 
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
+	// Register Dependency to try and bypass any tampering on dependent
+	// packages
 	fmt.Print(" → Registering Dependencies...")
 
-	// add offset to the secrets!
-	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
-		GenerateTyposquatName()}
 	// ------------------------------------------------------------------------
 	// Register eventual dependency passed by cli
 	// If a dependency check is present, register it.
@@ -75,7 +83,13 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
+	// Create the launcher program starting from our stub
 	fmt.Print(" → Creating Launcher Stub...")
+
+	// add offset to the secrets!
+	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
+		GenerateTyposquatName()}
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
@@ -87,9 +101,10 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
-	// obfuscate the launcher
+	// Obfuscate the launcher
 	fmt.Print(" → Obfuscating Launcher Stub...")
 	err = ObfuscateLauncher(launcherFile)
 	if err != nil {
@@ -101,10 +116,11 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	fmt.Print(" → Compiling Launcher...")
 
 	// ------------------------------------------------------------------------
 	// compile the launcher binary
+	fmt.Print(" → Compiling Launcher...")
+
 	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
 	os.Setenv("CGO_ENABLED", "0")
@@ -164,8 +180,10 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	}
 	// ------------------------------------------------------------------------
 
+	// ------------------------------------------------------------------------
+	// Remove unused file
 	fmt.Print(" → Cleaning up...")
-	// remove unused file
+
 	if ExecCommand("rm", []string{"-f", launcherFile}) {
 		fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 	} else {
@@ -173,6 +191,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		ExecCommand("rm", []string{"-f", outfile})
 		os.Exit(1)
 	}
+	// ------------------------------------------------------------------------
 
 	// read compiled file
 	encFile, err := os.OpenFile(outfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -185,7 +204,9 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	encFileStat, _ := encFile.Stat()
 	encFileSize := encFileStat.Size()
 
-	fmt.Print(" → Verifying offset correctness...")
+	// ------------------------------------------------------------------------
+	// Input validation
+	fmt.Print(" → Verifying input offset...")
 
 	// Ensure input offset is valid comared to compiled file size!
 	if offset <= encFileSize {
@@ -196,12 +217,14 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		os.Exit(1)
 	}
 	fmt.Printf(SuccessColor, "\t[ OK ]\n")
+	// ------------------------------------------------------------------------
 
-	fmt.Print(" → Adding garbage...")
 
 	// ------------------------------------------------------------------------
 	// Pre-Payload Garbage
 	// calculate where to put garbage and where to put the payload
+	fmt.Print(" → Adding garbage...")
+
 	blockCount := offset - encFileSize
 	// append randomness to the runner itself
 	_, err = encFile.WriteString(GenerateRandomGarbage(blockCount))
@@ -213,11 +236,12 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	fmt.Print(" → Preparing payload...")
 
 	// ------------------------------------------------------------------------
 	// Encryption and compression of the payload
 	// get file to encrypt argument
+	fmt.Print(" → Reading payload...")
+
 	byteContent, err := ioutil.ReadFile(infile) // just pass the file name
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t\t[ ERR ]\n")
@@ -230,11 +254,14 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	plaintext := []byte(base64.StdEncoding.EncodeToString([]byte(content)))
 
 	fmt.Printf(SuccessColor, "\t\t\t[ OK ]\n")
+	// ------------------------------------------------------------------------
+
 	fmt.Print(" → Compressing payload...")
 
 	// GZIP before encrypt
 	plaintext = GzipContent(plaintext)
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
+	// ------------------------------------------------------------------------
 
 	fmt.Print(" → Encrypting payload...")
 
@@ -256,11 +283,12 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
-	fmt.Print(" → Adding garbage to payload...")
 
 	// ------------------------------------------------------------------------
 	// Post-Payload Garbage
 	// calculate final padding
+	fmt.Print(" → Adding garbage to payload...")
+
 	finalPaddingArray := make([]byte, binary.MaxVarintLen64)
 	n := binary.PutVarint(finalPaddingArray, offset)
 	finalPaddingB := finalPaddingArray[:n]
