@@ -56,6 +56,21 @@ var extras = []string{
 	".text",
 	".itablink",
 	".shstrtab",
+	".data",
+	".dynamic",
+	".dynstr",
+	".dynsym",
+	".gnu.version_r",
+	".gopclntab",
+	".got.plt",
+	".init_array",
+	".interp",
+	".itablink",
+	".rela.dyn",
+	".rela.plt",
+	".tbss",
+	".plt",
+	".init",
 	// internal golang
 	"name", "runtime", "command", "cmd",
 	"ptr", "process", "unicode", "main",
@@ -217,7 +232,8 @@ func GenerateStringFunc(txt string, function string) string {
 	}
 	return fmt.Sprintf("func "+
 		function+
-		"() string { EAX := uint8(obUnsafe.Sizeof(true)); return string(\n[]byte{\n%s,\n},\n)}",
+		"() string { EAX := uint8(obUnsafe.Sizeof(true));"+
+		"return string(\n[]byte{\n%s,\n},\n)}",
 		strings.Join(lines, ",\n"))
 }
 
