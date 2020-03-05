@@ -61,27 +61,26 @@ attach A G A I N , register if unsuccessful
 this protects against custom ptrace (always returning 0)
 against NOP attacks and LD_PRELOAD attacks
 */
-// func obPtraceDetect() {
-// 	var obOffset = 0
-// 	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-// 		uintptr(obSyscall.PTRACE_TRACEME),
-// 		0,
-// 		0)
-// 	if obResult == 0 {
-// 		obOffset = 5
-// 	}
-// 	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-// 		uintptr(obSyscall.PTRACE_TRACEME),
-// 		0,
-// 		0)
-// 	if obResult == 1 {
-// 		obOffset *= 3
-// 	}
-// 	if obOffset != 15 {
-// 		obExit()
-// 	}
-// 	return
-// }
+func obPtraceDetect() {
+	var obOffset = 0
+	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
+	if obResult == 0 {
+		obOffset = 5
+	}
+	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
+	if obResult == 1 {
+		obOffset *= 3
+	}
+	if obOffset != 15 {
+		obExit()
+	}
+}
 
 /*
 Check the process cmdline to spot if a debugger is inline
@@ -536,7 +535,7 @@ func main() {
 	obChannel := make(chan obOS.Signal, 1)
 	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)
 	go obSigTrap(obChannel)
-	// go obPtraceDetect()
+	obPtraceDetect()
 	// OB_CHECK
 	obDependencyCheck()
 	// OB_CHECK
