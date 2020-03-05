@@ -75,7 +75,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 		RegisterDependency(dependency)
 	} else {
 		// in case of missing dependency add an empty variable for BFD
-		Secrets[depBFDPlaceholder] = []string{"[]int64[]", "leaveBFD"}
+		Secrets[depBFDPlaceholder] = []string{"[]float64{}", "leaveBFD"}
 	}
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
