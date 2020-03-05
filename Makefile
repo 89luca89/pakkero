@@ -69,4 +69,4 @@ test: clean
 		-offset 1850000 \
 		-register-dep /usr/bin/bash;
 	sync;
-	for i in $$(seq 1 500); do /tmp/test.enc $$i; done;
+	for i in $$(seq 1 20); do /tmp/test.enc $$i; done;
