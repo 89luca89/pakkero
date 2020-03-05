@@ -11,7 +11,6 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 )
@@ -50,9 +49,6 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	trap()
 
 	fmt.Print(" → Randomizing offset...")
-
-	// get the current script path
-	selfPath := filepath.Dir(os.Args[0])
 
 	// declare outfile as original filename + .enc
 	if len(outfile) <= 0 {
@@ -121,19 +117,14 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	// compile the launcher binary
 	fmt.Print(" → Compiling Launcher...")
 
-	gopath, _ := os.LookupEnv("GOPATH")
 	var flags []string
 	os.Setenv("CGO_ENABLED", "0")
 	flags = []string{"build", "-a",
-		"-gcflags=-N",
-		"-gcflags=-nolocalimports",
-		"-gcflags=-trimpath=" + selfPath,
-		"-asmflags=-trimpath=" + selfPath,
-		"-gcflags=-trimpath=" + gopath + "/src/",
-		"-asmflags=-trimpath=" + gopath + "/src/",
-		"-ldflags=-extldflags=-static",
-		"-ldflags=-s",
-		"-ldflags=-w",
+		"-trimpath",
+		"-gcflags",
+		"-N -l -nolocalimports",
+		"-ldflags",
+		"-s -w -extldflags -static",
 	}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
@@ -151,7 +142,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	// ------------------------------------------------------------------------
 	// Strip File of excess headers
 	fmt.Print(" → Stripping Launcher...")
-	if StripFile(outfile) {
+	if StripFile(outfile, launcherFile) {
 		fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	} else {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")

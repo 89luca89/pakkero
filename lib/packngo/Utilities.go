@@ -13,6 +13,7 @@ import (
 	mathRand "math/rand"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 )
 
@@ -110,6 +111,37 @@ func ExecCommand(name string, args []string) bool {
 }
 
 /*
+ListImportsFromFile will extract from a GO file the import section
+and return an array with all the imports (with multiple entry in case
+of sub packages)
+*/
+func ListImportsFromFile(inputFile string) []string {
+	byteContent, _ := ioutil.ReadFile(inputFile)
+	input := string(byteContent)
+	result := []string{}
+
+	// retrieve import section
+	imports := strings.Index(input, "import (")
+	endimports := strings.Index(input[imports:], ")")
+	importSection := input[imports+len("import (")+1 : imports+endimports-1]
+	// now get all imports from the .go file and anonymize them
+	for _, imports := range strings.Split(importSection, "\n") {
+		head := strings.Split(imports, ` `)
+		importlet := head[1]
+		// remove quotation marks
+		importlet = importlet[1 : len(importlet)-1]
+		// add to the group of removal
+		result = append(result, importlet)
+		// if it's a sub package, ensure to insert also single words
+		// in the removal list
+		if strings.Contains(importlet, "/") {
+			result = append(result, strings.Split(importlet, "/")...)
+		}
+	}
+	return result
+}
+
+/*
 GenerateRandomGarbage creates random garbage to rise entropy
 */
 func GenerateRandomGarbage(size int64) string {
@@ -129,6 +161,17 @@ func GzipContent(input []byte) []byte {
 	zlibWriter.Close()
 
 	return zlibPlaintext.Bytes()
+}
+
+/*
+GenerateRandomString will return a string with only void chars
+*/
+func GenerateNullString(n int) string {
+	result := ""
+	for len(result) < n {
+		result += string(0)
+	}
+	return result
 }
 
 /*

@@ -21,6 +21,96 @@ var Secrets = map[string][]string{}
 // LauncherStub Stub of the Launcher.go, put here during compilation time
 const LauncherStub = "LAUNCHERSTUB"
 
+var builtins = []string{
+	"append", "cap",
+	"close", "complex",
+	"copy", "delete",
+	"imag", "len",
+	"make", "new",
+	"panic", "print",
+	"println", "real",
+	"recover", "ComplexType",
+	"FloatType", "IntegerType",
+	"Type", "Type1",
+	"bool", "byte",
+	"complex128", "complex64",
+	"error", "float32",
+	"float64", "int",
+	"int16", "int32",
+	"int64", "int8",
+	"rune", "string",
+	"uint", "uint16",
+	"uint32", "uint64",
+	"uint8", "uintptr",
+}
+var keyWords = []string{
+	"break", "default",
+	"func", "interface",
+	"select", "case",
+	"defer", "go",
+	"map", "struct",
+	"chan", "else",
+	"goto", "package",
+	"switch", "const",
+	"fallthrough", "if",
+	"range", "type",
+	"continue", "for",
+	"import", "return",
+	"var",
+}
+var extras = []string{
+	// miscellaneous
+	"unix",
+	"linux",
+	"runtime",
+	"unicode",
+	"usr",
+	"lib",
+	// internal golang
+	"main",
+	"path",
+	"get",
+	"reflect",
+	"context",
+	"debug",
+	"fmt",
+	"sync",
+	"sort",
+	"size",
+	"malloc",
+	"heap",
+	"free",
+	"fatal",
+	"call",
+	"fixed",
+	"slice",
+	"bit",
+	"file",
+	"read",
+	"write",
+	"buffer",
+	// crypto traces
+	"hash",
+	"sum",
+	"gcm",
+	"encrypt",
+	"decrypt",
+	"digest",
+	// anti debug traces
+	"env",
+	"trace",
+	// ELF Headers
+	".gopclntab",
+	".go.buildinfo",
+	".noptrdata",
+	".noptrbss",
+	".data",
+	".rodata",
+	".text",
+	".itablink",
+	".shstrtab",
+}
+
 /*
 StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
@@ -68,10 +158,10 @@ func StripUPXHeaders(infile string) bool {
 StripFile will strip out all unneeded headers from and ELF
 file in input
 */
-func StripFile(infile string) bool {
+func StripFile(infile string, launcherFile string) bool {
 
 	// strip symbols and headers
-	return ExecCommand("strip",
+	if !ExecCommand("strip",
 		[]string{
 			"-sxX",
 			"--remove-section=.bss",
@@ -91,7 +181,41 @@ func StripFile(infile string) bool {
 			"--remove-section=.shstrtab",
 			"--remove-section=.typelink",
 			infile,
-		})
+		}) {
+		return false
+	}
+
+	// ------------------------------------------------------------------------
+	// proceede with manual
+	// obfuscation and stripping of golang strings
+	removeStrings := append(extras, keyWords...)
+	removeStrings = append(removeStrings, builtins...)
+	// anonymize the launcherFile string to hide the original launcher
+	// file name
+	removeStrings = append(removeStrings, launcherFile)
+	// anonymize imports
+	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
+	// deduplicate
+	removeStrings = Unique(removeStrings)
+
+	// read file to string
+	byteContent, err := ioutil.ReadFile(infile)
+	if err != nil {
+		return false
+	}
+	input := string(byteContent)
+
+	for _, remove := range removeStrings {
+		// generate new random string to place instead
+		newName := GenerateNullString(len(remove))
+		input = strings.ReplaceAll(input, remove, newName)
+		input = strings.ReplaceAll(input, strings.Title(remove), newName)
+	}
+	// save.
+	err = ioutil.WriteFile(infile, []byte(input), 0644)
+	// ------------------------------------------------------------------------
+
+	return err == nil
 }
 
 /*
@@ -131,7 +255,7 @@ func GenerateStringFunc(txt string, function string) string {
 	}
 	return fmt.Sprintf("func "+
 		function+
-		"() string { return string(\n[]byte{\n%s,\n},\n)}",
+		"() string { EAX := uint8(obUnsafe.Sizeof(true)); return string(\n[]byte{\n%s,\n},\n)}",
 		strings.Join(lines, ",\n"))
 }
 
@@ -152,16 +276,16 @@ func GenerateBitshift(n byte) (buf string) {
 		arr = append(arr, x)
 		n = n >> 1
 	}
-	buf = "1"
+	buf = "EAX"
 	mathRand.Seed(time.Now().Unix())
 	for i := len(arr) - 1; i >= 0; i-- {
-		buf = fmt.Sprintf("%s<<%s", buf, "1")
+		buf = fmt.Sprintf("%s<<%s", buf, "EAX")
 		if arr[i] == 1 {
 			op := "(%s|%s)"
 			if mathRand.Intn(2) == 0 {
 				op = "(%s^%s)"
 			}
-			buf = fmt.Sprintf(op, buf, "1")
+			buf = fmt.Sprintf(op, buf, "EAX")
 		}
 	}
 	return buf
@@ -302,13 +426,13 @@ func ObfuscateLauncher(infile string) error {
 	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
-	//	--- Start function name obfuscation
-	content = ObfuscateFuncVars(content)
+	//	--- Start string obfuscation
+	content = ObfuscateStrings(content)
 	// ------------------------------------------------------------------------
 
 	// ------------------------------------------------------------------------
-	//	--- Start string obfuscation
-	content = ObfuscateStrings(content)
+	//	--- Start function name obfuscation
+	content = ObfuscateFuncVars(content)
 	// ------------------------------------------------------------------------
 
 	// save.
