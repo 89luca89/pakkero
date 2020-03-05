@@ -34,9 +34,10 @@ var builtins = []string{
 	"uint32", "uint64", "uint8", "uintptr",
 }
 
+// "go",
 var keyWords = []string{
 	"break", "default", "func", "interface",
-	"select", "case", "defer", "go",
+	"select", "case", "defer",
 	"map", "struct", "chan", "else",
 	"goto", "package", "switch", "const",
 	"fallthrough", "if", "range", "type",
@@ -56,23 +57,17 @@ var extras = []string{
 	".itablink",
 	".shstrtab",
 	// internal golang
-	"name", "runtime",
-	"command", "cmd",
-	"ptr", "process",
-	"unicode", "main",
-	"path", "get",
-	"reflect", "context",
-	"debug", "fmt",
-	"sync", "sort",
-	"size", "heap",
-	"fatal", "call",
-	"fixed", "slice",
-	"bit", "file",
-	"read", "write",
-	"buffer", "encrypt",
-	"decrypt",
+	"name", "runtime", "command", "cmd",
+	"ptr", "process", "unicode", "main",
+	"path", "get", "reflect", "context",
+	"debug", "fmt", "sync", "sort",
+	"size", "heap", "fatal", "call",
+	"fixed", "slice", "bit", "file",
+	"read", "write", "buffer", "encrypt",
+	"decrypt", "hash", "state",
+	"external", "internal", "float",
 	// anti debug traces
-	"env", "trace",
+	"env", "trace", "pid",
 }
 
 /*
@@ -151,14 +146,18 @@ func StripFile(infile string, launcherFile string) bool {
 
 	// ------------------------------------------------------------------------
 	// proceede with manual
-	// obfuscation and stripping of golang strings
-	removeStrings := append(extras, keyWords...)
+	// stripping of golang builtins and keyWords strings
+	removeStrings := []string{}
+	removeStrings = append(removeStrings, extras...)
 	removeStrings = append(removeStrings, builtins...)
+	removeStrings = append(removeStrings, keyWords...)
+	// stripping of the dependencies strings
+	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
+
 	// anonymize the launcherFile string to hide the original launcher
 	// file name
 	removeStrings = append(removeStrings, launcherFile)
 	// anonymize imports
-	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
 	// deduplicate
 	removeStrings = Unique(removeStrings)
 

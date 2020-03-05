@@ -132,11 +132,6 @@ func ListImportsFromFile(inputFile string) []string {
 		importlet = importlet[1 : len(importlet)-1]
 		// add to the group of removal
 		result = append(result, importlet)
-		// if it's a sub package, ensure to insert also single words
-		// in the removal list
-		if strings.Contains(importlet, "/") {
-			result = append(result, strings.Split(importlet, "/")...)
-		}
 	}
 	return result
 }
@@ -196,7 +191,7 @@ func GzipContent(input []byte) []byte {
 }
 
 /*
-GenerateRandomString will return a string with only void chars
+GenerateNullString will return a string with only void chars
 */
 func GenerateNullString(n int) string {
 	result := ""
