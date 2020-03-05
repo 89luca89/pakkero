@@ -61,3 +61,12 @@ clean:
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
 		dist/packngo
+
+test: clean
+	dist/packngo \
+		--file /usr/bin/echo \
+		-o /tmp/test.enc \
+		-offset 1850000 \
+		-register-dep /usr/bin/bash;
+	sync;
+	for i in $$(seq 1 500); do /tmp/test.enc $$i; done;
