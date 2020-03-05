@@ -142,6 +142,38 @@ func ListImportsFromFile(inputFile string) []string {
 }
 
 /*
+GenerateBitshift will transform a char/byte in a series of operations on value 1
+
+thanks to:
+https://github.com/GH0st3rs/obfus/blob/master/obfus.go
+*/
+func GenerateBitshift(n byte) (buf string) {
+	var arr []byte
+	var x uint8
+	for n > 1 {
+		x = 0
+		if n%2 == 1 {
+			x = 1
+		}
+		arr = append(arr, x)
+		n = n >> 1
+	}
+	buf = "EAX"
+	mathRand.Seed(time.Now().Unix())
+	for i := len(arr) - 1; i >= 0; i-- {
+		buf = fmt.Sprintf("%s<<%s", buf, "EAX")
+		if arr[i] == 1 {
+			op := "(%s|%s)"
+			if mathRand.Intn(2) == 0 {
+				op = "(%s^%s)"
+			}
+			buf = fmt.Sprintf(op, buf, "EAX")
+		}
+	}
+	return buf
+}
+
+/*
 GenerateRandomGarbage creates random garbage to rise entropy
 */
 func GenerateRandomGarbage(size int64) string {

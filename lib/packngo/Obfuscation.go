@@ -22,83 +22,29 @@ var Secrets = map[string][]string{}
 const LauncherStub = "LAUNCHERSTUB"
 
 var builtins = []string{
-	"append", "cap",
-	"close", "complex",
-	"copy", "delete",
-	"imag", "len",
-	"make", "new",
-	"panic", "print",
-	"println", "real",
-	"recover", "ComplexType",
-	"FloatType", "IntegerType",
-	"Type", "Type1",
-	"bool", "byte",
-	"complex128", "complex64",
-	"error", "float32",
-	"float64", "int",
-	"int16", "int32",
-	"int64", "int8",
-	"rune", "string",
-	"uint", "uint16",
-	"uint32", "uint64",
-	"uint8", "uintptr",
+	"append", "cap", "close", "complex",
+	"copy", "delete", "imag", "len",
+	"make", "new", "panic", "print",
+	"println", "real", "recover", "ComplexType",
+	"FloatType", "IntegerType", "Type", "Type1",
+	"bool", "byte", "complex128", "complex64",
+	"error", "float32", "float64", "int",
+	"int16", "int32", "int64", "int8",
+	"rune", "string", "uint", "uint16",
+	"uint32", "uint64", "uint8", "uintptr",
 }
+
 var keyWords = []string{
-	"break", "default",
-	"func", "interface",
-	"select", "case",
-	"defer", "go",
-	"map", "struct",
-	"chan", "else",
-	"goto", "package",
-	"switch", "const",
-	"fallthrough", "if",
-	"range", "type",
-	"continue", "for",
-	"import", "return",
+	"break", "default", "func", "interface",
+	"select", "case", "defer", "go",
+	"map", "struct", "chan", "else",
+	"goto", "package", "switch", "const",
+	"fallthrough", "if", "range", "type",
+	"continue", "for", "import", "return",
 	"var",
 }
+
 var extras = []string{
-	// miscellaneous
-	"unix",
-	"linux",
-	"runtime",
-	"unicode",
-	"usr",
-	"lib",
-	// internal golang
-	"main",
-	"path",
-	"get",
-	"reflect",
-	"context",
-	"debug",
-	"fmt",
-	"sync",
-	"sort",
-	"size",
-	"malloc",
-	"heap",
-	"free",
-	"fatal",
-	"call",
-	"fixed",
-	"slice",
-	"bit",
-	"file",
-	"read",
-	"write",
-	"buffer",
-	// crypto traces
-	"hash",
-	"sum",
-	"gcm",
-	"encrypt",
-	"decrypt",
-	"digest",
-	// anti debug traces
-	"env",
-	"trace",
 	// ELF Headers
 	".gopclntab",
 	".go.buildinfo",
@@ -109,6 +55,24 @@ var extras = []string{
 	".text",
 	".itablink",
 	".shstrtab",
+	// internal golang
+	"name", "runtime",
+	"command", "cmd",
+	"ptr", "process",
+	"unicode", "main",
+	"path", "get",
+	"reflect", "context",
+	"debug", "fmt",
+	"sync", "sort",
+	"size", "heap",
+	"fatal", "call",
+	"fixed", "slice",
+	"bit", "file",
+	"read", "write",
+	"buffer", "encrypt",
+	"decrypt",
+	// anti debug traces
+	"env", "trace",
 }
 
 /*
@@ -260,38 +224,6 @@ func GenerateStringFunc(txt string, function string) string {
 }
 
 /*
-GenerateBitshift will transform a char/byte in a series of operations on value 1
-
-thanks to:
-https://github.com/GH0st3rs/obfus/blob/master/obfus.go
-*/
-func GenerateBitshift(n byte) (buf string) {
-	var arr []byte
-	var x uint8
-	for n > 1 {
-		x = 0
-		if n%2 == 1 {
-			x = 1
-		}
-		arr = append(arr, x)
-		n = n >> 1
-	}
-	buf = "EAX"
-	mathRand.Seed(time.Now().Unix())
-	for i := len(arr) - 1; i >= 0; i-- {
-		buf = fmt.Sprintf("%s<<%s", buf, "EAX")
-		if arr[i] == 1 {
-			op := "(%s|%s)"
-			if mathRand.Intn(2) == 0 {
-				op = "(%s^%s)"
-			}
-			buf = fmt.Sprintf(op, buf, "EAX")
-		}
-	}
-	return buf
-}
-
-/*
 ObfuscateStrings will extract all plaintext strings denotet with
 backticks and obfuscate them using byteshift wise operations
 */
@@ -348,6 +280,26 @@ func ObfuscateStrings(input string) string {
 }
 
 /*
+ObfuscateFuncVars will:
+  - extract all obfuscation-enabled func and var names:
+  - those start with ob_* and will bel isted
+  - for each matching string generate a typosquatted random string and
+    replace all string with that
+*/
+func ObfuscateFuncVars(input string) string {
+	// obfuscate functions and variables names
+	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
+	words := regex.FindAllString(input, -1)
+	words = ReverseStringArray(words)
+	words = Unique(words)
+	for _, w := range words {
+		// generate random name for each matching string
+		input = strings.ReplaceAll(input, w, GenerateTyposquatName())
+	}
+	return input
+}
+
+/*
 GenerateRandomAntiDebug will Insert random order of anti-debug check
 together with inline compilation to induce big number
 of instructions in random order
@@ -383,26 +335,6 @@ func GenerateRandomAntiDebug(input string) string {
 	}
 	// back to single string
 	return strings.Join(lines, "\n")
-}
-
-/*
-ObfuscateFuncVars will:
-  - extract all obfuscation-enabled func and var names:
-  - those start with ob_* and will bel isted
-  - for each matching string generate a typosquatted random string and
-    replace all string with that
-*/
-func ObfuscateFuncVars(input string) string {
-	// obfuscate functions and variables names
-	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
-	words := regex.FindAllString(input, -1)
-	words = ReverseStringArray(words)
-	words = Unique(words)
-	for _, w := range words {
-		// generate random name for each matching string
-		input = strings.ReplaceAll(input, w, GenerateTyposquatName())
-	}
-	return input
 }
 
 /*
