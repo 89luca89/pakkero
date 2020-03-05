@@ -153,11 +153,10 @@ func StripFile(infile string, launcherFile string) bool {
 	removeStrings = append(removeStrings, keyWords...)
 	// stripping of the dependencies strings
 	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
-
 	// anonymize the launcherFile string to hide the original launcher
 	// file name
 	removeStrings = append(removeStrings, launcherFile)
-	// anonymize imports
+
 	// deduplicate
 	removeStrings = Unique(removeStrings)
 
