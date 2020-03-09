@@ -12,6 +12,7 @@ import (
 
 const programName = "packngo"
 const version = "0.3.0"
+const minArgsLen = 2
 
 /*
 TestDependencies if all dependencies are present
@@ -22,7 +23,7 @@ func testDependencies() {
 	for _, v := range dependencies {
 		if !packngo.ExecCommand("which", []string{v}) {
 			println("Missing Dependency: " + v)
-			os.Exit(ERR)
+			os.Exit(packngo.ERR)
 		}
 	}
 }
@@ -32,7 +33,7 @@ Print version.
 */
 func printVersion() {
 	println(programName + " v" + version)
-	os.Exit(0)
+	os.Exit(packngo.OK)
 }
 
 /*
@@ -51,10 +52,12 @@ func help() {
 func main() {
 	// fist test if all dependencies are present
 	testDependencies()
-	if len(os.Args) == 1 {
+
+	if len(os.Args) < minArgsLen {
 		help()
-		os.Exit(ERR)
+		os.Exit(packngo.ERR)
 	}
+
 	flag.Usage = func() {
 		help()
 	}
@@ -75,7 +78,7 @@ func main() {
 		} else {
 			println("Missing arguments or invalid arguments!")
 			help()
-			os.Exit(1)
+			os.Exit(packngo.ERR)
 		}
 	}
 }

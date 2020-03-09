@@ -9,11 +9,13 @@ import (
 	obMD5 "crypto/md5"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
+	"fmt"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
 	obExec "os/exec"
 	obSignal "os/signal"
+	"runtime"
 	obStrconv "strconv"
 	obStrings "strings"
 	obSync "sync"
@@ -41,6 +43,11 @@ TODO:
 */
 
 func obExit() {
+	_, file, no, ok := runtime.Caller(1)
+	if ok {
+		fmt.Printf("called from %s#%d\n", file, no)
+	}
+
 	println("https://shorturl.at/crzEZ")
 	obOS.Exit(ERR)
 }
@@ -548,7 +555,7 @@ func obLauncher() {
 		obFileDescriptor,
 		uintptr(1024+9),
 		uintptr(obSealAll))
-	if obErr != nil {
+	if obErr != obSyscall.Errno(0) {
 		obExit()
 	}
 

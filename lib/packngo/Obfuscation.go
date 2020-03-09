@@ -133,7 +133,7 @@ StripFile will strip out all unneeded headers from and ELF
 file in input
 */
 func StripFile(infile string, launcherFile string) bool {
-
+	return true
 	// strip symbols and headers
 	if !ExecCommand("strip",
 		[]string{

@@ -66,7 +66,7 @@ test: clean
 	dist/packngo \
 		--file /usr/bin/echo \
 		-o /tmp/test.enc \
-		-offset 1850000 \
+		-offset 2850000 \
 		-register-dep /usr/bin/bash;
 	sync;
 	for i in $$(seq 1 20); do /tmp/test.enc $$i; done;
