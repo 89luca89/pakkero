@@ -30,6 +30,9 @@ type obDependency struct {
 
 const ERR = 1
 const OK = 0
+const obCorrelationLevel = 0.4
+const obStdLevel = 1
+const obFileSizeLevel = 15
 
 /*
 TODO:
@@ -355,7 +358,7 @@ func obDependencyCheck() {
 
 		obStatsFile, _ := obFile.Stat()
 		obTargetDepSize, _ := obStrconv.ParseInt(obInstanceDep.obDepSize, 10, 64)
-		obTargetTreshold := (obTargetDepSize / 100) * 15
+		obTargetTreshold := (obTargetDepSize / 100) * obFileSizeLevel
 		// first check if file size is +/- 15% of registered size
 		if (obStatsFile.Size()-obTargetDepSize) < (-1*(obTargetTreshold)) ||
 			(obStatsFile.Size()-obTargetDepSize) > obTargetTreshold {
@@ -374,7 +377,7 @@ func obDependencyCheck() {
 		obTargetStdDev := obUtilStandardDeviationCalc(obTargetBFD)
 		obCorrelation := obCovariance / (obDepStdDev * obTargetStdDev)
 
-		if obCorrelation < 0.4 {
+		if obCorrelation < obCorrelationLevel {
 			// not correlated, different nature
 			obExit()
 		}
@@ -384,7 +387,7 @@ func obDependencyCheck() {
 			obTargetBFD)
 
 		// standard deviation should not be greater than 1
-		if obCombinedStdDev > 1 {
+		if obCombinedStdDev > obStdLevel {
 			obExit()
 		}
 	}
