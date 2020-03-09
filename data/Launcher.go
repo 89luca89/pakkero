@@ -28,6 +28,9 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
+const ERR = 1
+const OK = 0
+
 /*
 TODO:
     missing an int3 scanner (golang runtime is full of them...)
@@ -36,7 +39,7 @@ TODO:
 
 func obExit() {
 	println("https://shorturl.at/crzEZ")
-	obOS.Exit(1)
+	obOS.Exit(ERR)
 }
 
 /*
@@ -63,21 +66,26 @@ against NOP attacks and LD_PRELOAD attacks
 */
 func obPtraceDetect() {
 	var obOffset = 0
+
 	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
 		uintptr(obSyscall.PTRACE_TRACEME),
 		0,
 		0)
-	if obResult == 0 {
+
+	if obResult == OK {
 		obOffset = 5
 	}
+
 	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
 		uintptr(obSyscall.PTRACE_TRACEME),
 		0,
 		0)
-	if obResult == 1 {
+
+	if obResult == ERR {
 		obOffset *= 3
 	}
-	if obOffset != 15 {
+
+	if obOffset != (3 * 5) {
 		obExit()
 	}
 }
@@ -91,6 +99,7 @@ func obParentCmdLineDetect() {
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
 		"/cmdline"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+
 	if obStrings.Contains(string(obStatParent), "gdb") ||
 		obStrings.Contains(string(obStatParent), "strace") ||
 		obStrings.Contains(string(obStatParent), "ltrace") ||
@@ -116,11 +125,14 @@ func obParentTracerDetect() {
 		"/status"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
 	obStatLines := obStrings.Split(string(obStatParent), "\n")
+
 	for _, obValue := range obStatLines {
+
 		if obStrings.Contains(obValue, "TracerPid") {
+
 			obSplitArray := obStrings.Split(obValue, ":")
-			obSplitValue := obStrings.Replace(obSplitArray[1], " ", "", -1)
-			obSplitValue = obStrings.Replace(obSplitArray[1], "\t", "", -1)
+			obSplitValue := obStrings.Replace(obSplitArray[1], "\t", "", -1)
+
 			if obSplitValue != "0" {
 				obExit()
 			}
@@ -137,6 +149,7 @@ func obParentDetect() {
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
 		"/stat"
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+
 	if obStrings.Contains(string(obStatParent), "gdb") ||
 		obStrings.Contains(string(obStatParent), "strace") ||
 		obStrings.Contains(string(obStatParent), "ltrace") ||
@@ -169,17 +182,17 @@ Check the process cmdline to spot if a debugger is inline
 */
 func obEnvParentDetect() {
 	obLines, _ := obOS.LookupEnv("_")
-	if obStrings.Contains(string(obLines), "gdb") ||
-		obStrings.Contains(string(obLines), "strace") ||
-		obStrings.Contains(string(obLines), "ltrace") ||
-		obStrings.Contains(string(obLines), "lldb") ||
-		obStrings.Contains(string(obLines), "valgrind") ||
-		obStrings.Contains(string(obLines), "dlv") ||
-		obStrings.Contains(string(obLines), "frida") ||
-		obStrings.Contains(string(obLines), "edb") ||
-		obStrings.Contains(string(obLines), "ghidra") ||
-		obStrings.Contains(string(obLines), "ida") ||
-		obStrings.Contains(string(obLines), "godebug") {
+	if obStrings.Contains(obLines, "gdb") ||
+		obStrings.Contains(obLines, "strace") ||
+		obStrings.Contains(obLines, "ltrace") ||
+		obStrings.Contains(obLines, "lldb") ||
+		obStrings.Contains(obLines, "valgrind") ||
+		obStrings.Contains(obLines, "dlv") ||
+		obStrings.Contains(obLines, "frida") ||
+		obStrings.Contains(obLines, "edb") ||
+		obStrings.Contains(obLines, "ghidra") ||
+		obStrings.Contains(obLines, "ida") ||
+		obStrings.Contains(obLines, "godebug") {
 		obExit()
 	}
 }
@@ -193,6 +206,7 @@ func obEnvDetect() {
 	_, obLines := obOS.LookupEnv("LINES")
 	_, obColumns := obOS.LookupEnv("COLUMNS")
 	_, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
+
 	if obLines || obColumns || obLineLdPreload {
 		obExit()
 	}
@@ -206,10 +220,18 @@ various restrictions (like ptrace checks)
 func obLdPreloadDetect() {
 	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
-	obOS.Setenv(obKey, obValue)
+
+	err := obOS.Setenv(obKey, obValue)
+	if err != nil {
+		obExit()
+	}
+
 	obLineLdPreload, _ := obOS.LookupEnv(obKey)
 	if obLineLdPreload == obValue {
-		obOS.Unsetenv(obKey)
+		err := obOS.Unsetenv(obKey)
+		if err != nil {
+			obExit()
+		}
 	} else {
 		obExit()
 	}
@@ -221,8 +243,9 @@ func obUtilBFDCalc(obInput string) []float64 {
 
 	obBfd := make([]float64, 256)
 	for _, obValue := range obFile {
-		obBfd[obValue] = obBfd[obValue] + 1
+		obBfd[obValue]++
 	}
+
 	return obBfd
 }
 
@@ -231,6 +254,7 @@ func obUtilAbsCalc(obInput float64) float64 {
 	if obInput < 0 {
 		return -obInput
 	}
+
 	return obInput
 }
 
@@ -238,18 +262,22 @@ func obUtilAbsCalc(obInput float64) float64 {
 func obUtilCovarianceCalc(obDepInput []float64, obTargetInput []float64) float64 {
 	obMeanDepInput := 0.0
 	obMeanTargetInput := 0.0
+
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		obMeanDepInput += obDepInput[obIndex]
 		obMeanTargetInput += obTargetInput[obIndex]
 	}
-	obMeanDepInput = obMeanDepInput / 256
-	obMeanTargetInput = obMeanTargetInput / 256
+
+	obMeanDepInput /= 256
+	obMeanTargetInput /= 256
 
 	obCovariance := 0.0
 	for obIndex := 0; obIndex < 256; obIndex++ {
 		obCovariance += (obDepInput[obIndex] - obMeanDepInput) * (obTargetInput[obIndex] - obMeanTargetInput)
 	}
-	obCovariance = obCovariance / 255
+
+	obCovariance /= 255
+
 	return obCovariance
 }
 
@@ -262,13 +290,15 @@ func obUtilStandardDeviationCalc(obInput []float64) float64 {
 		obSums += obInput[obIndex]
 	}
 	// calculate the mean
-	obMeanSums := obSums / 256
+	obMeanSums := obSums / float64(len(obInput))
 	obStdDev := 0.0
 	// calculate the standard deviation
 	for obIndex := 0; obIndex < 256; obIndex++ {
-		obStdDev += obMath.Pow(float64(obInput[obIndex]-obMeanSums), 2)
+		obStdDev += obMath.Pow(obInput[obIndex]-obMeanSums, 2)
 	}
-	obStdDev = (obMath.Sqrt(obStdDev / 256))
+
+	obStdDev = (obMath.Sqrt(obStdDev / float64(len(obInput))))
+
 	return obStdDev
 }
 
@@ -284,18 +314,21 @@ func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float
 		obDiffs[obIndex] = obUtilAbsCalc(obDepBFD[obIndex] - obTargetBFD[obIndex])
 		obSums += obDiffs[obIndex]
 		// increase obInstanceDep to calculate mean value of registered distribution
-		obDepSums += float64(obDepBFD[obIndex])
+		obDepSums += obDepBFD[obIndex]
 	}
 	// calculate the mean
-	obDepSums = obDepSums / 256
+	obDepSums /= float64(len(obDepBFD))
 	// calculate the mean
-	obMeanSums := obSums / 256
+	obMeanSums := obSums / float64(len(obDepBFD))
+
 	obStdDev := 0.0
 	// calculate the standard deviation
 	for obIndex := 0; obIndex < 256; obIndex++ {
-		obStdDev += obMath.Pow(float64(obDiffs[obIndex]-obMeanSums), 2)
+		obStdDev += obMath.Pow(obDiffs[obIndex]-obMeanSums, 2)
 	}
-	obStdDev = (obMath.Sqrt(obStdDev / 256)) / obDepSums
+
+	obStdDev = (obMath.Sqrt(obStdDev / float64(len(obDepBFD)))) / obDepSums
+
 	return obStdDev
 }
 
@@ -310,7 +343,6 @@ func obDependencyCheck() {
 	// control that we effectively want to control the dependencies
 	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
 		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
-
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
 		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
@@ -343,6 +375,7 @@ func obDependencyCheck() {
 		obDepStdDev := obUtilStandardDeviationCalc(obInstanceDep.obDepBFD)
 		obTargetStdDev := obUtilStandardDeviationCalc(obTargetBFD)
 		obCorrelation := obCovariance / (obDepStdDev * obTargetStdDev)
+
 		if obCorrelation < 0.4 {
 			// not correlated, different nature
 			obExit()
@@ -351,6 +384,7 @@ func obDependencyCheck() {
 		obCombinedStdDev := obUtilCombinedStandardDeviationCalc(
 			obInstanceDep.obDepBFD,
 			obTargetBFD)
+
 		// standard deviation should not be greater than 1
 		if obCombinedStdDev > 1 {
 			obExit()
@@ -363,21 +397,25 @@ Reverse a slice of bytes
 */
 func obReverseByteArray(obInput []byte) []byte {
 	obResult := []byte{}
+
 	for i := range obInput {
 		n := obInput[len(obInput)-1-i]
 		obResult = append(obResult, n)
 	}
+
 	return obResult
 }
 
 // Change byte endianess
 func obByteReverse(obBar byte) byte {
 	var obFoo byte
+
 	for obStart := 0; obStart < 8; obStart++ {
 		obFoo <<= 1
 		obFoo |= obBar & 1
 		obBar >>= 1
 	}
+
 	return obFoo
 }
 
@@ -395,6 +433,7 @@ const (
 func obLauncher() {
 	// OB_CHECK
 	obNameFile, _ := obOS.Executable()
+
 	obFile, _ := obOS.Open(obNameFile)
 	defer obFile.Close()
 
@@ -405,26 +444,42 @@ func obLauncher() {
 	// calculate final padding
 	obArrayFinalPadding := make([]byte, obBinary.MaxVarintLen64)
 	obByteFinalPadding := obArrayFinalPadding[:obBinary.PutVarint(obArrayFinalPadding, obOffset)]
+
 	for obIndex := range obByteFinalPadding {
 		obByteFinalPadding[obIndex] = obByteReverse(obByteFinalPadding[obIndex])
 	}
+
 	obFinalPadding, _ := obBinary.Varint(obByteFinalPadding)
+
 	// make it positive!
 	if obFinalPadding < 0 {
-		obFinalPadding = obFinalPadding * -1
+		obFinalPadding *= -1
 	}
 	// read the complete executable
 	obKey := make([]byte, obOffset)
-	obFile.Read(obKey)
+
+	_, obErr := obFile.Read(obKey)
+	if obErr != nil {
+		obExit()
+	}
 
 	// OB_CHECK
 	obSizeFile := obStatsFile.Size() - obOffset
 
 	// OB_CHECK
-	obFile.Seek(obOffset, 0)
+	_, obErr = obFile.Seek(obOffset, 0)
+	if obErr != nil {
+		obExit()
+	}
+
 	obCiphertext := make([]byte, obSizeFile)
+
 	// OB_CHECK
-	obFile.Read(obCiphertext)
+	_, obErr = obFile.Read(obCiphertext)
+	if obErr != nil {
+		obExit()
+	}
+
 	obCiphertext = obCiphertext[:int64(len(obCiphertext))-obFinalPadding]
 	// OB_CHECK
 	// the payload was reversed!
@@ -443,7 +498,7 @@ func obLauncher() {
 		features in the binary.
 		This doubles also as anti-tamper measure.
 	*/
-	obPassword := obMD5.Sum([]byte(obKey))
+	obPassword := obMD5.Sum(obKey)
 	// OB_CHECK
 	obCipherBlock, _ := obAES.NewCipher(obPassword[:])
 
@@ -481,13 +536,20 @@ func obLauncher() {
 
 	// OB_CHECK
 	// write payload to FD
-	obSyscall.Write(int(obFileDescriptor), obPayload)
+	_, obErr = obSyscall.Write(int(obFileDescriptor), obPayload)
+	if obErr != nil {
+		obExit()
+	}
+
 	// OB_CHECK
 	// make it immutable
-	obSyscall.Syscall(obSysFCNTL,
+	_, _, obErr = obSyscall.Syscall(obSysFCNTL,
 		obFileDescriptor,
 		uintptr(1024+9),
 		uintptr(obSealAll))
+	if obErr != nil {
+		obExit()
+	}
 
 	// OB_CHECK
 	obFDPath := "/proc/" +
@@ -501,19 +563,28 @@ func obLauncher() {
 	obCommand.Stdin = obOS.Stdin
 	// OB_CHECK
 	obStdoutIn, _ := obCommand.StdoutPipe()
-	obStderrIn, _ := obCommand.StderrPipe()
 	defer obStdoutIn.Close()
+
+	obStderrIn, _ := obCommand.StderrPipe()
 	defer obStderrIn.Close()
+
 	// OB_CHECK
-	obCommand.Start()
+	obErr = obCommand.Start()
+	if obErr != nil {
+		obExit()
+	}
+
 	var obWaitGroup obSync.WaitGroup
+
 	obWaitGroup.Add(2)
+
 	obStdoutScan := obBufio.NewScanner(obStdoutIn)
 	obStderrScan := obBufio.NewScanner(obStderrIn)
 	// OB_CHECK
 	// async fetch stdout
 	go func() {
 		defer obWaitGroup.Done()
+
 		for obStdoutScan.Scan() {
 			println(obStdoutScan.Text())
 		}
@@ -522,6 +593,7 @@ func obLauncher() {
 	// async fetch stderr
 	go func() {
 		defer obWaitGroup.Done()
+
 		for obStderrScan.Scan() {
 			println(obStderrScan.Text())
 		}
@@ -534,7 +606,9 @@ func main() {
 	// Prepare to intercept SIGTRAP
 	obChannel := make(chan obOS.Signal, 1)
 	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)
+
 	go obSigTrap(obChannel)
+
 	obPtraceDetect()
 	// OB_CHECK
 	obDependencyCheck()

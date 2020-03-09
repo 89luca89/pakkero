@@ -23,6 +23,8 @@ const (
 	WarningColor = "\033[1;33m%s\033[0m"
 	ErrorColor   = "\033[1;31m%s\033[0m"
 )
+const ERR = 1
+const OK = 0
 
 /*
 Unique will deduplicate a given slice

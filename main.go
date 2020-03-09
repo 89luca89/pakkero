@@ -13,20 +13,18 @@ import (
 const programName = "packngo"
 const version = "0.3.0"
 
-var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
-
 /*
 TestDependencies if all dependencies are present
 in the system
 */
-func testDependencies() error {
+func testDependencies() {
+	var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
 	for _, v := range dependencies {
 		if !packngo.ExecCommand("which", []string{v}) {
 			println("Missing Dependency: " + v)
-			os.Exit(1)
+			os.Exit(ERR)
 		}
 	}
-	return nil
 }
 
 /*
@@ -52,33 +50,32 @@ func help() {
 }
 func main() {
 	// fist test if all dependencies are present
-	if testDependencies() == nil {
-		if len(os.Args) == 1 {
+	testDependencies()
+	if len(os.Args) == 1 {
+		help()
+		os.Exit(ERR)
+	}
+	flag.Usage = func() {
+		help()
+	}
+	file := flag.String("file", "", "")
+	dependency := flag.String("register-dep", "", "")
+	output := flag.String("o", "", "")
+	offset := flag.Int64("offset", 0, "")
+	compress := flag.Bool("c", false, "")
+	flag.Bool("v", false, "")
+	flag.Parse()
+
+	switch os.Args[1] {
+	case "-v":
+		printVersion()
+	default:
+		if *file != "" && *offset >= 0 {
+			packngo.PackNGo(*file, *offset, *output, *dependency, *compress)
+		} else {
+			println("Missing arguments or invalid arguments!")
 			help()
 			os.Exit(1)
-		}
-		flag.Usage = func() {
-			help()
-		}
-		file := flag.String("file", "", "")
-		dependency := flag.String("register-dep", "", "")
-		output := flag.String("o", "", "")
-		offset := flag.Int64("offset", 0, "")
-		compress := flag.Bool("c", false, "")
-		flag.Bool("v", false, "")
-		flag.Parse()
-
-		switch os.Args[1] {
-		case "-v":
-			printVersion()
-		default:
-			if *file != "" && *offset >= 0 {
-				packngo.PackNGo(*file, *offset, *output, *dependency, *compress)
-			} else {
-				println("Missing arguments or invalid arguments!")
-				help()
-				os.Exit(1)
-			}
 		}
 	}
 }
