@@ -127,9 +127,7 @@ func obParentTracerDetect() {
 	obStatLines := obStrings.Split(string(obStatParent), "\n")
 
 	for _, obValue := range obStatLines {
-
 		if obStrings.Contains(obValue, "TracerPid") {
-
 			obSplitArray := obStrings.Split(obValue, ":")
 			obSplitValue := obStrings.Replace(obSplitArray[1], "\t", "", -1)
 
