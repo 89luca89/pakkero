@@ -34,7 +34,6 @@ var builtins = []string{
 	"uint32", "uint64", "uint8", "uintptr",
 }
 
-// "go",
 var keyWords = []string{
 	"break", "default", "func", "interface",
 	"select", "case", "defer",
@@ -111,12 +110,18 @@ func StripUPXHeaders(infile string) bool {
 		`\x55\x50\x58\x21`,
 	}
 	result := true
+
 	for _, v := range header {
 		sedString := ""
 		// generate random byte sequence
 		replace := make([]byte, 1)
+
 		for len(sedString) < len(v) {
-			rand.Read(replace)
+			_, err := rand.Read(replace)
+			if err != nil {
+				return false
+			}
+
 			sedString += `\x` + hex.EncodeToString(replace)
 		}
 		// replace UPX sequence with random garbage
@@ -125,6 +130,7 @@ func StripUPXHeaders(infile string) bool {
 			return result
 		}
 	}
+
 	return result
 }
 
@@ -178,6 +184,7 @@ func StripFile(infile string, launcherFile string) bool {
 	if err != nil {
 		return false
 	}
+
 	input := string(byteContent)
 
 	for _, remove := range removeStrings {
@@ -214,6 +221,7 @@ func GenerateTyposquatName() string {
 			b[i] = mixedRunes[mathRand.Intn(len(mixedRunes))]
 		}
 	}
+
 	return string(b)
 }
 
@@ -228,6 +236,7 @@ func GenerateStringFunc(txt string, function string) string {
 			lines, GenerateBitshift(item),
 		)
 	}
+
 	return fmt.Sprintf("func "+
 		function+
 		"() string { EAX := uint8(obUnsafe.Sizeof(true));"+
@@ -252,6 +261,7 @@ func ObfuscateStrings(input string) string {
 		regex := regexp.MustCompile(v + ".*?" + v)
 		words := regex.FindAllString(body, -1)
 		words = Unique(words)
+
 		for _, w := range words {
 			// string not void, accounting for quotes
 			if len(w) > 2 && !strings.Contains(w, `\`) {
@@ -275,8 +285,8 @@ func ObfuscateStrings(input string) string {
 		} else {
 			body = strings.ReplaceAll(body, k, w[0])
 		}
-
 	}
+
 	// remove any comment
 	bodySlice := strings.Split(body, "\n")
 	for index, line := range bodySlice {
@@ -284,10 +294,12 @@ func ObfuscateStrings(input string) string {
 			bodySlice[index] = ""
 		}
 	}
+
 	body = strings.Join(bodySlice, "\n")
 	// reconstruct the program correctly and
 	// insert all the functions before the main
 	body = body + "\n" + funcString
+
 	return importSection + body
 }
 
@@ -304,10 +316,12 @@ func ObfuscateFuncVars(input string) string {
 	words := regex.FindAllString(input, -1)
 	words = ReverseStringArray(words)
 	words = Unique(words)
+
 	for _, w := range words {
 		// generate random name for each matching string
 		input = strings.ReplaceAll(input, w, GenerateTyposquatName())
 	}
+
 	return input
 }
 
@@ -317,7 +331,7 @@ together with inline compilation to induce big number
 of instructions in random order
 */
 func GenerateRandomAntiDebug(input string) string {
-	lines := strings.Split(string(input), "\n")
+	lines := strings.Split(input, "\n")
 	randomChecks := []string{
 		`obDependencyCheck()`,
 		`obEnvArgsDetect()`,
@@ -337,6 +351,7 @@ func GenerateRandomAntiDebug(input string) string {
 			for j, v := range ShuffleSlice(randomChecks) {
 				threadString = threadString + "go " + v + ";"
 				checkString += v
+
 				if j != (len(randomChecks) - 1) {
 					checkString += `||`
 				}
@@ -358,12 +373,13 @@ Basic techniques are applied:
 - ObfuscateFuncVars
 */
 func ObfuscateLauncher(infile string) error {
-
 	byteContent, err := ioutil.ReadFile(infile)
 	if err != nil {
 		return err
 	}
+
 	content := string(byteContent)
+
 	// ------------------------------------------------------------------------
 	//	--- Start anti-debug checks
 	content = GenerateRandomAntiDebug(content)
@@ -380,7 +396,10 @@ func ObfuscateLauncher(infile string) error {
 	// ------------------------------------------------------------------------
 
 	// save.
-	ioutil.WriteFile(infile, []byte(content), 0644)
+	err = ioutil.WriteFile(infile, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

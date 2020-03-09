@@ -34,12 +34,15 @@ func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	key := md5.Sum(b)
+
 	//	generate new cipher
 	c, err := aes.NewCipher(key[:])
 	if err != nil {
 		println(err)
 	}
+
 	gcm, err := cipher.NewGCM(c)
 	if err != nil {
 		println(err)
@@ -62,5 +65,6 @@ func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 
 	// reverse the complete payload
 	ciphertext = string(ReverseByteArray([]byte(ciphertext)))
+
 	return ciphertext, nil
 }
