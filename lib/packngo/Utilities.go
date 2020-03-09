@@ -153,7 +153,7 @@ func GenerateBitshift(n byte) (buf string) {
 			x = 1
 		}
 		arr = append(arr, x)
-		n = n >> 1
+		n >>= 1
 	}
 	buf = "EAX"
 	mathRand.Seed(time.Now().Unix())

@@ -51,14 +51,14 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	fmt.Print(" → Randomizing offset...")
 
 	// declare outfile as original filename + .enc
-	if len(outfile) <= 0 {
+	if len(outfile) == 0 {
 		outfile = infile + ".enc"
 	}
 
 	// ------------------------------------------------------------------------
 	// offset Hysteresis, this will prevent easy key retrieving
 	rand.Seed(time.Now().UTC().UnixNano())
-	offset = offset + (rand.Int63n(4096-128) + 128)
+	offset += (rand.Int63n(4096-128) + 128)
 
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
@@ -288,7 +288,7 @@ func PackNGo(infile string, offset int64, outfile string, dependency string, com
 	finalPadding, _ := binary.Varint(finalPaddingB)
 	// and ensure it is positive!
 	if finalPadding < 0 {
-		finalPadding = finalPadding * -1
+		finalPadding *= -1
 	}
 
 	// append random garbage equal to bit-reverse of the offset

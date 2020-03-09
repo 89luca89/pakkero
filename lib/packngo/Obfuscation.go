@@ -336,9 +336,9 @@ func GenerateRandomAntiDebug(input string) string {
 			// randomize order of check to replace
 			for j, v := range ShuffleSlice(randomChecks) {
 				threadString = threadString + "go " + v + ";"
-				checkString = checkString + v
+				checkString += v
 				if j != (len(randomChecks) - 1) {
-					checkString = checkString + `||`
+					checkString += `||`
 				}
 			}
 			// add action in case of failed check
