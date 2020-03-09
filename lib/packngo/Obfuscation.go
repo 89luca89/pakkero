@@ -195,7 +195,7 @@ func StripFile(infile string, launcherFile string) bool {
 
 /*
 GenerateTyposquatName is a gyposquat name generator
-based on a lenght (128 default) this will create a random
+based on a length (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
 func GenerateTyposquatName() string {
@@ -204,8 +204,8 @@ func GenerateTyposquatName() string {
 	// must not start with a number.
 	letterRunes := []rune("OÓÕÔÒÖŌŎŐƠΘΟ")
 	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
-	lenght := 128
-	b := make([]rune, lenght)
+	length := 128
+	b := make([]rune, length)
 	// ensure we do not start with a number or we will break code.
 	b[0] = letterRunes[mathRand.Intn(len(letterRunes))]
 	for i := range b {
