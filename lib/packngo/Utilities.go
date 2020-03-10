@@ -32,12 +32,15 @@ Unique will deduplicate a given slice
 func Unique(slice []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
+
 	for _, entry := range slice {
 		if _, value := keys[entry]; !value {
 			keys[entry] = true
+
 			list = append(list, entry)
 		}
 	}
+
 	return list
 }
 
@@ -46,10 +49,13 @@ ReverseByteArray will reverse a slice of bytes
 */
 func ReverseByteArray(input []byte) []byte {
 	reversed := []byte{}
+
 	for i := range input {
 		n := input[len(input)-1-i]
+
 		reversed = append(reversed, n)
 	}
+
 	return reversed
 }
 
@@ -58,11 +64,13 @@ ReverseByte will change a byte endianess
 */
 func ReverseByte(b byte) byte {
 	var d byte
+
 	for i := 0; i < 8; i++ {
 		d <<= 1
 		d |= b & 1
 		b >>= 1
 	}
+
 	return d
 }
 
@@ -71,9 +79,11 @@ ReverseStringArray reverse a slice of strings
 */
 func ReverseStringArray(ss []string) []string {
 	last := len(ss) - 1
+
 	for i := 0; i < len(ss)/2; i++ {
 		ss[i], ss[last-i] = ss[last-i], ss[i]
 	}
+
 	return ss
 }
 
@@ -82,9 +92,11 @@ ReverseString reverse a string
 */
 func ReverseString(input string) string {
 	var result string
+
 	for _, value := range input {
 		result = string(value) + result
 	}
+
 	return result
 }
 
@@ -94,6 +106,7 @@ ShuffleSlice will shuffle a slice.
 func ShuffleSlice(in []string) []string {
 	mathRand.Seed(time.Now().UnixNano())
 	mathRand.Shuffle(len(in), func(i, j int) { in[i], in[j] = in[j], in[i] })
+
 	return in
 }
 
@@ -104,11 +117,14 @@ and ensure it's result is not err.
 func ExecCommand(name string, args []string) bool {
 	cmd := exec.Command(name, args...)
 	errString, err := cmd.CombinedOutput()
+
 	if err != nil {
 		println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
 		println(string(errString))
+
 		return false
 	}
+
 	return true
 }
 
@@ -135,6 +151,7 @@ func ListImportsFromFile(inputFile string) []string {
 		// add to the group of removal
 		result = append(result, importlet)
 	}
+
 	return result
 }
 
@@ -146,27 +163,37 @@ https://github.com/GH0st3rs/obfus/blob/master/obfus.go
 */
 func GenerateBitshift(n byte) (buf string) {
 	var arr []byte
+
 	var x uint8
+
 	for n > 1 {
 		x = 0
 		if n%2 == 1 {
 			x = 1
 		}
+
 		arr = append(arr, x)
 		n >>= 1
 	}
+
 	buf = "EAX"
+
 	mathRand.Seed(time.Now().Unix())
+
 	for i := len(arr) - 1; i >= 0; i-- {
 		buf = fmt.Sprintf("%s<<%s", buf, "EAX")
+
 		if arr[i] == 1 {
 			op := "(%s|%s)"
+
 			if mathRand.Intn(2) == 0 {
 				op = "(%s^%s)"
 			}
+
 			buf = fmt.Sprintf(op, buf, "EAX")
 		}
 	}
+
 	return buf
 }
 
@@ -176,6 +203,7 @@ GenerateRandomGarbage creates random garbage to rise entropy
 func GenerateRandomGarbage(size int64) string {
 	randomGarbage := make([]byte, size)
 	rand.Read(randomGarbage)
+
 	return string(randomGarbage)
 }
 
@@ -197,9 +225,11 @@ GenerateNullString will return a string with only void chars
 */
 func GenerateNullString(n int) string {
 	result := ""
+
 	for len(result) < n {
 		result += string(0)
 	}
+
 	return result
 }
 
@@ -213,6 +243,7 @@ func RegisterDependency(dependency string) {
 	defer dependencyFile.Close()
 	dependencyStats, _ := dependencyFile.Stat()
 	depenencyLinkStats, _ := os.Lstat(dependency)
+
 	if (depenencyLinkStats.Mode() & os.ModeSymlink) != 0 {
 		cleanup()
 		fmt.Printf("Invalid path: %s is a symlink, use absolute paths.\n", dependency)
@@ -222,6 +253,7 @@ func RegisterDependency(dependency string) {
 	bytes, _ := ioutil.ReadFile(dependency)
 
 	bfd := make([]float64, 256)
+
 	for _, b := range bytes {
 		bfd[b] = bfd[b] + 1
 	}
@@ -230,6 +262,7 @@ func RegisterDependency(dependency string) {
 	for _, v := range bfd {
 		bfdString += fmt.Sprintf("%f", v) + ","
 	}
+
 	bfdString += "}"
 
 	// add Dependency data to the secrets

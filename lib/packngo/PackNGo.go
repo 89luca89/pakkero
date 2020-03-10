@@ -45,7 +45,6 @@ func trap() {
 
 // PackNGo will Encrypt and pack the payload for a secure execution
 func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
-
 	trap()
 
 	fmt.Print(" → Randomizing offset...")
