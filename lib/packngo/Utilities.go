@@ -202,7 +202,11 @@ GenerateRandomGarbage creates random garbage to rise entropy
 */
 func GenerateRandomGarbage(size int64) string {
 	randomGarbage := make([]byte, size)
-	rand.Read(randomGarbage)
+
+	_, err := rand.Read(randomGarbage)
+	if err != nil {
+		panic(err)
+	}
 
 	return string(randomGarbage)
 }
@@ -214,8 +218,13 @@ func GzipContent(input []byte) []byte {
 	// GZIP before encrypt
 	var zlibPlaintext bytes.Buffer
 	zlibWriter := zlib.NewWriter(&zlibPlaintext)
-	zlibWriter.Write(input)
+
+	_, err := zlibWriter.Write(input)
 	zlibWriter.Close()
+
+	if err != nil {
+		panic(err)
+	}
 
 	return zlibPlaintext.Bytes()
 }
@@ -255,7 +264,7 @@ func RegisterDependency(dependency string) {
 	bfd := make([]float64, 256)
 
 	for _, b := range bytes {
-		bfd[b] = bfd[b] + 1
+		bfd[b]++
 	}
 	// make a string out of it
 	bfdString := "[]float64{"
