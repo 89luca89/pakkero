@@ -340,7 +340,8 @@ func obDependencyCheck() {
 	obInstanceDep := obDependency{
 		obDepName: "DEPNAME1",
 		obDepSize: "DEPSIZE2",
-		obDepBFD:  []float64{1, 2, 3, 4}}
+		obDepBFD:  []float64{1, 2, 3, 4},
+	}
 	// control that we effectively want to control the dependencies
 	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
 		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
