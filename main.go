@@ -11,16 +11,18 @@ import (
 )
 
 const programName = "packngo"
-const version = "0.3.0"
+const version = "0.4.0"
 const minArgsLen = 2
+
+var dependencies = []string{"ls", "sed", "go", "strip"}
+var dependenciesComplete = []string{"upx", "ls", "sed", "go", "strip"}
 
 /*
 TestDependencies if all dependencies are present
 in the system
 */
-func testDependencies() {
-	var dependencies = []string{"upx", "ls", "sed", "go", "strip"}
-	for _, v := range dependencies {
+func testDependencies(deps []string) {
+	for _, v := range deps {
 		if !packngo.ExecCommand("which", []string{v}) {
 			println("Missing Dependency: " + v)
 			os.Exit(packngo.ERR)
@@ -40,19 +42,15 @@ func printVersion() {
 Print Help.
 */
 func help() {
-	println("Usage: " + programName + " -file /path/to/file -offset OFFSET -o /path/to/output")
-	println("  -file <file>			Target file to Pack")
-	println("  -o   <file>			place the output into <file> (default is <inputfile>.enc)")
-	println("  -c   			compress the output to occupy less space (uses UPX)")
-	println("  -offset			Offset where to start the payload (Bytes)")
-	println("  -register-dep			/path/to/dependency to analyze and use as fingerprint (absolute)")
-	println("				Offset minimal recommended value is 700000")
-	println("  -v				Check " + programName + " version")
+	println("Usage: " + programName + " -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-register-dep /path/to/file)")
+	println("  -file <file>		Target file to Pack")
+	println("  -o   <file>		place the output into <file> (default is <inputfile>.enc), optional")
+	println("  -c   			compress the output to occupy less space (uses UPX), optional")
+	println("  -offset		Offset where to start the payload (Number of Bytes)")
+	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolutea, optional)")
+	println("  -v			Check " + programName + " version")
 }
 func main() {
-	// fist test if all dependencies are present
-	testDependencies()
-
 	if len(os.Args) < minArgsLen {
 		help()
 		os.Exit(packngo.ERR)
@@ -73,6 +71,14 @@ func main() {
 	case "-v":
 		printVersion()
 	default:
+		// fist test if all dependencies are present
+		if *compress {
+			// compression needs additional upx dependency
+			testDependencies(dependenciesComplete)
+		} else {
+			testDependencies(dependencies)
+		}
+
 		if *file != "" && *offset >= 0 {
 			packngo.PackNGo(*file, *offset, *output, *dependency, *compress)
 		} else {
