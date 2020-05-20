@@ -7,8 +7,8 @@ package packngo
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/md5"
 	"crypto/rand"
+	"crypto/sha512"
 	"io"
 	"io/ioutil"
 )
@@ -17,15 +17,15 @@ import (
 EncryptAESReversed Wrapper around AESGCM encryption
 
 this will not only encrypt the payload but:
-- generate a password using the randomized UPX Binary's md5sum
+- generate a password using the randomized UPX Binary's sha512_256 sum
 - cipher the payload with AESGCM using the generated password
 - swap endianess on all the encrypted bytes
 - reverse the complete payload
 */
 func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
-	// generate a password using the randomized UPX Binary's md5sum
+	// generate a password using the randomized UPX Binary's sha512_256 sum
 	/*
-			    the aes-256 psk is the md5sum of the whole executable
+			    the aes-256 psk is the sha512_256 sum of the whole executable
 		        this is also useful to protect against NOP attacks to the anti-debug
 		        features in the binary.
 		        This doubles also as anti-tamper measure.
@@ -35,7 +35,8 @@ func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 		return "", err
 	}
 
-	key := md5.Sum(b)
+	// use SHA512 (32byte) of the passphrase as key
+	key := sha512.Sum512_256(b)
 
 	//	generate new cipher
 	c, err := aes.NewCipher(key[:])

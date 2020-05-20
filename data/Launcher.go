@@ -6,7 +6,7 @@ import (
 	obZlib "compress/zlib"
 	obAES "crypto/aes"
 	obCipher "crypto/cipher"
-	obMD5 "crypto/md5"
+	obSHA "crypto/sha512"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
 	obUtilio "io/ioutil"
@@ -37,7 +37,7 @@ const obFileSizeLevel = 15
 /*
 TODO:
     missing an int3 scanner (golang runtime is full of them...)
-    missing nearheap check (must be done in C)
+    missing a nearheap check (must be done in C)
 */
 
 func obExit() {
@@ -104,16 +104,16 @@ func obParentCmdLineDetect() {
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
 
 	if obStrings.Contains(string(obStatParent), "gdb") ||
-		obStrings.Contains(string(obStatParent), "strace") ||
-		obStrings.Contains(string(obStatParent), "ltrace") ||
-		obStrings.Contains(string(obStatParent), "lldb") ||
-		obStrings.Contains(string(obStatParent), "valgrind") ||
 		obStrings.Contains(string(obStatParent), "dlv") ||
 		obStrings.Contains(string(obStatParent), "edb") ||
 		obStrings.Contains(string(obStatParent), "frida") ||
 		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "godebug") ||
 		obStrings.Contains(string(obStatParent), "ida") ||
-		obStrings.Contains(string(obStatParent), "godebug") {
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "valgrind") {
 		obExit()
 	}
 }
@@ -152,16 +152,16 @@ func obParentDetect() {
 	obStatParent, _ := obUtilio.ReadFile(obNameFile)
 
 	if obStrings.Contains(string(obStatParent), "gdb") ||
-		obStrings.Contains(string(obStatParent), "strace") ||
-		obStrings.Contains(string(obStatParent), "ltrace") ||
-		obStrings.Contains(string(obStatParent), "lldb") ||
-		obStrings.Contains(string(obStatParent), "valgrind") ||
 		obStrings.Contains(string(obStatParent), "dlv") ||
 		obStrings.Contains(string(obStatParent), "edb") ||
 		obStrings.Contains(string(obStatParent), "frida") ||
 		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "godebug") ||
 		obStrings.Contains(string(obStatParent), "ida") ||
-		obStrings.Contains(string(obStatParent), "godebug") {
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "valgrind") {
 		obExit()
 	}
 }
@@ -184,16 +184,16 @@ Check the process cmdline to spot if a debugger is inline
 func obEnvParentDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obStrings.Contains(obLines, "gdb") ||
-		obStrings.Contains(obLines, "strace") ||
-		obStrings.Contains(obLines, "ltrace") ||
-		obStrings.Contains(obLines, "lldb") ||
-		obStrings.Contains(obLines, "valgrind") ||
 		obStrings.Contains(obLines, "dlv") ||
-		obStrings.Contains(obLines, "frida") ||
 		obStrings.Contains(obLines, "edb") ||
+		obStrings.Contains(obLines, "frida") ||
 		obStrings.Contains(obLines, "ghidra") ||
+		obStrings.Contains(obLines, "godebug") ||
 		obStrings.Contains(obLines, "ida") ||
-		obStrings.Contains(obLines, "godebug") {
+		obStrings.Contains(obLines, "lldb") ||
+		obStrings.Contains(obLines, "ltrace") ||
+		obStrings.Contains(obLines, "strace") ||
+		obStrings.Contains(obLines, "valgrind") {
 		obExit()
 	}
 }
@@ -495,12 +495,12 @@ func obLauncher() {
 
 	// OB_CHECK
 	/*
-		the aes-256 psk is the md5sum of the whole executable
+		the aes-256 psk is the sha512_256 sum of the whole executable
 		this is also useful to protect against NOP attacks to the anti-debug
 		features in the binary.
 		This doubles also as anti-tamper measure.
 	*/
-	obPassword := obMD5.Sum(obKey)
+	obPassword := obSHA.Sum512_256(obKey)
 	// OB_CHECK
 	obCipherBlock, _ := obAES.NewCipher(obPassword[:])
 
@@ -611,7 +611,7 @@ func main() {
 
 	go obSigTrap(obChannel)
 
-	obPtraceDetect()
+	// obPtraceDetect()
 	// OB_CHECK
 	obDependencyCheck()
 	// OB_CHECK
