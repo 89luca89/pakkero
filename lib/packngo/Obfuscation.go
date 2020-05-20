@@ -21,29 +21,6 @@ var Secrets = map[string][]string{}
 // LauncherStub Stub of the Launcher.go, put here during compilation time
 const LauncherStub = "LAUNCHERSTUB"
 
-var builtins = []string{
-	"append", "cap", "close", "complex",
-	"copy", "delete", "imag", "len",
-	"make", "new", "panic", "print",
-	"println", "real", "recover", "ComplexType",
-	"FloatType", "IntegerType", "Type", "Type1",
-	"bool", "byte", "complex128", "complex64",
-	"error", "float32", "float64", "int",
-	"int16", "int32", "int64", "int8",
-	"rune", "string", "uint", "uint16",
-	"uint32", "uint64", "uint8", "uintptr",
-}
-
-var keyWords = []string{
-	"break", "default", "func", "interface",
-	"select", "case", "defer",
-	"map", "struct", "chan", "else",
-	"goto", "package", "switch", "const",
-	"fallthrough", "if", "range", "type",
-	"continue", "for", "import", "return",
-	"var",
-}
-
 var extras = []string{
 	// ELF Headers
 	".gopclntab",
@@ -87,7 +64,7 @@ var extras = []string{
 /*
 StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
-simple attempts like "upx -d"
+simple attempts like "upx -d" in case of compression
 */
 func StripUPXHeaders(infile string) bool {
 	// Bit sequence of UPX copyright and header infos
@@ -169,8 +146,6 @@ func StripFile(infile string, launcherFile string) bool {
 	// stripping of golang builtins and keyWords strings
 	removeStrings := []string{}
 	removeStrings = append(removeStrings, extras...)
-	removeStrings = append(removeStrings, builtins...)
-	removeStrings = append(removeStrings, keyWords...)
 	// stripping of the dependencies strings
 	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
 	// anonymize the launcherFile string to hide the original launcher file name
@@ -201,7 +176,7 @@ func StripFile(infile string, launcherFile string) bool {
 }
 
 /*
-GenerateTyposquatName is a gyposquat name generator
+GenerateTyposquatName is a typosquat name generator
 based on a length (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
@@ -227,7 +202,7 @@ func GenerateTyposquatName() string {
 
 /*
 GenerateStringFunc will hide a string creating a function that returns
-that value as a string encoded with a series og byteshift operations
+that value as a string encoded with a series of byteshift operations
 */
 func GenerateStringFunc(txt string, function string) string {
 	lines := []string{}
@@ -249,14 +224,22 @@ ObfuscateStrings will extract all plaintext strings denotet with
 backticks and obfuscate them using byteshift wise operations
 */
 func ObfuscateStrings(input string) string {
+
+	// parse the launcher file to create the list of imports in it
 	imports := strings.Index(input, "import (")
 	endimports := strings.Index(input[imports:], ")")
 
+	// import section
 	importSection := input[:imports+endimports+1]
+
+	// the rest of the program
 	body := input[imports+endimports+1:]
 
+	// various types of string delimiter
 	tickTypes := []string{"`", `'`, `"`}
 
+	// for each ticktype, try to get all the strings and
+	// obfuscate them using functions
 	for _, v := range tickTypes {
 		regex := regexp.MustCompile(v + ".*?" + v)
 		words := regex.FindAllString(body, -1)
@@ -287,26 +270,18 @@ func ObfuscateStrings(input string) string {
 		}
 	}
 
-	// remove any comment
-	bodySlice := strings.Split(body, "\n")
-	for index, line := range bodySlice {
-		if strings.Contains(line, "//") {
-			bodySlice[index] = ""
-		}
-	}
-
-	body = strings.Join(bodySlice, "\n")
 	// reconstruct the program correctly and
 	// insert all the functions before the main
 	body = body + "\n" + funcString
 
+	// join back with the import section
 	return importSection + body
 }
 
 /*
 ObfuscateFuncVars will:
   - extract all obfuscation-enabled func and var names:
-  - those start with ob_* and will bel isted
+  - those start with "ob*" and will be listed
   - for each matching string generate a typosquatted random string and
     replace all string with that
 */
