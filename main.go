@@ -7,10 +7,10 @@ import (
 	"flag"
 	"os"
 
-	"./lib/packngo"
+	"./lib/pakkero"
 )
 
-const programName = "packngo"
+const programName = "pakkero"
 const version = "0.4.0"
 const minArgsLen = 2
 
@@ -23,9 +23,9 @@ in the system
 */
 func testDependencies(deps []string) {
 	for _, v := range deps {
-		if !packngo.ExecCommand("which", []string{v}) {
+		if !pakkero.ExecCommand("which", []string{v}) {
 			println("Missing Dependency: " + v)
-			os.Exit(packngo.ERR)
+			os.Exit(pakkero.ERR)
 		}
 	}
 }
@@ -35,7 +35,7 @@ Print version.
 */
 func printVersion() {
 	println(programName + " v" + version)
-	os.Exit(packngo.OK)
+	os.Exit(pakkero.OK)
 }
 
 /*
@@ -53,7 +53,7 @@ func help() {
 func main() {
 	if len(os.Args) < minArgsLen {
 		help()
-		os.Exit(packngo.ERR)
+		os.Exit(pakkero.ERR)
 	}
 
 	flag.Usage = func() {
@@ -80,11 +80,11 @@ func main() {
 		}
 
 		if *file != "" && *offset >= 0 {
-			packngo.PackNGo(*file, *offset, *output, *dependency, *compress)
+			pakkero.PakkerO(*file, *offset, *output, *dependency, *compress)
 		} else {
 			println("Missing arguments or invalid arguments!")
 			help()
-			os.Exit(packngo.ERR)
+			os.Exit(pakkero.ERR)
 		}
 	}
 }

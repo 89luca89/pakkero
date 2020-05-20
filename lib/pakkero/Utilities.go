@@ -1,8 +1,8 @@
 /*
-Package packngo will pack, compress and encrypt any type of executable.
+Package pakkero will pack, compress and encrypt any type of executable.
 Utilities library
 */
-package packngo
+package pakkero
 
 import (
 	"bytes"

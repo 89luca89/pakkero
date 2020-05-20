@@ -1,6 +1,6 @@
 all:
-	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
-	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/packngo/Obfuscation.go;
+	cp lib/pakkero/Obfuscation.go lib/pakkero/Obfuscation.go.bak;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/pakkero/Obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \
@@ -10,7 +10,7 @@ all:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/packngo; mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
+		-o dist/pakkero; mv lib/pakkero/Obfuscation.go.bak lib/pakkero/Obfuscation.go
 	strip \
 		-sxX \
 		--remove-section=.bss \
@@ -28,11 +28,11 @@ all:
 		--remove-section=.note.go.buildid \
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
-		dist/packngo;
+		dist/pakkero;
 clean:
 	rm -rf dist/;
-	cp lib/packngo/Obfuscation.go lib/packngo/Obfuscation.go.bak;
-	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/packngo/Obfuscation.go;
+	cp lib/pakkero/Obfuscation.go lib/pakkero/Obfuscation.go.bak;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" lib/pakkero/Obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \
@@ -42,7 +42,7 @@ clean:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/packngo; mv lib/packngo/Obfuscation.go.bak lib/packngo/Obfuscation.go
+		-o dist/pakkero; mv lib/pakkero/Obfuscation.go.bak lib/pakkero/Obfuscation.go
 	strip \
 		-sxXwSgd \
 		--remove-section=.bss \
@@ -60,10 +60,10 @@ clean:
 		--remove-section=.note.go.buildid \
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
-		dist/packngo
+		dist/pakkero
 
 test: clean
-	dist/packngo \
+	dist/pakkero \
 		--file /usr/bin/echo \
 		-o /tmp/test.enc \
 		-offset 2850000 \

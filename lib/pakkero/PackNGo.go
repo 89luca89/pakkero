@@ -1,7 +1,7 @@
 /*
-Package packngo will pack, compress and encrypt any type of executable.
+Package pakkero will pack, compress and encrypt any type of executable.
 */
-package packngo
+package pakkero
 
 import (
 	"encoding/base64"
@@ -43,8 +43,8 @@ func trap() {
 	}()
 }
 
-// PackNGo will Encrypt and pack the payload for a secure execution
-func PackNGo(infile string, offset int64, outfile string, dependency string, compress bool) {
+// PakkerO will Encrypt and pack the payload for a secure execution
+func PakkerO(infile string, offset int64, outfile string, dependency string, compress bool) {
 	trap()
 
 	fmt.Print(" → Randomizing offset...")
