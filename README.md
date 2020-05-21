@@ -235,6 +235,21 @@ Output of readelf to see the effect:
 
 #### File Entropy
 
+Using binwalk to analyze the file entropy can give some hint on how the process works:
+
+This is the entropy of a packaged binary **without compression**
+
+![uncompressed]("./pics/uncompressed-entropy.png")
+
+This is the entropy of a packaged binary **with compression**
+
+![compressed]("./pics/compressed-entropy.png")
+
+In both cases (but mainly the first) it is possible to see when the launcher stops and
+the payload starts. This is really not a problem, because the offset of garbage is
+bot preponed and postponed to the payload, and the "secret number" of when it starts is
+kept inside the launcher in an obfuscated form (like shown before)
+
 ## Part 2: the launcher
 
 The launcher is the second part of the project an
