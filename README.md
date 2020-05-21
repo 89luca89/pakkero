@@ -239,11 +239,11 @@ Using binwalk to analyze the file entropy can give some hint on how the process 
 
 This is the entropy of a packaged binary **without compression**
 
-![uncompressed]("./pics/uncompressed-entropy.png")
+![uncompressed](./pics/uncompressed-entropy.png)
 
 This is the entropy of a packaged binary **with compression**
 
-![compressed]("./pics/compressed-entropy.png")
+![compressed](./pics/compressed-entropy.png)
 
 In both cases (but mainly the first) it is possible to see when the launcher stops and
 the payload starts. This is really not a problem, because the offset of garbage is
