@@ -15,6 +15,22 @@ Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 PakkerO is divided in two main pieces, the packer part (PakkerO itself) and the
 launcher part.
 
+It can be used to protect and launch various type of payloads, from scripts (bash, php, python...) to
+elf files.
+
+It is not recommended for very small files as the launcher itself can vary from ~700kb to ~1.7mb depending
+on compression. On files above 2.6mb there is convenience:
+
+```
+base-bin    1.2M    ->  1.6M
+smaller-bin 2.4M    ->  2.3M
+small-bin   3.7M    ->  3.0M
+medium-bin  25M     ->  16M
+big-bin     148M    ->  88M
+```
+
+So it's best above 2.5Mb of payload
+
 ## Install
 
 
@@ -188,7 +204,7 @@ File is the **stripped**, using obviously **strip** with the flags:
 ```
 
 Additionally, if using *UPX*, their headers are **removed and replaced with randomness**, to ensure simple
-things like `upx -d` do not work.
+things like `upx -d` will not work.
 
 Additionally a series of extra words are removed from the binary, to make it harder to do static analysis:
 
