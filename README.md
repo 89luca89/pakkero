@@ -47,7 +47,7 @@ The following are weak dependencies
 
 **Dependencies are checked at runtime and an error message will specify what is missing**
 
-### Part 1: the packer
+## Part 1: the packer
 
 PakkerO can be launched like:
 
@@ -58,7 +58,7 @@ pakkero --file ./target-file -o ./output-file -offset 880000 -register-dep depen
 ![demo](pics/demo.png)
 
 
-#### Usage
+### Usage
 
 Typing `pakker -h` the following output will be shown:
 
@@ -80,20 +80,20 @@ Below there is a full explanation of provided arguments:
 * **c**: (optional) If specificed, UPX will be used to further compress the Launcher
 * **offset**: The number of bytes from where to start the payload (increases if not using compression)
 * **regiser-dep** (optional) Path to a file that can be used to register the fingerprint of a dependency to ensure that the Launcher runs only if a file with similar fingerprint is present
-* *v*: Print version
+* **v**: Print version
 
-#### Packaging
+### Packaging
 
-#### Encryption
+### Encryption
 
-#### Obfuscation
+### Obfuscation
 
-### Part 2: the launcher
+## Part 2: the launcher
 
-#### Anti-debug
+### Anti-debug
 
-#### BFD Study
+### BFD Study
 
-#### Decryption
+### Decryption
 
-#### Execution
+### Execution
