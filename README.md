@@ -165,6 +165,76 @@ func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
 credits for the string obfuscation part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
 as my implementation is started from that and tweaked to work in my workflow.
 
+File is the **stripped**, using obviously **strip** with the flags:
+
+```
+	-sxX
+	--remove-section=.bss
+	--remove-section=.comment
+	--remove-section=.eh_frame
+	--remove-section=.eh_frame_hdr
+	--remove-section=.fini
+	--remove-section=.fini_array
+	--remove-section=.gnu.build.attributes
+	--remove-section=.gnu.hash
+	--remove-section=.gnu.version
+	--remove-section=.gosymtab
+	--remove-section=.got
+	--remove-section=.note.ABI-tag
+	--remove-section=.note.gnu.build-id
+	--remove-section=.note.go.buildid
+	--remove-section=.shstrtab
+	--remove-section=.typelink
+```
+
+Additionally, if using *UPX*, their headers are **removed and replaced with randomness**, to ensure simple
+things like `upx -d` do not work.
+
+Additionally a series of extra words are removed from the binary, to make it harder to do static analysis:
+
+```
+	.gopclntab
+	.go.buildinfo
+	.noptrdata
+	.noptrbss
+	.data
+	.rodata
+	.text
+	.itablink
+	.shstrtab
+	.data
+	.dynamic
+	.dynstr
+	.dynsym
+	.gnu.version_r
+	.gopclntab
+	.got.plt
+	.init_array
+	.interp
+	.itablink
+	.rela.dyn
+	.rela.plt
+	.tbss
+	.plt
+	.init
+	name runtime command cmd
+	ptr process unicode main
+	path get reflect context
+	debug fmt sync sort
+	size heap fatal call
+	fixed slice bit file
+	read write buffer encrypt
+	decrypt hash state
+	external internal float
+	env trace pid
+```
+
+Output of readelf to see the effect:
+
+![readelf](./pics/readelf.png)
+
+#### File Entropy
+
 ## Part 2: the launcher
 
 The launcher is the second part of the project an
