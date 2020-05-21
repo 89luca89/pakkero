@@ -84,11 +84,34 @@ Below there is a full explanation of provided arguments:
 
 ### Packaging
 
-### Encryption
+The main intent is to **not alter the payload in any way**, this can be very important
+for types of binary that rely on specific order of instructions or relatively fragile timings.
+
+#### Payload
+
+For this purpose the payload is simply encrypted using AES256-GCM, and then compressed
+using Zlib
+
+During encryption, some basic operations are also performed on the payload:
+
+- putting garbage random values before and after the payload to mask it
+- reverse it and change each byte endianess
+
+Encryption password is the hash SHA512 of the compiled launcher itself, thus providing
+some integrity protection and anti-tampering.
+
+#### Offset
+
+The offset will decide **where in the output file the payload starts**.
+
+Put simply, after the launcher is compiled (more on the launcher later), the payload is
+attached to it. The offset ensures that the payload can be put anywhere after it.
+All the space after the launcher until the payload is filled with random garbage.
 
 ### Obfuscation
 
 ## Part 2: the launcher
+
 
 ### Anti-debug
 
