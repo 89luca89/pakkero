@@ -250,7 +250,7 @@ the payload starts. This is really not a problem, because the offset of garbage 
 both preponed **and** postponed to the payload, and the "secret number" of when it starts is
 kept inside the launcher in an obfuscated form (like shown before)
 
-This is obviously vulnerable to static analysis, reversing the binary will reveal the secret,
+This is obviously vulnerable, reversing the binary will reveal the secret,
 all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and
 try to force static analysis.
 
