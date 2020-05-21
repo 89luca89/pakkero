@@ -125,7 +125,7 @@ The technique utilized for obfuscating the function and variables name is based 
 
 This is done in a pretty naive way, simply put, in the launcher each function/variable which name has
 to be obfuscated, needs to start with the suffix **ob**, it will be then put into a secret map, and
-replaced each occurrence in the file with a random string of lenght 128, composed only of runes that
+each occurrence will be replaced in the file with a random string of lenght 128, composed only of runes that
 have siilar shape, namely:
 
 ```
@@ -162,11 +162,10 @@ func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
 }
 
 ```
-credits for this part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
-
+credits for the string obfuscation part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
+as my implementation is started from that and tweaked to work in my workflow.
 
 ## Part 2: the launcher
-
 
 The launcher is the second part of the project an
 
