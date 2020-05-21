@@ -97,7 +97,8 @@ During encryption, some basic operations are also performed on the payload:
 - putting garbage random values before and after the payload to mask it
 - reverse it and change each byte endianess
 
-Encryption password is the hash SHA512 of the compiled launcher itself, thus providing
+Encryption password is the hash SHA512 of the compiled launcher itself together with the
+garbage values added to fill the file till the offset, thus providing
 some integrity protection and anti-tampering.
 
 #### Offset
@@ -108,9 +109,24 @@ Put simply, after the launcher is compiled (more on the launcher later), the pay
 attached to it. The offset ensures that the payload can be put anywhere after it.
 All the space after the launcher until the payload is filled with random garbage.
 
+Being part of the password itself, greater offset will make stronger the encryption, but
+enlarge the final output file.
+
+Optimal value are *at least* 800000 when compression is enabled and 1900000 when disabled.
+
 ### Obfuscation
 
+The final thing the packer does is compiling the launcher. To protect some of the foundamental
+part of it (namely where the offset starts) the launcher is *obfuscated* and heavily stripped down.
+
+The technique utilized for obfuscating the function and variables name is based on typosquatting:
+
+![obfuscation](./pics/obfuscation.png)
+
 ## Part 2: the launcher
+
+The launcher is the second part of the project an
+
 
 
 ### Anti-debug
