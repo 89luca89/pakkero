@@ -19,7 +19,7 @@ It can be used to protect and launch various type of payloads, from scripts (bas
 elf files.
 
 It is not recommended for very small files as the launcher itself can vary from ~700kb to ~1.7mb depending
-on compression. On files above 2.6mb there is convenience:
+on compression. On files above 2.6mb there is gain, else the resulting binary is larger than the original:
 
 ```
 base-bin    1.2M    ->  1.6M
@@ -28,8 +28,6 @@ small-bin   3.7M    ->  3.0M
 medium-bin  25M     ->  16M
 big-bin     148M    ->  88M
 ```
-
-So it's best above 2.5Mb of payload
 
 ## Install
 
