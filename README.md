@@ -247,8 +247,12 @@ This is the entropy of a packaged binary **with compression**
 
 In both cases (but mainly the first) it is possible to see when the launcher stops and
 the payload starts. This is really not a problem, because the offset of garbage is
-bot preponed and postponed to the payload, and the "secret number" of when it starts is
+both preponed **and** postponed to the payload, and the "secret number" of when it starts is
 kept inside the launcher in an obfuscated form (like shown before)
+
+This is obviously vulnerable to static analysis, reversing the binary will reveal the secret,
+all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and
+try to force static analysis.
 
 ## Part 2: the launcher
 
