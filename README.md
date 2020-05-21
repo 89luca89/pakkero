@@ -123,7 +123,50 @@ The technique utilized for obfuscating the function and variables name is based 
 
 ![obfuscation](./pics/obfuscation.png)
 
+This is done in a pretty naive way, simply put, in the launcher each function/variable which name has
+to be obfuscated, needs to start with the suffix **ob**, it will be then put into a secret map, and
+replaced each occurrence in the file with a random string of lenght 128, composed only of runes that
+have siilar shape, namely:
+
+```
+	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
+```
+
+For pure strings in the launcher, they are detected using regular expressions, finding
+all the words that are comprised between the three type of ticks supported in go
+
+```
+`
+'
+"
+```
+
+All of the strings found this way, are then replaced with a function that performs simple bitshifts to return
+the original char value,
+
+so a string becomes for example
+
+```
+func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
+	EAX := uint8(Ö0ΟÖΟŐŌŐŐŎÖŌÕ . . . .ÓOΘ0ΟŌŐŎŌÖÓÕƠ0ΟŎƠ.Sizeof(true))
+	return string(
+		[]byte{
+			(((EAX<<EAX^EAX)<<EAX<<EAX|EAX)<<EAX | EAX) << EAX << EAX,
+			(((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX | EAX) << EAX << EAX,
+			(((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX<<EAX | EAX) << EAX,
+			((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX<<EAX | EAX),
+			(((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX|EAX)<<EAX | EAX),
+			(((EAX<<EAX^EAX)<<EAX<<EAX<<EAX|EAX)<<EAX<<EAX | EAX),
+		},
+	)
+}
+
+```
+credits for this part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
+
+
 ## Part 2: the launcher
+
 
 The launcher is the second part of the project an
 
