@@ -576,6 +576,12 @@ Hash is too strict , for  example /usr/bin/bash on fedora is different from the 
 
 Only the presence of it is not enough (like in the example attack before)
 
+Some basic checks are made:
+
+- the file exists
+
+- file size is +/- 15% of the registered one
+
 #### Byte Frequency Distribution Study
 
 To address the problem it is possible to recycle a technique mostly used in the data-recovery territory: the byte frequency distribution study
@@ -586,7 +592,7 @@ References:
 
 [A New Approach to Content-based File Type Detection](https://arxiv.org/pdf/1002.3174)
 
-The idea is to register the BFD of our dependency, then calculate the correlation indev of Bravais-Pearson to see if the two dataset are linearly correlated.
+The idea is to register the BFD of our dependency, then calculate the correlation index of Bravais-Pearson to see if the two dataset are linearly correlated.
 
 Ref: [Pearson correlation coefficient - Wikipedia](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)
 
@@ -598,8 +604,26 @@ Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/w
 
 
 
+Then study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
 
+
+
+This ensures that the dependency we are finding is of the same type (a binary) using the Bravais-Pearson index and "similar distribution" from the combined std deviation.
+
+
+
+Here an example of a valid dependency: /usr/bin/bash on fedora30 vs centos7
+
+
+
+![bfd](./pics/bfd-std.png)
+
+Blue and green the two BFD of the binaries, in green the combined std deviation.
+
+This method is able to distinguish (and stop) the use of different (but functionally equal) binaries like zsh, dash or busybox
 
 ### Decryption
+
+
 
 ### Execution
