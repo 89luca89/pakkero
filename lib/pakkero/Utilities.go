@@ -244,7 +244,7 @@ func GenerateNullString(n int) string {
 
 /*
 RegisterDependency will take a file in input and register the
-Binary Frequency Distribution (BFD) and some other data to let the launcher
+Byte Frequency Distribution (BFD) and some other data to let the launcher
 do statystical analysis of the found files
 */
 func RegisterDependency(dependency string) {

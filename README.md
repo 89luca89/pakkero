@@ -277,7 +277,9 @@ This is a well known technique as it is possible to read:
 
 and in many other places in C programming literature.
 
+```
 Put briefly, use syscall to create a memory file descriptor (syscall 319 for amd64), write the plaintext payload here, and execute. The fd will be automatically removed after the execution without leaving trace on the storage.
+```
 
 ### Possible weakpoints
 
@@ -299,11 +301,7 @@ Forcing static analysis of the decompiled code is already a big step forward in 
 
 Implemented here are a series of anti-debug techniques that are quite common in C/C++, from the **double-ptrace method** to the **ppid analysis** and breakpoint interception.
 
-
-
 First line of protection is breakpoint interception, on linux, a breackpoint is equivalent to signal *SIGILL* and *SIGTRAP* so:
-
-
 
 ```go
 /*
@@ -311,24 +309,19 @@ Breakpoint on linux are 0xCC and will be interpreted as a
 SIGTRAP, we will intercept them.
 */
 func obSigTrap(obInput chan obOS.Signal) {
-	obMySignal := <-obInput
-	switch obMySignal {
-	case obSyscall.SIGILL:
-		obExit()
-	case obSyscall.SIGTRAP:
-		obExit()
-	default:
-		return
-	}
+    obMySignal := <-obInput
+    switch obMySignal {
+    case obSyscall.SIGILL:
+        obExit()
+    case obSyscall.SIGTRAP:
+        obExit()
+    default:
+        return
+    }
 }
-
 ```
 
-
-
 This is pretty basic, so we go ahead and try to block **ptrace**:
-
-
 
 ```go
 /*
@@ -338,66 +331,61 @@ this protects against custom ptrace (always returning 0)
 against NOP attacks and LD_PRELOAD attacks
 */
 func obPtraceDetect() {
-	var obOffset = 0
+    var obOffset = 0
 
-	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-		uintptr(obSyscall.PTRACE_TRACEME),
-		0,
-		0)
+    _, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+        uintptr(obSyscall.PTRACE_TRACEME),
+        0,
+        0)
 
-	if obResult == OK {
-		obOffset = 5
-	}
+    if obResult == OK {
+        obOffset = 5
+    }
 
-	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-		uintptr(obSyscall.PTRACE_TRACEME),
-		0,
-		0)
+    _, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+        uintptr(obSyscall.PTRACE_TRACEME),
+        0,
+        0)
 
-	if obResult == ERR {
-		obOffset *= 3
-	}
+    if obResult == ERR {
+        obOffset *= 3
+    }
 
-	if obOffset != (3 * 5) {
-		obExit()
-	}
+    if obOffset != (3 * 5) {
+        obExit()
+    }
 }
 ```
 
 *Double ptraceme* ensures that tampering the ptrace loading with ld_preload with a fake ptrace lib that always returns 0, would result in a failure.
 
-
-
 CMD Line detection, would check for common processes for debugging, this is pretty naive check 
-
-
 
 ```go
 /*
 Check the process cmdline to spot if a debugger is inline
 */
 func obParentCmdLineDetect() {
-	obPidParent := obOS.Getppid()
+    obPidParent := obOS.Getppid()
 
-	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
-		"/cmdline"
-	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+    obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+        "/cmdline"
+    obStatParent, _ := obUtilio.ReadFile(obNameFile)
 
-	if obStrings.Contains(string(obStatParent), "gdb") ||
-		obStrings.Contains(string(obStatParent), "dlv") ||
-		obStrings.Contains(string(obStatParent), "edb") ||
-		obStrings.Contains(string(obStatParent), "frida") ||
-		obStrings.Contains(string(obStatParent), "ghidra") ||
-		obStrings.Contains(string(obStatParent), "godebug") ||
-		obStrings.Contains(string(obStatParent), "ida") ||
-		obStrings.Contains(string(obStatParent), "lldb") ||
-		obStrings.Contains(string(obStatParent), "ltrace") ||
-		obStrings.Contains(string(obStatParent), "strace") ||
-		obStrings.Contains(string(obStatParent), "valgrind") {
-		obExit()
-	}
+    if obStrings.Contains(string(obStatParent), "gdb") ||
+        obStrings.Contains(string(obStatParent), "dlv") ||
+        obStrings.Contains(string(obStatParent), "edb") ||
+        obStrings.Contains(string(obStatParent), "frida") ||
+        obStrings.Contains(string(obStatParent), "ghidra") ||
+        obStrings.Contains(string(obStatParent), "godebug") ||
+        obStrings.Contains(string(obStatParent), "ida") ||
+        obStrings.Contains(string(obStatParent), "lldb") ||
+        obStrings.Contains(string(obStatParent), "ltrace") ||
+        obStrings.Contains(string(obStatParent), "strace") ||
+        obStrings.Contains(string(obStatParent), "valgrind") {
+        obExit()
+    }
 }
-
 ```
 
 ```go
@@ -405,57 +393,53 @@ func obParentCmdLineDetect() {
 Check the process cmdline to spot if a debugger is the PPID of our process
 */
 func obParentDetect() {
-	obPidParent := obOS.Getppid()
+    obPidParent := obOS.Getppid()
 
-	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
-		"/stat"
-	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+    obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+        "/stat"
+    obStatParent, _ := obUtilio.ReadFile(obNameFile)
 
-	if obStrings.Contains(string(obStatParent), "gdb") ||
-		obStrings.Contains(string(obStatParent), "dlv") ||
-		obStrings.Contains(string(obStatParent), "edb") ||
-		obStrings.Contains(string(obStatParent), "frida") ||
-		obStrings.Contains(string(obStatParent), "ghidra") ||
-		obStrings.Contains(string(obStatParent), "godebug") ||
-		obStrings.Contains(string(obStatParent), "ida") ||
-		obStrings.Contains(string(obStatParent), "lldb") ||
-		obStrings.Contains(string(obStatParent), "ltrace") ||
-		obStrings.Contains(string(obStatParent), "strace") ||
-		obStrings.Contains(string(obStatParent), "valgrind") {
-		obExit()
-	}
+    if obStrings.Contains(string(obStatParent), "gdb") ||
+        obStrings.Contains(string(obStatParent), "dlv") ||
+        obStrings.Contains(string(obStatParent), "edb") ||
+        obStrings.Contains(string(obStatParent), "frida") ||
+        obStrings.Contains(string(obStatParent), "ghidra") ||
+        obStrings.Contains(string(obStatParent), "godebug") ||
+        obStrings.Contains(string(obStatParent), "ida") ||
+        obStrings.Contains(string(obStatParent), "lldb") ||
+        obStrings.Contains(string(obStatParent), "ltrace") ||
+        obStrings.Contains(string(obStatParent), "strace") ||
+        obStrings.Contains(string(obStatParent), "valgrind") {
+        obExit()
+    }
 }
-
 ```
 
 this goes in conjunction with the TracePid check to see if a parent is tracing us:
-
-
 
 ```go
 /*
 Check the process status to spot if a debugger is active using the TracePid key
 */
 func obParentTracerDetect() {
-	obPidParent := obOS.Getppid()
+    obPidParent := obOS.Getppid()
 
-	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
-		"/status"
-	obStatParent, _ := obUtilio.ReadFile(obNameFile)
-	obStatLines := obStrings.Split(string(obStatParent), "\n")
+    obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+        "/status"
+    obStatParent, _ := obUtilio.ReadFile(obNameFile)
+    obStatLines := obStrings.Split(string(obStatParent), "\n")
 
-	for _, obValue := range obStatLines {
-		if obStrings.Contains(obValue, "TracerPid") {
-			obSplitArray := obStrings.Split(obValue, ":")
-			obSplitValue := obStrings.Replace(obSplitArray[1], "\t", "", -1)
+    for _, obValue := range obStatLines {
+        if obStrings.Contains(obValue, "TracerPid") {
+            obSplitArray := obStrings.Split(obValue, ":")
+            obSplitValue := obStrings.Replace(obSplitArray[1], "\t", "", -1)
 
-			if obSplitValue != "0" {
-				obExit()
-			}
-		}
-	}
+            if obSplitValue != "0" {
+                obExit()
+            }
+        }
+    }
 }
-
 ```
 
 and verification that the process cmdline corresponds to "argv[0]" (for example, launching `strace mybin arg1` would result in a cmdline of `strace` and argv[0] of `mybin`
@@ -466,10 +450,10 @@ Check the process cmdline to spot if a debugger is launcher
 "_" and Args[0] should match otherwise
 */
 func obEnvArgsDetect() {
-	obLines, _ := obOS.LookupEnv("_")
-	if obLines != obOS.Args[0] {
-		obExit()
-	}
+    obLines, _ := obOS.LookupEnv("_")
+    if obLines != obOS.Args[0] {
+        obExit()
+    }
 }
 ```
 
@@ -481,20 +465,20 @@ Check the process cmdline to spot if a debugger is inline
 "_" should not contain the name of any debugger
 */
 func obEnvParentDetect() {
-	obLines, _ := obOS.LookupEnv("_")
-	if obStrings.Contains(obLines, "gdb") ||
-		obStrings.Contains(obLines, "dlv") ||
-		obStrings.Contains(obLines, "edb") ||
-		obStrings.Contains(obLines, "frida") ||
-		obStrings.Contains(obLines, "ghidra") ||
-		obStrings.Contains(obLines, "godebug") ||
-		obStrings.Contains(obLines, "ida") ||
-		obStrings.Contains(obLines, "lldb") ||
-		obStrings.Contains(obLines, "ltrace") ||
-		obStrings.Contains(obLines, "strace") ||
-		obStrings.Contains(obLines, "valgrind") {
-		obExit()
-	}
+    obLines, _ := obOS.LookupEnv("_")
+    if obStrings.Contains(obLines, "gdb") ||
+        obStrings.Contains(obLines, "dlv") ||
+        obStrings.Contains(obLines, "edb") ||
+        obStrings.Contains(obLines, "frida") ||
+        obStrings.Contains(obLines, "ghidra") ||
+        obStrings.Contains(obLines, "godebug") ||
+        obStrings.Contains(obLines, "ida") ||
+        obStrings.Contains(obLines, "lldb") ||
+        obStrings.Contains(obLines, "ltrace") ||
+        obStrings.Contains(obLines, "strace") ||
+        obStrings.Contains(obLines, "valgrind") {
+        obExit()
+    }
 }
 ```
 
@@ -507,13 +491,13 @@ most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
 to function, we try to spot this
 */
 func obEnvDetect() {
-	_, obLines := obOS.LookupEnv("LINES")
-	_, obColumns := obOS.LookupEnv("COLUMNS")
-	_, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
+    _, obLines := obOS.LookupEnv("LINES")
+    _, obColumns := obOS.LookupEnv("COLUMNS")
+    _, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
 
-	if obLines || obColumns || obLineLdPreload {
-		obExit()
-	}
+    if obLines || obColumns || obLineLdPreload {
+        obExit()
+    }
 }
 ```
 
@@ -528,38 +512,93 @@ This can be an injection attack (like on frida) to try and circumvent
 various restrictions (like ptrace checks)
 */
 func obLdPreloadDetect() {
-	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
-	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+    obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+    obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 
-	err := obOS.Setenv(obKey, obValue)
-	if err != nil {
-		obExit()
-	}
+    err := obOS.Setenv(obKey, obValue)
+    if err != nil {
+        obExit()
+    }
 
-	obLineLdPreload, _ := obOS.LookupEnv(obKey)
-	if obLineLdPreload == obValue {
-		err := obOS.Unsetenv(obKey)
-		if err != nil {
-			obExit()
-		}
-	} else {
-		obExit()
-	}
+    obLineLdPreload, _ := obOS.LookupEnv(obKey)
+    if obLineLdPreload == obValue {
+        err := obOS.Unsetenv(obKey)
+        if err != nil {
+            obExit()
+        }
+    } else {
+        obExit()
+    }
 }
-
 ```
 
 to make it more resilient to "false environment" attacks, we also try and set a random key-value in the environment, and check if it works, to ensure we do not have a "fake" environment (always empty for example).
 
-
-
 This type of checks are pretty basic and easy to port from C to Go. 
 
-A couple of checks I would like to port are for example the heap relocation check, as explained in this repo: [debugmenot/test_nearheap.c at master · kirschju/debugmenot · GitHub](https://github.com/kirschju/debugmenot/blob/master/src/test_nearheap.c) **GDB relocates the heap to the end of the bss section**
+A couple of checks I would like to port are for example the heap relocation check, as explained in this repo: [debugmenot/test_nearheap.c at master · kirschju/debugmenot · GitHub](https://github.com/kirschju/debugmenot/blob/master/src/test_nearheap.c) 
+
+**GDB relocates the heap to the end of the bss section**
 
 This type of check is not easily done in Go because *go does not support pointer arithmetics*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
 
-### Dependency Registration: Binary Frequency Distribution Study
+### Dependency Registration
+
+Another form of protection, is the *dependency registration*.
+
+The idea behind it is to protect not only elf binaries, but also executable scripts, like python, bash, perl, php or anything with a shebang.
+
+A common attack that is possible is a "man in the middle execution", for example, let the payload be a bash script, in the moment of execution "/usr/bin/env bash" is called to execute the content of the script.
+
+If in the environment (or really with a symlink on /usr/bin/bash) we put something like:
+
+```bash
+#!/bin/sh
+
+cp $0 /tmp/plaintext
+
+/usr/bin/real-bash $@
+```
+
+This will result in a transparent execution but a dumped plaintext in /tmp
+
+(credits for the attack idea to [mrnfrancesco (Francesco Marano) · GitHub](https://github.com/mrnfrancesco) )
+
+### 
+
+So what can we do to ensure nothing like this happens?
+
+We will register a binary/dependency that is necessary for the payload to run (for example /usr/bin/bash for a bash script, /usr/bin/python3 for a python script etc etc) and verify that the dependency in the target where we would execute the payload is valid or not.
+
+Now there is a problem, how do we verify that it's a valid binary? 
+
+Hash is too strict , for  example /usr/bin/bash on fedora is different from the one on centos 8, but both are valid binaries
+
+Only the presence of it is not enough (like in the example attack before)
+
+#### Byte Frequency Distribution Study
+
+To address the problem it is possible to recycle a technique mostly used in the data-recovery territory: the byte frequency distribution study
+
+References:
+
+[byte frequency analysis descriptor with spatial information for file fragment classification| Semantic Scholar](https://www.semanticscholar.org/paper/BYTE-FREQUENCY-ANALYSIS-DESCRIPTOR-WITH-SPATIAL-FOR-Xie-Abdullah/c39872eae0c61ecf47603aab3f5c1545ee612ac9)
+
+[A New Approach to Content-based File Type Detection](https://arxiv.org/pdf/1002.3174)
+
+The idea is to register the BFD of our dependency, then calculate the correlation indev of Bravais-Pearson to see if the two dataset are linearly correlated.
+
+Ref: [Pearson correlation coefficient - Wikipedia](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)
+
+Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/wiki/Covariance "Covariance") of the two variables divided by the product of their [standard deviations](https://en.wikipedia.org/wiki/Standard_deviations "Standard deviations").
+
+
+
+![pearson](https://wikimedia.org/api/rest_v1/media/math/render/svg/f76ccfa7c2ed7f5b085115086107bbe25d329cec)
+
+
+
+
 
 ### Decryption
 
