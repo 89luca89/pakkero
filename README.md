@@ -2,11 +2,9 @@
 
 <img src="pics/logo.jpg" data-canonical-src="pics/logo.jpg" width="250" height="250" />
 
-
 Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
-
 
 ## Introduction
 
@@ -30,7 +28,6 @@ big-bin     148M    ->  88M
 ```
 
 ## Install
-
 
 If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
 
@@ -71,12 +68,11 @@ pakkero --file ./target-file -o ./output-file -offset 880000 -register-dep depen
 
 ![demo](pics/demo.png)
 
-
 ### Usage
 
 Typing `pakker -h` the following output will be shown:
 
-```
+```bash
 Usage: pakkero -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-register-dep /path/to/file)
   -file <file>          Target file to Pack
   -o   <file>           place the output into <file> (default is <inputfile>.enc), optional
@@ -84,7 +80,6 @@ Usage: pakkero -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-re
   -offset               Offset where to start the payload (Number of Bytes)
   -register-dep         /path/to/dependency to analyze and use as fingerprint (absolutea, optional)
   -v                    Check pakkero version
-
 ```
 
 Below there is a full explanation of provided arguments:
@@ -142,8 +137,8 @@ to be obfuscated, needs to start with the suffix **ob**, it will be then put int
 each occurrence will be replaced in the file with a random string of lenght 128, composed only of runes that
 have siilar shape, namely:
 
-```
-	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
+```go
+    mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
 ```
 
 For pure strings in the launcher, they are detected using regular expressions, finding
@@ -160,45 +155,45 @@ the original char value,
 
 so a string becomes for example
 
-```
+```go
 func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
-	EAX := uint8(Ö0ΟÖΟŐŌŐŐŎÖŌÕ . . . .ÓOΘ0ΟŌŐŎŌÖÓÕƠ0ΟŎƠ.Sizeof(true))
-	return string(
-		[]byte{
-			(((EAX<<EAX^EAX)<<EAX<<EAX|EAX)<<EAX | EAX) << EAX << EAX,
-			(((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX | EAX) << EAX << EAX,
-			(((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX<<EAX | EAX) << EAX,
-			((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX<<EAX | EAX),
-			(((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX|EAX)<<EAX | EAX),
-			(((EAX<<EAX^EAX)<<EAX<<EAX<<EAX|EAX)<<EAX<<EAX | EAX),
-		},
-	)
+    EAX := uint8(Ö0ΟÖΟŐŌŐŐŎÖŌÕ . . . .ÓOΘ0ΟŌŐŎŌÖÓÕƠ0ΟŎƠ.Sizeof(true))
+    return string(
+        []byte{
+            (((EAX<<EAX^EAX)<<EAX<<EAX|EAX)<<EAX | EAX) << EAX << EAX,
+            (((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX | EAX) << EAX << EAX,
+            (((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX<<EAX | EAX) << EAX,
+            ((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX<<EAX | EAX),
+            (((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX|EAX)<<EAX | EAX),
+            (((EAX<<EAX^EAX)<<EAX<<EAX<<EAX|EAX)<<EAX<<EAX | EAX),
+        },
+    )
 }
-
 ```
+
 credits for the string obfuscation part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
 as my implementation is started from that and tweaked to work in my workflow.
 
 File is the **stripped**, using obviously **strip** with the flags:
 
-```
-	-sxX
-	--remove-section=.bss
-	--remove-section=.comment
-	--remove-section=.eh_frame
-	--remove-section=.eh_frame_hdr
-	--remove-section=.fini
-	--remove-section=.fini_array
-	--remove-section=.gnu.build.attributes
-	--remove-section=.gnu.hash
-	--remove-section=.gnu.version
-	--remove-section=.gosymtab
-	--remove-section=.got
-	--remove-section=.note.ABI-tag
-	--remove-section=.note.gnu.build-id
-	--remove-section=.note.go.buildid
-	--remove-section=.shstrtab
-	--remove-section=.typelink
+```bash
+    -sxX
+    --remove-section=.bss
+    --remove-section=.comment
+    --remove-section=.eh_frame
+    --remove-section=.eh_frame_hdr
+    --remove-section=.fini
+    --remove-section=.fini_array
+    --remove-section=.gnu.build.attributes
+    --remove-section=.gnu.hash
+    --remove-section=.gnu.version
+    --remove-section=.gosymtab
+    --remove-section=.got
+    --remove-section=.note.ABI-tag
+    --remove-section=.note.gnu.build-id
+    --remove-section=.note.go.buildid
+    --remove-section=.shstrtab
+    --remove-section=.typelink
 ```
 
 Additionally, if using *UPX*, their headers are **removed and replaced with randomness**, to ensure simple
@@ -207,40 +202,40 @@ things like `upx -d` will not work.
 Additionally a series of extra words are removed from the binary, to make it harder to do static analysis:
 
 ```
-	.gopclntab
-	.go.buildinfo
-	.noptrdata
-	.noptrbss
-	.data
-	.rodata
-	.text
-	.itablink
-	.shstrtab
-	.data
-	.dynamic
-	.dynstr
-	.dynsym
-	.gnu.version_r
-	.gopclntab
-	.got.plt
-	.init_array
-	.interp
-	.itablink
-	.rela.dyn
-	.rela.plt
-	.tbss
-	.plt
-	.init
-	name runtime command cmd
-	ptr process unicode main
-	path get reflect context
-	debug fmt sync sort
-	size heap fatal call
-	fixed slice bit file
-	read write buffer encrypt
-	decrypt hash state
-	external internal float
-	env trace pid
+    .gopclntab
+    .go.buildinfo
+    .noptrdata
+    .noptrbss
+    .data
+    .rodata
+    .text
+    .itablink
+    .shstrtab
+    .data
+    .dynamic
+    .dynstr
+    .dynsym
+    .gnu.version_r
+    .gopclntab
+    .got.plt
+    .init_array
+    .interp
+    .itablink
+    .rela.dyn
+    .rela.plt
+    .tbss
+    .plt
+    .init
+    name runtime command cmd
+    ptr process unicode main
+    path get reflect context
+    debug fmt sync sort
+    size heap fatal call
+    fixed slice bit file
+    read write buffer encrypt
+    decrypt hash state
+    external internal float
+    env trace pid
 ```
 
 Output of readelf to see the effect:
@@ -250,6 +245,10 @@ Output of readelf to see the effect:
 #### File Entropy
 
 Using binwalk to analyze the file entropy can give some hint on how the process works:
+
+This is the entropy of the binary we want to package (for this example /usr/bin/bash):
+
+![original-entropy.png](./pics/original-entropy.png)
 
 This is the entropy of a packaged binary **without compression**
 
@@ -261,22 +260,306 @@ This is the entropy of a packaged binary **with compression**
 
 In both cases (but mainly the first) it is possible to see when the launcher stops and
 the payload starts. This is really not a problem, because the offset of garbage is
-both preponed **and** postponed to the payload, and the "secret number" of when it starts is
-kept inside the launcher in an obfuscated form (like shown before)
+both preponed **and** postponed to the payload, and the "secret number" of when it starts is kept inside the launcher in an obfuscated form (like shown before)
 
 This is obviously vulnerable, reversing the binary will reveal the secret,
-all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and
-try to force static analysis.
+all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and try to force static analysis.
 
 ## Part 2: the launcher
 
-The launcher is the second part of the project an
+The launcher is the second part of the project, it allows to decompress, decrypt and launch the payload without touching storage, but using a file descriptor in RAM.
 
+This is a well known technique as it is possible to read:
 
+- [In-Memory-Only ELF Execution (Without tmpfs) Mrs Quis Will Think of a Better Title](https://magisterquis.github.io/2018/03/31/in-memory-only-elf-execution.html)
+
+- [ELF in-memory execution](https://blog.fbkcs.ru/en/elf-in-memory-execution/)
+
+and in many other places in C programming literature.
+
+Put briefly, use syscall to create a memory file descriptor (syscall 319 for amd64), write the plaintext payload here, and execute. The fd will be automatically removed after the execution without leaving trace on the storage.
+
+### Possible weakpoints
+
+This approach is vulnerable to 
+
+1. "memory dump attack", for example pausing the VM during execution and manually search the ram for all file descriptors until you find the right one
+
+2. dynamic analysis, during execution "pausing" the process and spot the right fd
+
+3. reversing the binary to find the "secret" (which in our case is the offset) and from there, reverse the encryption process and reconstruct the plaintext
+
+For point 1, it is possible to insert hypervisor detection, sandbox detection etc... it is in the TODO list, but I would leave it optional, in case you genuinely want to run the binary on VMs or Dockers
+
+Point 2 (and by conseguence point 3) can be made harder by blocking dynamic analysis detecting debuggers, tracers and so on... 
+
+Forcing static analysis of the decompiled code is already a big step forward in protecting the binary execution.
 
 ### Anti-debug
 
-### BFD Study
+Implemented here are a series of anti-debug techniques that are quite common in C/C++, from the **double-ptrace method** to the **ppid analysis** and breakpoint interception.
+
+
+
+First line of protection is breakpoint interception, on linux, a breackpoint is equivalent to signal *SIGILL* and *SIGTRAP* so:
+
+
+
+```go
+/*
+Breakpoint on linux are 0xCC and will be interpreted as a
+SIGTRAP, we will intercept them.
+*/
+func obSigTrap(obInput chan obOS.Signal) {
+	obMySignal := <-obInput
+	switch obMySignal {
+	case obSyscall.SIGILL:
+		obExit()
+	case obSyscall.SIGTRAP:
+		obExit()
+	default:
+		return
+	}
+}
+
+```
+
+
+
+This is pretty basic, so we go ahead and try to block **ptrace**:
+
+
+
+```go
+/*
+attach to PTRACE, register if successful
+attach A G A I N , register if unsuccessful
+this protects against custom ptrace (always returning 0)
+against NOP attacks and LD_PRELOAD attacks
+*/
+func obPtraceDetect() {
+	var obOffset = 0
+
+	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
+
+	if obResult == OK {
+		obOffset = 5
+	}
+
+	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
+		uintptr(obSyscall.PTRACE_TRACEME),
+		0,
+		0)
+
+	if obResult == ERR {
+		obOffset *= 3
+	}
+
+	if obOffset != (3 * 5) {
+		obExit()
+	}
+}
+```
+
+*Double ptraceme* ensures that tampering the ptrace loading with ld_preload with a fake ptrace lib that always returns 0, would result in a failure.
+
+
+
+CMD Line detection, would check for common processes for debugging, this is pretty naive check 
+
+
+
+```go
+/*
+Check the process cmdline to spot if a debugger is inline
+*/
+func obParentCmdLineDetect() {
+	obPidParent := obOS.Getppid()
+
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/cmdline"
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+
+	if obStrings.Contains(string(obStatParent), "gdb") ||
+		obStrings.Contains(string(obStatParent), "dlv") ||
+		obStrings.Contains(string(obStatParent), "edb") ||
+		obStrings.Contains(string(obStatParent), "frida") ||
+		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "godebug") ||
+		obStrings.Contains(string(obStatParent), "ida") ||
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "valgrind") {
+		obExit()
+	}
+}
+
+```
+
+```go
+/*
+Check the process cmdline to spot if a debugger is the PPID of our process
+*/
+func obParentDetect() {
+	obPidParent := obOS.Getppid()
+
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/stat"
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+
+	if obStrings.Contains(string(obStatParent), "gdb") ||
+		obStrings.Contains(string(obStatParent), "dlv") ||
+		obStrings.Contains(string(obStatParent), "edb") ||
+		obStrings.Contains(string(obStatParent), "frida") ||
+		obStrings.Contains(string(obStatParent), "ghidra") ||
+		obStrings.Contains(string(obStatParent), "godebug") ||
+		obStrings.Contains(string(obStatParent), "ida") ||
+		obStrings.Contains(string(obStatParent), "lldb") ||
+		obStrings.Contains(string(obStatParent), "ltrace") ||
+		obStrings.Contains(string(obStatParent), "strace") ||
+		obStrings.Contains(string(obStatParent), "valgrind") {
+		obExit()
+	}
+}
+
+```
+
+this goes in conjunction with the TracePid check to see if a parent is tracing us:
+
+
+
+```go
+/*
+Check the process status to spot if a debugger is active using the TracePid key
+*/
+func obParentTracerDetect() {
+	obPidParent := obOS.Getppid()
+
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/status"
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+	obStatLines := obStrings.Split(string(obStatParent), "\n")
+
+	for _, obValue := range obStatLines {
+		if obStrings.Contains(obValue, "TracerPid") {
+			obSplitArray := obStrings.Split(obValue, ":")
+			obSplitValue := obStrings.Replace(obSplitArray[1], "\t", "", -1)
+
+			if obSplitValue != "0" {
+				obExit()
+			}
+		}
+	}
+}
+
+```
+
+and verification that the process cmdline corresponds to "argv[0]" (for example, launching `strace mybin arg1` would result in a cmdline of `strace` and argv[0] of `mybin`
+
+```go
+/*
+Check the process cmdline to spot if a debugger is launcher
+"_" and Args[0] should match otherwise
+*/
+func obEnvArgsDetect() {
+	obLines, _ := obOS.LookupEnv("_")
+	if obLines != obOS.Args[0] {
+		obExit()
+	}
+}
+```
+
+and check if there is none of the known debuggers inline with the command
+
+```go
+/*
+Check the process cmdline to spot if a debugger is inline
+"_" should not contain the name of any debugger
+*/
+func obEnvParentDetect() {
+	obLines, _ := obOS.LookupEnv("_")
+	if obStrings.Contains(obLines, "gdb") ||
+		obStrings.Contains(obLines, "dlv") ||
+		obStrings.Contains(obLines, "edb") ||
+		obStrings.Contains(obLines, "frida") ||
+		obStrings.Contains(obLines, "ghidra") ||
+		obStrings.Contains(obLines, "godebug") ||
+		obStrings.Contains(obLines, "ida") ||
+		obStrings.Contains(obLines, "lldb") ||
+		obStrings.Contains(obLines, "ltrace") ||
+		obStrings.Contains(obLines, "strace") ||
+		obStrings.Contains(obLines, "valgrind") {
+		obExit()
+	}
+}
+```
+
+Also a pretty common check to do if we are in a debugger is to see if ENV has the variables LINES and COLUMNS:
+
+```go
+/*
+Check the process cmdline to spot if a debugger is active
+most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
+to function, we try to spot this
+*/
+func obEnvDetect() {
+	_, obLines := obOS.LookupEnv("LINES")
+	_, obColumns := obOS.LookupEnv("COLUMNS")
+	_, obLineLdPreload := obOS.LookupEnv("LD_PRELOAD")
+
+	if obLines || obColumns || obLineLdPreload {
+		obExit()
+	}
+}
+```
+
+This can give false positives (example the embedded terminal in VSCode or VIM), but worth checking for a normal environment.
+
+Also banally checking for LD_PRELOAD env variable present:
+
+```go
+/*
+Check the process is launcher with a LD_PRELOAD set.
+This can be an injection attack (like on frida) to try and circumvent
+various restrictions (like ptrace checks)
+*/
+func obLdPreloadDetect() {
+	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
+
+	err := obOS.Setenv(obKey, obValue)
+	if err != nil {
+		obExit()
+	}
+
+	obLineLdPreload, _ := obOS.LookupEnv(obKey)
+	if obLineLdPreload == obValue {
+		err := obOS.Unsetenv(obKey)
+		if err != nil {
+			obExit()
+		}
+	} else {
+		obExit()
+	}
+}
+
+```
+
+to make it more resilient to "false environment" attacks, we also try and set a random key-value in the environment, and check if it works, to ensure we do not have a "fake" environment (always empty for example).
+
+
+
+This type of checks are pretty basic and easy to port from C to Go. 
+
+A couple of checks I would like to port are for example the heap relocation check, as explained in this repo: [debugmenot/test_nearheap.c at master · kirschju/debugmenot · GitHub](https://github.com/kirschju/debugmenot/blob/master/src/test_nearheap.c) **GDB relocates the heap to the end of the bss section**
+
+This type of check is not easily done in Go because *go does not support pointer arithmetics*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
+
+### Dependency Registration: Binary Frequency Distribution Study
 
 ### Decryption
 
