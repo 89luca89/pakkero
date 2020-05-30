@@ -27,6 +27,8 @@ medium-bin  25M     ->  16M
 big-bin     148M    ->  88M
 ```
 
+With compression disabled, all resulting file size are ~1mb higher, making it suitable for 5+mb files.  
+
 ## Install
 
 If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
