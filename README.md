@@ -542,6 +542,106 @@ A couple of checks I would like to port are for example the heap relocation chec
 
 This type of check is not easily done in Go because *go does not support pointer arithmetics*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
 
+### Making difficult to reverse
+
+To add to this in many points of the source code it is possible to see that a comment is made:
+
+`//OB_CHECK`
+
+This is because during the obfuscation phase, every time we encounter this string, we will inject a random permutation of ALL of the anti-debug tricks that will be executed in parallel using go routines.
+
+```go
+/*
+GenerateRandomAntiDebug will Insert random order of anti-debug check
+together with inline compilation to induce big number
+of instructions in random order
+*/
+func GenerateRandomAntiDebug(input string) string {
+	lines := strings.Split(input, "\n")
+	randomChecks := []string{
+		`obDependencyCheck()`,
+		`obEnvArgsDetect()`,
+		`obParentTracerDetect()`,
+		`obParentCmdLineDetect()`,
+		`obEnvDetect()`,
+		`obEnvParentDetect() `,
+		`obLdPreloadDetect()`,
+		`obParentDetect()`,
+	}
+	// find OB_CHECK and put the checks there.
+	for i, v := range lines {
+		if strings.Contains(v, "// OB_CHECK") {
+			threadString := ""
+			checkString := ""
+			// randomize order of check to replace
+			for j, v := range ShuffleSlice(randomChecks) {
+				threadString = threadString + "go " + v + ";"
+				checkString += v
+
+				if j != (len(randomChecks) - 1) {
+					checkString += `||`
+				}
+			}
+			// add action in case of failed check
+			lines[i] = threadString
+		}
+	}
+	// back to single string
+	return strings.Join(lines, "\n")
+}
+
+```
+
+The generated source will be filled with this always-changing code, that will make difficult to use NOP attacks, manual jump using breakpoints and make confusion in the  graph view of disassemblers like Cutter, IDA Pro or Ghidra.
+
+
+
+So the main, for example, becomes something like:
+
+
+
+```go
+func main() {
+	// Prepare to intercept SIGTRAP
+	ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ := make(chan ÒÕ0ΟÓŎ0ÖÒŌƠÒΘ0ÓΘΘƠΟÕƠΘÕO0OŐOŎOƠŎƠÖOOÒÖÒO0ÕÕÓÖΘΘÓÒÕŌŐΘŐƠÖOÕΘÔÕÖƠƠŌŐƠ0ÖÖƠŌΟ0ΘƠÕÒÔƠÒOÒΘÔΟÒ0OÕOŌÕΘÒÒŐÓΟÕÖÕŎΟƠŎOŌÔΟŎŐÒŎŎOƠOO0Ō0ŌŐÓÖŎÖ.Signal, 1)
+	ÔƠÕΟÒΘΘÖŎ0ÓŎÒŎOÕΟÒ0ŐΘƠÓOƠOÔÒÕŐ0OÔÒÓΟOÓŐŐŎΟÒŐÒ0ŌΟO0ΟOÔOΘOƠƠÒ0ŐÓΘÖΘΘÕÖΟÔÖÖΘÔŎÕ00ŐÖÔŎŎŌ0ŐƠOÖÖΟΘÕÓŌÖÔÖÕÒƠƠÓÓ0ÒÖƠŌÔÔŐƠŌOŐÔÒ0ŐÕÖOŐŌŎÔÔ.Notify(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGTRAP, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGILL)
+
+	go ÔΘƠƠƠŎÔŐŌÖOŐÒÓO0ÖΘΘ0ΘŐŎΘ0ÖŌOÒŐÕ0ÒŐ0ƠÖÕŐÓÕÕŌƠƠÖÒÔŎÔÔÖÕŐÖΟÒÖŐÓÕÔÓΘΟÕƠOŐ0ŌÓÖÔOƠÓ0ŎÓ0ŎOÒΟÓOΘÔΟÒÔƠΘŐÒΘΘÓƠΟƠÓÒÓƠ0Ŏ0ÓÒŌOŌÕÕΟŌOΘ0ŎƠŎ0ÕƠƠ(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ)
+
+	// ÔOÒŎ00ƠÒŎΟOÓΟÖΟOÖΘÓƠƠƠŎÖŌŐŐÒÓÔOŎÒÔΘŌΟÓŐÒΟƠOÕÖÕƠƠÕŎÔÔÒΟOÖO0ŐÔÓÓƠÒ0ŎΘOÒŎOŐÔŌƠÓÒÕÕΟO0ÓƠÒŎŌÖOŌÖOÕÒƠŐÓΟŐÔÔŎŐÓÔÓOƠΘOOŎ0ƠΘÓΘÕÔÕƠÓΘÒÔŐΟÒ()
+	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+	ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+	ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+
+
+.....
+```
+
+### 
+
 ### Dependency Registration
 
 Another form of protection, is the *dependency registration*.
@@ -604,7 +704,9 @@ Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/w
 
 
 
-Then study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
+If the index indicats strong correlation, we know that the two file are of the same type (binary)
+
+A second step is to study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
 
 
 
@@ -624,6 +726,34 @@ This method is able to distinguish (and stop) the use of different (but function
 
 ### Decryption
 
+The last line of defence is also the encryption of the payload. 
 
+The decryption key of the payload is the sha512sum of the compiled launcher itself with the random garbage appended to it.
+
+
+
+For example:
+
+With offset 930000
+
+```
+Compiled launcher (800kb)
+
+Random Garbage (130kb)
+
+Payload
+
+Random Garbage ( different one, 130kb)
+```
+
+
+
+The decryption key is 
+
+`sha512sum(Launcher+RandomGarbage)`
+
+
+
+This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
 
 ### Execution
