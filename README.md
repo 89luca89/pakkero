@@ -58,6 +58,10 @@ The following are weak dependencies
 
 **Dependencies are checked at runtime and an error message will specify what is missing**
 
+# Disclaimer
+
+**This is a for-fun project**, complete protection for a binary is **impossible**, in a way or another there is always someone that will reverse it, even if only baser on 0 an 1, so this is more abaout exploring some arguments that to create an anti-reverse launcher.
+
 ## Part 1: the packer
 
 PakkerO can be launched like:
@@ -756,4 +760,52 @@ The decryption key is
 
 This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
 
+
+
+So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that became a pure function as explained above) of random name and content.
+
 ### Execution
+
+As explained above, we will use a memory file desciptor to execute the binary without passing for the storage.
+
+The binary will be executed using the `Command` library of Go, that uses the syscall exec under the hood, so no new shells are instantiated.
+
+
+
+Two routines are used to pipe the payload stderr and stdout to the launcher process.
+
+Also piping is supported.
+
+
+
+For IO heavy processes it is possible to insert in the `Scan` of the outputs an `OB_CHECK` like this:
+
+
+
+```go
+	// OB_CHECK
+	// async fetch stdout
+	go func() {
+		defer obWaitGroup.Done()
+
+		for obStdoutScan.Scan() {
+			// OB_CHECK
+			println(obStdoutScan.Text())
+		}
+	}()
+	// OB_CHECK
+	// async fetch stderr
+	go func() {
+		defer obWaitGroup.Done()
+
+		for obStderrScan.Scan() {
+		    // OB_CHECK
+			println(obStderrScan.Text())
+		}
+	}()
+
+```
+
+
+
+This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing.
