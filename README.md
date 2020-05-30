@@ -1,4 +1,4 @@
-# Pakker0
+# PakkerO
 
 <img src="pics/logo.jpg" data-canonical-src="pics/logo.jpg" width="250" height="250" />
 
@@ -8,7 +8,7 @@ Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 ## Introduction
 
-**Pakker0** is a binary paker written in Go made for fun and educational purpose.
+**PakkerO** is a binary paker written in Go made for fun and educational purpose.
 
 PakkerO is divided in two main pieces, the packer part (PakkerO itself) and the
 launcher part.
@@ -563,84 +563,79 @@ together with inline compilation to induce big number
 of instructions in random order
 */
 func GenerateRandomAntiDebug(input string) string {
-	lines := strings.Split(input, "\n")
-	randomChecks := []string{
-		`obDependencyCheck()`,
-		`obEnvArgsDetect()`,
-		`obParentTracerDetect()`,
-		`obParentCmdLineDetect()`,
-		`obEnvDetect()`,
-		`obEnvParentDetect() `,
-		`obLdPreloadDetect()`,
-		`obParentDetect()`,
-	}
-	// find OB_CHECK and put the checks there.
-	for i, v := range lines {
-		if strings.Contains(v, "// OB_CHECK") {
-			threadString := ""
-			checkString := ""
-			// randomize order of check to replace
-			for j, v := range ShuffleSlice(randomChecks) {
-				threadString = threadString + "go " + v + ";"
-				checkString += v
+    lines := strings.Split(input, "\n")
+    randomChecks := []string{
+        `obDependencyCheck()`,
+        `obEnvArgsDetect()`,
+        `obParentTracerDetect()`,
+        `obParentCmdLineDetect()`,
+        `obEnvDetect()`,
+        `obEnvParentDetect() `,
+        `obLdPreloadDetect()`,
+        `obParentDetect()`,
+    }
+    // find OB_CHECK and put the checks there.
+    for i, v := range lines {
+        if strings.Contains(v, "// OB_CHECK") {
+            threadString := ""
+            checkString := ""
+            // randomize order of check to replace
+            for j, v := range ShuffleSlice(randomChecks) {
+                threadString = threadString + "go " + v + ";"
+                checkString += v
 
-				if j != (len(randomChecks) - 1) {
-					checkString += `||`
-				}
-			}
-			// add action in case of failed check
-			lines[i] = threadString
-		}
-	}
-	// back to single string
-	return strings.Join(lines, "\n")
+                if j != (len(randomChecks) - 1) {
+                    checkString += `||`
+                }
+            }
+            // add action in case of failed check
+            lines[i] = threadString
+        }
+    }
+    // back to single string
+    return strings.Join(lines, "\n")
 }
-
 ```
 
 The generated source will be filled with this always-changing code, that will make difficult to use NOP attacks, manual jump using breakpoints and make confusion in the  graph view of disassemblers like Cutter, IDA Pro or Ghidra.
 
-
-
 So the main, for example, becomes something like:
-
-
 
 ```go
 func main() {
-	// Prepare to intercept SIGTRAP
-	ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ := make(chan ÒÕ0ΟÓŎ0ÖÒŌƠÒΘ0ÓΘΘƠΟÕƠΘÕO0OŐOŎOƠŎƠÖOOÒÖÒO0ÕÕÓÖΘΘÓÒÕŌŐΘŐƠÖOÕΘÔÕÖƠƠŌŐƠ0ÖÖƠŌΟ0ΘƠÕÒÔƠÒOÒΘÔΟÒ0OÕOŌÕΘÒÒŐÓΟÕÖÕŎΟƠŎOŌÔΟŎŐÒŎŎOƠOO0Ō0ŌŐÓÖŎÖ.Signal, 1)
-	ÔƠÕΟÒΘΘÖŎ0ÓŎÒŎOÕΟÒ0ŐΘƠÓOƠOÔÒÕŐ0OÔÒÓΟOÓŐŐŎΟÒŐÒ0ŌΟO0ΟOÔOΘOƠƠÒ0ŐÓΘÖΘΘÕÖΟÔÖÖΘÔŎÕ00ŐÖÔŎŎŌ0ŐƠOÖÖΟΘÕÓŌÖÔÖÕÒƠƠÓÓ0ÒÖƠŌÔÔŐƠŌOŐÔÒ0ŐÕÖOŐŌŎÔÔ.Notify(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGTRAP, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGILL)
+    // Prepare to intercept SIGTRAP
+    ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ := make(chan ÒÕ0ΟÓŎ0ÖÒŌƠÒΘ0ÓΘΘƠΟÕƠΘÕO0OŐOŎOƠŎƠÖOOÒÖÒO0ÕÕÓÖΘΘÓÒÕŌŐΘŐƠÖOÕΘÔÕÖƠƠŌŐƠ0ÖÖƠŌΟ0ΘƠÕÒÔƠÒOÒΘÔΟÒ0OÕOŌÕΘÒÒŐÓΟÕÖÕŎΟƠŎOŌÔΟŎŐÒŎŎOƠOO0Ō0ŌŐÓÖŎÖ.Signal, 1)
+    ÔƠÕΟÒΘΘÖŎ0ÓŎÒŎOÕΟÒ0ŐΘƠÓOƠOÔÒÕŐ0OÔÒÓΟOÓŐŐŎΟÒŐÒ0ŌΟO0ΟOÔOΘOƠƠÒ0ŐÓΘÖΘΘÕÖΟÔÖÖΘÔŎÕ00ŐÖÔŎŎŌ0ŐƠOÖÖΟΘÕÓŌÖÔÖÕÒƠƠÓÓ0ÒÖƠŌÔÔŐƠŌOŐÔÒ0ŐÕÖOŐŌŎÔÔ.Notify(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGTRAP, O0OÓΟ0ŎŐOƠOŎƠ0ÓƠΘÒƠÕƠÖÓÕŎƠŎOΟΘƠŌƠÖÔÓÔÕŐŎŌŐŐƠΘO0Ô0Ò0OÕƠ0ŐÓÖÔ0ŎΘÕÔÔŎƠÓÔOÕO0ÓΘÒOŎŎÔ0ÓƠ0ÖŎŎΘO0ƠŐÖŐŌOOOΟOÒΘΟΟƠΘΟ0ÖÔŎƠÓŌÕÕOΘÕŎŐŌΘOŐΘÕŌ.SIGILL)
 
-	go ÔΘƠƠƠŎÔŐŌÖOŐÒÓO0ÖΘΘ0ΘŐŎΘ0ÖŌOÒŐÕ0ÒŐ0ƠÖÕŐÓÕÕŌƠƠÖÒÔŎÔÔÖÕŐÖΟÒÖŐÓÕÔÓΘΟÕƠOŐ0ŌÓÖÔOƠÓ0ŎÓ0ŎOÒΟÓOΘÔΟÒÔƠΘŐÒΘΘÓƠΟƠÓÒÓƠ0Ŏ0ÓÒŌOŌÕÕΟŌOΘ0ŎƠŎ0ÕƠƠ(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ)
+    go ÔΘƠƠƠŎÔŐŌÖOŐÒÓO0ÖΘΘ0ΘŐŎΘ0ÖŌOÒŐÕ0ÒŐ0ƠÖÕŐÓÕÕŌƠƠÖÒÔŎÔÔÖÕŐÖΟÒÖŐÓÕÔÓΘΟÕƠOŐ0ŌÓÖÔOƠÓ0ŎÓ0ŎOÒΟÓOΘÔΟÒÔƠΘŐÒΘΘÓƠΟƠÓÒÓƠ0Ŏ0ÓÒŌOŌÕÕΟŌOΘ0ŎƠŎ0ÕƠƠ(ÖÖΘÓOŐƠOΟŌΟŐÔÒÕÓÒÒÒOŎŌO0ÔŌÓÖOŐŎΟŌŌŌÔ0OOŌŐΘŎΘÔOOOÓΘŐΘ00ƠŎÖÖ0ÔÕÕŎŎŎÒÖO00ŎÔΘÓOÖ0ΘÔOΟÒŐŐƠÒΘÒ0ŎŌŌÖΟÓ0ƠŎŌŌΟŎΘŐÖÒŐΘÔÕOŌÕŎÒŎÔŌÓƠÓŌŐΟΟÒÒƠ)
 
-	// ÔOÒŎ00ƠÒŎΟOÓΟÖΟOÖΘÓƠƠƠŎÖŌŐŐÒÓÔOŎÒÔΘŌΟÓŐÒΟƠOÕÖÕƠƠÕŎÔÔÒΟOÖO0ŐÔÓÓƠÒ0ŎΘOÒŎOŐÔŌƠÓÒÕÕΟO0ÓƠÒŎŌÖOŌÖOÕÒƠŐÓΟŐÔÔŎŐÓÔÓOƠΘOOŎ0ƠΘÓΘÕÔÕƠÓΘÒÔŐΟÒ()
-	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
-	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
-	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
-	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
-	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
-	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
-	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
-	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
-	ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
-	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
-	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
-	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
-	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
-	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
-	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
-	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
-	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
-	ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
-	go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
-	go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
-	go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
-	go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
-	go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
-	go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
-	go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
-	go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+    // ÔOÒŎ00ƠÒŎΟOÓΟÖΟOÖΘÓƠƠƠŎÖŌŐŐÒÓÔOŎÒÔΘŌΟÓŐÒΟƠOÕÖÕƠƠÕŎÔÔÒΟOÖO0ŐÔÓÓƠÒ0ŎΘOÒŎOŐÔŌƠÓÒÕÕΟO0ÓƠÒŎŌÖOŌÖOÕÒƠŐÓΟŐÔÔŎŐÓÔÓOƠΘOOŎ0ƠΘÓΘÕÔÕƠÓΘÒÔŐΟÒ()
+    go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+    go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+    go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+    go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+    go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+    go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+    go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+    go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+    ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+    go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+    go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+    go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
+    go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+    go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+    go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+    go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+    go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+    ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+    go ÒŎ0ÖƠÔŌÔÖΟΘƠΟÒƠƠÖ0ŐÓÓΟOÓŎÖΟÔŌOOΟÔÒÓƠÓΟŎŎ0ÕƠŌÕÒÒÖ0OŌÕŐ0ƠÖΟƠÕÔÒÖŎÖÔÕÔŐOƠŌƠÒΘŌŎÖOŎΘÓÔÔΟŐŌΟŐƠÕΟÖŐ0ÔΘƠŌƠƠÒOOŎÔ0ŐΟÕÕŌÕÔÕÒŐÔŐÔÖÓƠÖΟOŌŎƠ()
+    go ÔŌÕŌŐ0ŐÓÖΘŐÖΟŎΟƠŎOÖÖÕÒΘƠŐΟÓΟΘOÒƠΟ0ÒÒÖÖŌŎŌΘƠƠOΟÒƠΟΘOÓÕŌÕÒÕO0ŎOÔŐOÖŎÓÔOO0OÕŌOΘ0ÒƠƠÔŌÔÔÔŐΟ0ΘΘOŌOÒÕÒÕÕOÔÕŐŌΟÒŌÔ00ÖƠÔΟ0ΟÔŐΟƠÖÕΘ0ÖΟŌÖÖ()
+    go ƠΘÔŐŎŌÒŌÖŌΟŎOΟŐŎŎΘOƠÔ0ŐƠΘÒΟƠŐŌ0ŌΘΟΟÒŎÖÓ0ÒΟŐ0ƠΘŌÒÔÔŌƠŌÖOƠÓÔŌOÓ0OŐÕÒ0ŌÖÓŎÕŎÕÓÓ0ÒΘÖΟΘŎÕÓƠŐΟÕΟŌÔŎŌÓOÒÓ0Ŏ0ΟÕÔÒŌƠΘŌΟŎŐΘƠÔÓŐΘŎÔŌŌO0ƠÒÖÖ()
+    go ÒŎÒ0ΘŐŐÔƠΘÒŐŎΘÓÕÕÔŎÖ0ŌÖÖΟÖÓÔÓÒÖÖŌŐΘŌ0ÕÖŎÓΟŌŌÒÖ0ΘÖOΘŎŎÖΘΟÓÒƠΟŐOƠOΘΘÓ0ÕΘŐƠÔÖΟΟ0OΘÖΘŎΟŐÕΘŐΟÓÓƠƠŐÒΟÖΘOŌƠΟΘŎ0ÒΟƠƠÔŎ00ŌÕÓÒ0ŌŎÒOƠŎÖŐÕÓƠ()
+    go ΟƠŐΟÔOƠÔΟΟÓΘÖOŐΟÕƠ0ΘŐÓÖÔŎÒ0OÔŐÓΟƠΘΘΘÔOÖŌÕŎÒŎΟÔÕÒŎÓ0OÖƠ0ÖÓOÒŐÓŐÔΘÓŌƠÕŎÕÒΟÖŌÒŎΟ0ÒÔÔÕ0ÕÓÒÓÒÔ0ŎO0Θ0ΘŐÖΟŎÖŌOΘÒΘ0ÕŐÖÓΟOÖÒÒÔÕOƠÒŎΘO0ÔÓÔ()
+    go ÔŐŌŌÒÓ0OΟO0ÖΟŌ0ƠÒ0ÒŌÔOΟΟÖŎÕ0ΘÓΘOOΟΟΘ0Ơ0ΘŐÕ0ΟÔŐ0ŐŌÕ00ŌOΟΟÒÕÒÖŌÓOOÒÔΘÒΘÒÔŌŎΟÒŐŌÕÒÕŎÖÒÖÕΘ00OÖÓŌÓÖÖÓÔƠΘŌ0ÓÕ0ŌÖΘOÖ0ÓŐƠ0ΟÖ00ŌŐŐΘΘÕÒƠÕΟ()
+    go ŎÓÕƠŌOŌΟÖÓ0ÒÓΘΟ0ƠŎÖΟŌŎÕÒÕÓŎÖÕƠÒŎŐƠÒƠ0ÒƠÖÕŎÒŐÓÔÓÒ0ΟÕŌÒŐOŐŌÖOÕƠƠÔŎÖ0ÒÓÒÕOÖÕƠÔÕOÔÖΟΘÕÔ0OÕƠÓOÓOÔÖÒ0ΟÖOÖÔΘŌOŌŎΘΘΘ0ŐŌOÔÒΟƠ0ŐÓÕŐÔŐΟÒŐÒΟ()
+    go ÖƠŎŎΘΟÓÓÒÖÒ0ÓΘŎÖΘŌ0ŎOÕÔÓƠÔÔΘŌÔΘ0OÕOΟOÕƠŌÒŎ0O0ŎΘΟÒÕΟΟÓ0ŎΟÒΘÕΟÖŎÕÔOÕOΘΘŐÖŌŐΟÔΟÖΟ0OÔÓ0ΟŐOŌÕŌOŌOÕÒÒΘΟŎƠΟÒŌ0ƠΟÔOÒÓÒΟŐÕÒŌƠÔÖ0ŐÖÖÖÓΟƠŌÕ()
 
 
 .....
@@ -704,25 +699,15 @@ Ref: [Pearson correlation coefficient - Wikipedia](https://en.wikipedia.org/wiki
 
 Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/wiki/Covariance "Covariance") of the two variables divided by the product of their [standard deviations](https://en.wikipedia.org/wiki/Standard_deviations "Standard deviations").
 
-
-
 ![pearson](https://wikimedia.org/api/rest_v1/media/math/render/svg/f76ccfa7c2ed7f5b085115086107bbe25d329cec)
-
-
 
 If the index indicats strong correlation, we know that the two file are of the same type (binary)
 
 A second step is to study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
 
-
-
 This ensures that the dependency we are finding is of the same type (a binary) using the Bravais-Pearson index and "similar distribution" from the combined std deviation.
 
-
-
 Here an example of a valid dependency: /usr/bin/bash on fedora30 vs centos7
-
-
 
 ![bfd](./pics/bfd-std.png)
 
@@ -735,8 +720,6 @@ This method is able to distinguish (and stop) the use of different (but function
 The last line of defence is also the encryption of the payload. 
 
 The decryption key of the payload is the sha512sum of the compiled launcher itself with the random garbage appended to it.
-
-
 
 For example:
 
@@ -752,17 +735,11 @@ Payload
 Random Garbage ( different one, 130kb)
 ```
 
-
-
 The decryption key is 
 
 `sha512sum(Launcher+RandomGarbage)`
 
-
-
 This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
-
-
 
 So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that became a pure function as explained above) of random name and content.
 
@@ -772,42 +749,33 @@ As explained above, we will use a memory file desciptor to execute the binary wi
 
 The binary will be executed using the `Command` library of Go, that uses the syscall exec under the hood, so no new shells are instantiated.
 
-
-
 Two routines are used to pipe the payload stderr and stdout to the launcher process.
 
 Also piping is supported.
 
-
-
 For IO heavy processes it is possible to insert in the `Scan` of the outputs an `OB_CHECK` like this:
 
-
-
 ```go
-	// OB_CHECK
-	// async fetch stdout
-	go func() {
-		defer obWaitGroup.Done()
+    // OB_CHECK
+    // async fetch stdout
+    go func() {
+        defer obWaitGroup.Done()
 
-		for obStdoutScan.Scan() {
-			// OB_CHECK
-			println(obStdoutScan.Text())
-		}
-	}()
-	// OB_CHECK
-	// async fetch stderr
-	go func() {
-		defer obWaitGroup.Done()
+        for obStdoutScan.Scan() {
+            // OB_CHECK
+            println(obStdoutScan.Text())
+        }
+    }()
+    // OB_CHECK
+    // async fetch stderr
+    go func() {
+        defer obWaitGroup.Done()
 
-		for obStderrScan.Scan() {
-		    // OB_CHECK
-			println(obStderrScan.Text())
-		}
-	}()
-
+        for obStderrScan.Scan() {
+            // OB_CHECK
+            println(obStderrScan.Text())
+        }
+    }()
 ```
-
-
 
 This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing.
