@@ -82,9 +82,9 @@ func main() {
 		// set a default offset if not specified
 		if *offset == 0 {
 			if *compress {
-				*offset = 80000
+				*offset = pakkero.Random(80000, 90000)
 			} else {
-				*offset = 1850000
+				*offset = pakkero.Random(188000, 190000)
 			}
 		}
 		if *file != "" {

@@ -27,6 +27,14 @@ const ERR = 1
 const OK = 0
 
 /*
+Random will return a random number in a range
+*/
+func Random(min, max int64) int64 {
+	mathRand.Seed(time.Now().UnixNano())
+	return mathRand.Int63n(max-min) + min
+}
+
+/*
 Unique will deduplicate a given slice
 */
 func Unique(slice []string) []string {

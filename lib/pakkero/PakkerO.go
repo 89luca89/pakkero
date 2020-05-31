@@ -57,8 +57,7 @@ func PakkerO(infile string, offset int64, outfile string, dependency string, com
 	// ------------------------------------------------------------------------
 	// offset Hysteresis, this will prevent easy key retrieving
 	rand.Seed(time.Now().UTC().UnixNano())
-	offset += (rand.Int63n(4096-128) + 128)
-
+	offset += Random(128, 4094)
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 	// ------------------------------------------------------------------------
 
