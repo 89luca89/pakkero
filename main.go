@@ -45,9 +45,9 @@ func help() {
 	println("Usage: " + programName + " -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-register-dep /path/to/file)")
 	println("  -file <file>		Target file to Pack")
 	println("  -o   <file>		place the output into <file> (default is <inputfile>.enc), optional")
-	println("  -c   			compress the output to occupy less space (uses UPX), optional")
-	println("  -offset		Offset where to start the payload (Number of Bytes)")
-	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolutea, optional)")
+	println("  -c   			compress the output to occupy less space (uses UPX, optional)")
+	println("  -offset		Offset where to start the payload (Number of Bytes, optional)")
+	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolute path, optional)")
 	println("  -v			Check " + programName + " version")
 }
 func main() {
@@ -79,7 +79,15 @@ func main() {
 			testDependencies(dependencies)
 		}
 
-		if *file != "" && *offset >= 0 {
+		// set a default offset if not specified
+		if *offset == 0 {
+			if *compress {
+				*offset = 80000
+			} else {
+				*offset = 1850000
+			}
+		}
+		if *file != "" {
 			pakkero.PakkerO(*file, *offset, *output, *dependency, *compress)
 		} else {
 			println("Missing arguments or invalid arguments!")
