@@ -40,8 +40,16 @@ go get github.com/89luca89/pakkero
 Once you retrieved you are ready to build:
 
 ```bash
-go build github.com/89luca89/pakkero
+cd $GOPATH/src/github.com/89luca89/pakkero; make
 ```
+
+or to test
+
+```bash
+cd $GOPATH/src/github.com/89luca89/pakkero; make test
+```
+
+The binary file will be in `$GOPATH/src/github.com/89luca89/pakkero/dist`
 
 The following are hard dependencies:
 
