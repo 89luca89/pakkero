@@ -114,13 +114,9 @@ for types of binary that rely on specific order of instructions or relatively fr
 
 To build the project, you can simply use the `Makefile`;
 
-
-
 `make` will compile
 
 `make test` will compile and run a run with a simple binary (echo)
-
-
 
 **Why not using simply go build?**
 
@@ -154,8 +150,6 @@ Being part of the password itself, greater offset will make stronger the encrypt
 enlarge the final output file.
 
 Optimal value are *at least* 800000 when compression is enabled and 1900000 when disabled.
-
-
 
 If not specified a random one will be chosen upon creation.
 
@@ -771,7 +765,7 @@ The decryption key is
 
 This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
 
-So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that became a pure function as explained above) of random name and content.
+So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that is not saved but computed at runtime) of random name and content. 
 
 ### Execution
 
