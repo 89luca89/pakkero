@@ -1,4 +1,4 @@
-# PakkerO
+# Pakkero
 
 <img src="pics/logo.jpg" data-canonical-src="pics/logo.jpg" width="250" height="250" />
 
@@ -8,9 +8,9 @@ Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 ## Introduction
 
-**PakkerO** is a binary packer written in Go made for fun and educational purpose.
+**Pakkero** is a binary packer written in Go made for fun and educational purpose.
 
-PakkerO is divided in two main pieces, the packer part (PakkerO itself) and the
+Pakkero is divided in two main pieces, the packer part (Pakkero itself) and the
 launcher part.
 
 It can be used to protect and launch various type of payloads, from scripts (bash, php, python...) to
@@ -74,7 +74,7 @@ The following are weak dependencies
 
 ## Part 1: the packer
 
-PakkerO can be launched like:
+Pakkero can be launched like:
 
 ```bash
 pakkero --file ./target-file -o ./output-file -register-dep dependency-file -c
@@ -120,9 +120,9 @@ To build the project, you can simply use the `Makefile`;
 
 **Why not using simply go build?**
 
-Go build works fine, but will skip a fundamental step in the building process, **the injection of the launcher stub inside PakkerO source**
+Go build works fine, but will skip a fundamental step in the building process, **the injection of the launcher stub inside Pakkero source**
 
-This way the PakkerO binary has inside the source of the Launcher to be used for each packaging.
+This way the Pakkero binary has inside the source of the Launcher to be used for each packaging.
 
 #### Payload
 

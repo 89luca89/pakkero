@@ -43,8 +43,8 @@ func trap() {
 	}()
 }
 
-// PakkerO will Encrypt and pack the payload for a secure execution
-func PakkerO(infile string, offset int64, outfile string, dependency string, compress bool) {
+// Pakkero will Encrypt and pack the payload for a secure execution
+func Pakkero(infile string, offset int64, outfile string, dependency string, compress bool) {
 	trap()
 
 	fmt.Print(" → Randomizing offset...")

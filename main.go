@@ -88,7 +88,7 @@ func main() {
 			}
 		}
 		if *file != "" {
-			pakkero.PakkerO(*file, *offset, *output, *dependency, *compress)
+			pakkero.Pakkero(*file, *offset, *output, *dependency, *compress)
 		} else {
 			println("Missing arguments or invalid arguments!")
 			help()
