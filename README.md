@@ -126,8 +126,7 @@ This way the Pakkero binary has inside the source of the Launcher to be used for
 
 #### Payload
 
-For this purpose the payload is simply encrypted using AES256-GCM, and then compressed
-using Zlib
+For this purpose the payload is simply compressed using zlib then encrypted using AES256-GCM
 
 During encryption, some basic operations are also performed on the payload:
 
