@@ -1,6 +1,6 @@
 all:
-	cp internal/pakkero/Obfuscation.go internal/pakkero/Obfuscation.go.bak;
-	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" internal/pakkero/Obfuscation.go;
+	cp internal/pakkero/obfuscation.go internal/pakkero/obfuscation.go.bak;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/launcher.go)|g" internal/pakkero/obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \
@@ -10,7 +10,7 @@ all:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/pakkero; mv internal/pakkero/Obfuscation.go.bak internal/pakkero/Obfuscation.go
+		-o dist/pakkero; mv internal/pakkero/obfuscation.go.bak internal/pakkero/obfuscation.go
 	strip \
 		-sxX \
 		--remove-section=.bss \
@@ -31,8 +31,8 @@ all:
 		dist/pakkero;
 clean:
 	rm -rf dist/;
-	cp internal/pakkero/Obfuscation.go internal/pakkero/Obfuscation.go.bak;
-	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/Launcher.go)|g" internal/pakkero/Obfuscation.go;
+	cp internal/pakkero/obfuscation.go internal/pakkero/obfuscation.go.bak;
+	sed -i "s|LAUNCHERSTUB|$$(base64 -w0 data/launcher.go)|g" internal/pakkero/obfuscation.go;
 	go build -i \
 		-gcflags="-N" \
 		-gcflags="-nolocalimports" \
@@ -42,7 +42,7 @@ clean:
 		-gcflags="-trimpath=$$GOPATH/src/" \
 		-asmflags="-trimpath=$$GOPATH/src/" \
 		-ldflags="-s" \
-		-o dist/pakkero; mv internal/pakkero/Obfuscation.go.bak internal/pakkero/Obfuscation.go
+		-o dist/pakkero; mv internal/pakkero/obfuscation.go.bak internal/pakkero/obfuscation.go
 	strip \
 		-sxXwSgd \
 		--remove-section=.bss \
