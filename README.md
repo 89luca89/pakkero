@@ -8,7 +8,7 @@ Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 ## Introduction
 
-**PakkerO** is a binary paker written in Go made for fun and educational purpose.
+**PakkerO** is a binary packer written in Go made for fun and educational purpose.
 
 PakkerO is divided in two main pieces, the packer part (PakkerO itself) and the
 launcher part.
@@ -70,14 +70,14 @@ The following are weak dependencies
 
 # Disclaimer
 
-**This is a for-fun project**, complete protection for a binary is **impossible**, in a way or another there is always someone that will reverse it, even if only baser on 0 an 1, so this is more abaout exploring some arguments that to create an anti-reverse launcher.
+**This is a for-fun and educational project**, complete protection for a binary is **impossible**, in a way or another there is always someone that will reverse it, even if only based on 0 an 1, so this is more about exploring some arguments that to create an anti-reverse launcher.
 
 ## Part 1: the packer
 
 PakkerO can be launched like:
 
 ```bash
-pakkero --file ./target-file -o ./output-file -offset 880000 -register-dep dependency-file -c
+pakkero --file ./target-file -o ./output-file -register-dep dependency-file -c
 ```
 
 ![demo](pics/demo.png)
@@ -100,15 +100,33 @@ Below there is a full explanation of provided arguments:
 
 * **file**: The file we want to pack
 * **o**: The file output that we will create
-* **c**: (optional) If specificed, UPX will be used to further compress the Launcher
+* **c**: (optional) If specified, UPX will be used to further compress the Launcher
 * **offset**: The number of bytes from where to start the payload (increases if not using compression)
 * **regiser-dep** (optional) Path to a file that can be used to register the fingerprint of a dependency to ensure that the Launcher runs only if a file with similar fingerprint is present
 * **v**: Print version
 
 ### Packaging
 
-The main intent is to **not alter the payload in any way**, this can be very important
-for types of binary that rely on specific order of instructions or relatively fragile timings.
+**The main intent is to not alter the payload in any way, this can be very important
+for types of binary that rely on specific order of instructions or relatively fragile timings.**
+
+#### Building
+
+To build the project, you can simply use the `Makefile`;
+
+
+
+`make` will compile
+
+`make test` will compile and run a run with a simple binary (echo)
+
+
+
+**Why not using simply go build?**
+
+Go build works fine, but will skip a fundamental step in the building process, **the injection of the launcher stub inside PakkerO source**
+
+This way the PakkerO binary has inside the source of the Launcher to be used for each packaging.
 
 #### Payload
 
@@ -137,19 +155,23 @@ enlarge the final output file.
 
 Optimal value are *at least* 800000 when compression is enabled and 1900000 when disabled.
 
+
+
+If not specified a random one will be chosen upon creation.
+
 ### Obfuscation
 
-The final thing the packer does is compiling the launcher. To protect some of the foundamental
+The final thing the packer does is compiling the launcher. To protect some of the fundamental
 part of it (namely where the offset starts) the launcher is *obfuscated* and heavily stripped down.
 
-The technique utilized for obfuscating the function and variables name is based on typosquatting:
+The technique utilized for obfuscating the function and variables name is based on typo-squatting:
 
 ![obfuscation](./pics/obfuscation.png)
 
 This is done in a pretty naive way, simply put, in the launcher each function/variable which name has
 to be obfuscated, needs to start with the suffix **ob**, it will be then put into a secret map, and
-each occurrence will be replaced in the file with a random string of lenght 128, composed only of runes that
-have siilar shape, namely:
+each occurrence will be replaced in the file with a random string of length 128, composed only of runes that
+have similar shape, namely:
 
 ```go
     mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
@@ -164,7 +186,7 @@ all the words that are comprised between the three type of ticks supported in go
 "
 ```
 
-All of the strings found this way, are then replaced with a function that performs simple bitshifts to return
+All of the strings found this way, are then replaced with a function that performs simple bit-shifts to return
 the original char value,
 
 so a string becomes for example
@@ -274,7 +296,7 @@ This is the entropy of a packaged binary **with compression**
 
 In both cases (but mainly the first) it is possible to see when the launcher stops and
 the payload starts. This is really not a problem, because the offset of garbage is
-both preponed **and** postponed to the payload, and the "secret number" of when it starts is kept inside the launcher in an obfuscated form (like shown before)
+both pre-poned **and** post-poned to the payload, and the "secret number" of when it starts is kept inside the launcher in an obfuscated form (like shown before)
 
 This is obviously vulnerable, reversing the binary will reveal the secret,
 all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and try to force static analysis.
@@ -307,15 +329,15 @@ This approach is vulnerable to
 
 For point 1, it is possible to insert hypervisor detection, sandbox detection etc... it is in the TODO list, but I would leave it optional, in case you genuinely want to run the binary on VMs or Dockers
 
-Point 2 (and by conseguence point 3) can be made harder by blocking dynamic analysis detecting debuggers, tracers and so on... 
+Point 2 (and by consequence point 3) can be made harder by blocking dynamic analysis detecting debuggers, tracers and so on... 
 
 Forcing static analysis of the decompiled code is already a big step forward in protecting the binary execution.
 
 ### Anti-debug
 
-Implemented here are a series of anti-debug techniques that are quite common in C/C++, from the **double-ptrace method** to the **ppid analysis** and breakpoint interception.
+Implemented here are a series of anti-debug techniques that are quite common in C/C++, from the **double-ptrace method** to the **ppid analysis** and breakpoints interception.
 
-First line of protection is breakpoint interception, on linux, a breackpoint is equivalent to signal *SIGILL* and *SIGTRAP* so:
+First line of protection is breakpoints interception, on linux, a breakpoints is equivalent to signal *SIGILL* and *SIGTRAP* so:
 
 ```go
 /*
@@ -554,7 +576,7 @@ A couple of checks I would like to port are for example the heap relocation chec
 
 **GDB relocates the heap to the end of the bss section**
 
-This type of check is not easily done in Go because *go does not support pointer arithmetics*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
+This type of check is not easily done in Go because *go does not support pointer arithmetic*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
 
 ### Making difficult to reverse
 
@@ -709,7 +731,7 @@ Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/w
 
 ![pearson](https://wikimedia.org/api/rest_v1/media/math/render/svg/f76ccfa7c2ed7f5b085115086107bbe25d329cec)
 
-If the index indicats strong correlation, we know that the two file are of the same type (binary)
+If the index indicates strong correlation, we know that the two file are of the same type (binary)
 
 A second step is to study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
 
@@ -725,7 +747,7 @@ This method is able to distinguish (and stop) the use of different (but function
 
 ### Decryption
 
-The last line of defence is also the encryption of the payload. 
+The last line of defense is also the encryption of the payload. 
 
 The decryption key of the payload is the sha512sum of the compiled launcher itself with the random garbage appended to it.
 
@@ -753,7 +775,7 @@ So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-de
 
 ### Execution
 
-As explained above, we will use a memory file desciptor to execute the binary without passing for the storage.
+As explained above, we will use a memory file descriptor to execute the binary without passing for the storage.
 
 The binary will be executed using the `Command` library of Go, that uses the syscall exec under the hood, so no new shells are instantiated.
 
