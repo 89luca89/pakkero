@@ -7,7 +7,7 @@ import (
 	"flag"
 	"os"
 
-	"./lib/pakkero"
+	"github.com/89luca89/pakkero/internal/pakkero"
 )
 
 const programName = "pakkero"
