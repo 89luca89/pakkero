@@ -205,6 +205,19 @@ func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
 credits for the string obfuscation part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
 as my implementation is started from that and tweaked to work in my workflow.
 
+The launcher is compiled then using:
+
+```go
+	flags = []string{"build", "-a",
+		"-trimpath",
+		"-gcflags",
+		"-N -l -nolocalimports",
+		"-ldflags",
+		"-s -w -extldflags -static",
+	}
+	exec.Command("go", flags...)
+```
+
 File is the **stripped**, using obviously **strip** with the flags:
 
 ```bash
