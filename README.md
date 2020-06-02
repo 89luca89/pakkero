@@ -764,7 +764,27 @@ The decryption key is
 
 This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
 
-So **THE REAL DECRYPTION KEY IS THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that is not saved but computed at runtime) of random name and content. 
+
+
+![payload](./pics/decryption.png)
+
+The payload is structured as above, OFFSET1 **ends on the offset value**, OFFSET2 is calculated as the byte reverse of the offset value.
+
+
+
+The procedure will:
+
+- calculate the offset (embedded in the code as a funcion for obfuscation purposes)
+
+- take the launcher+OFFSET1, sha512sum it
+
+- remove OFFSET2 random bytes at the end
+
+- decrypt payload using the calculated sha512sum
+
+
+
+So **THE REAL DECRYPTION KEY IS BASED ON THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that is not saved but computed at runtime) of random name and content. 
 
 ### Execution
 
