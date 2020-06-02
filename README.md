@@ -66,7 +66,7 @@ The following are weak dependencies
  - upx -> needed for launcher compression (optional)
 ```
 
-**GO 1.12+ needed**
+**GO 1.13+ needed**
 
 **Dependencies are checked at runtime and an error message will specify what is missing**
 
