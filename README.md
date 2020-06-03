@@ -10,14 +10,9 @@ Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 **Pakkero** is a binary packer written in Go made for fun and educational purpose.
 
-Pakkero is divided in two main pieces, the packer part (Pakkero itself) and the
-launcher part.
+Its main goal is to take in input a program file (elf binary, script, even appimage) and compress it, protect it from tampering and intrusion.
 
-It can be used to protect and launch various type of payloads, from scripts (bash, php, python...) to
-elf files.
-
-It is not recommended for very small files as the launcher itself can vary from ~700kb to ~1.7mb depending
-on compression. On files above 2.6mb there is gain, else the resulting binary is larger than the original:
+It is not recommended for very small files as the launcher itself can vary from ~700kb to ~1.7mb depending on compression. On files above 2.6mb there is gain, else the resulting binary is larger than the original:
 
 ```
 base-bin    1.2M    ->  1.6M
@@ -74,6 +69,11 @@ The following are weak dependencies
 
 **This is a for-fun and educational project**, complete protection for a binary is **impossible**, in a way or another there is always someone that will reverse it, even if only based on 0 an 1, so this is more about exploring some arguments that to create an anti-reverse launcher.
 
+---
+
+Pakkero is divided in two main pieces, the packer part (Pakkero itself) and the
+launcher part.
+
 ## Part 1: the packer
 
 Pakkero can be launched like:
@@ -101,9 +101,9 @@ Usage: pakkero -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-re
 Below there is a full explanation of provided arguments:
 
 * **file**: The file we want to pack
-* **o**: The file output that we will create
+* **o**: (optional) The file output that we will create
 * **c**: (optional) If specified, UPX will be used to further compress the Launcher
-* **offset**: The number of bytes from where to start the payload (increases if not using compression)
+* **offset**: (optional) The number of bytes from where to start the payload (increases if not using compression)
 * **regiser-dep** (optional) Path to a file that can be used to register the fingerprint of a dependency to ensure that the Launcher runs only if a file with similar fingerprint is present
 * **v**: Print version
 
@@ -112,13 +112,17 @@ Below there is a full explanation of provided arguments:
 **The main intent is to not alter the payload in any way, this can be very important
 for types of binary that rely on specific order of instructions or relatively fragile timings.**
 
+The target of pakkero is not to touch the "payload".
+Other packers like UPX works by compressing the sections stored within the Section Table of the executable file, relocating the sections and renaming them. It then alters 
+the entry point where the binary will run. While this is really what defines storically a packer, this in some way or another "touches" the payload so can make it unusable (when it works on strict timing, precise elf sections tricks and so on)
+
 #### Building
 
 To build the project, you can simply use the `Makefile`;
 
-`make` will compile
+- `make` will compile
 
-`make test` will compile and run a run with a simple binary (echo)
+- `make test` will compile and run a run with a simple binary (echo)
 
 **Why not using simply go build?**
 
@@ -135,8 +139,7 @@ During encryption, some basic operations are also performed on the payload:
 - putting garbage random values before and after the payload to mask it
 - reverse it and change each byte endianess
 
-Encryption password is the hash SHA512 of the compiled launcher itself together with the
-garbage values added to fill the file till the offset, thus providing
+Encryption password is the hash SHA512 of the compiled launcher itself together with the garbage values added to fill the file till the offset, thus providing
 some integrity protection and anti-tampering.
 
 #### Offset
@@ -147,26 +150,22 @@ Put simply, after the launcher is compiled (more on the launcher later), the pay
 attached to it. The offset ensures that the payload can be put anywhere after it.
 All the space after the launcher until the payload is filled with random garbage.
 
+![payload](./pics/decryption.png)
+
 Being part of the password itself, greater offset will make stronger the encryption, but
 enlarge the final output file.
 
-Optimal value are *at least* 800000 when compression is enabled and 1900000 when disabled.
-
-If not specified a random one will be chosen upon creation.
+Optimal value are **at least** 800000 when compression is enabled and **1900000** when disabled. *If not specified a random one will be chosen upon creation.
 
 ### Obfuscation
 
-The final thing the packer does is compiling the launcher. To protect some of the fundamental
-part of it (namely where the offset starts) the launcher is *obfuscated* and heavily stripped down.
+The final thing the packer does is compiling the launcher. To protect some of the fundamental part of it (namely where the offset starts) the launcher is *obfuscated* and heavily stripped down.
 
 The technique utilized for obfuscating the function and variables name is based on typo-squatting:
 
 ![obfuscation](./pics/obfuscation.png)
 
-This is done in a pretty naive way, simply put, in the launcher each function/variable which name has
-to be obfuscated, needs to start with the suffix **ob**, it will be then put into a secret map, and
-each occurrence will be replaced in the file with a random string of length 128, composed only of runes that
-have similar shape, namely:
+This is done in a pretty naive way, simply put, in the launcher each function/variable which name has to be obfuscated, needs to start with the suffix **ob**, it will be then put into a secret map, and each occurrence will be replaced in the file with a random string of length 128, composed only of runes that have similar shape, namely:
 
 ```go
     mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
@@ -181,10 +180,7 @@ all the words that are comprised between the three type of ticks supported in go
 "
 ```
 
-All of the strings found this way, are then replaced with a function that performs simple bit-shifts to return
-the original char value,
-
-so a string becomes for example
+All of the strings found this way, are then replaced with a function that performs simple bit-shifts to return the original char value, so a string becomes for example:
 
 ```go
 func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
@@ -208,17 +204,17 @@ as my implementation is started from that and tweaked to work in my workflow.
 The launcher is compiled then using:
 
 ```go
-	flags = []string{"build", "-a",
-		"-trimpath",
-		"-gcflags",
-		"-N -l -nolocalimports",
-		"-ldflags",
-		"-s -w -extldflags -static",
-	}
-	exec.Command("go", flags...)
+    flags = []string{"build", "-a",
+        "-trimpath",
+        "-gcflags",
+        "-N -l -nolocalimports",
+        "-ldflags",
+        "-s -w -extldflags -static",
+    }
+    exec.Command("go", flags...)
 ```
 
-File is the **stripped**, using obviously **strip** with the flags:
+File is the **stripped**, using `strip` with the flags:
 
 ```bash
     -sxX
@@ -240,10 +236,9 @@ File is the **stripped**, using obviously **strip** with the flags:
     --remove-section=.typelink
 ```
 
-Additionally, if using *UPX*, their headers are **removed and replaced with randomness**, to ensure simple
-things like `upx -d` will not work.
+Additionally, if using *UPX*, their headers are **removed and replaced with randomness**, to ensure simple things like `upx -d` will not work.
 
-Additionally a series of extra words are removed from the binary, to make it harder to do static analysis:
+Additionally a series of extra words are removed from the binary and replaced with random bytes, to make it harder to do static analysis:
 
 ```
     .gopclntab
@@ -303,11 +298,9 @@ This is the entropy of a packaged binary **with compression**
 ![compressed](./pics/compressed-entropy.png)
 
 In both cases (but mainly the first) it is possible to see when the launcher stops and
-the payload starts. This is really not a problem, because the offset of garbage is
-both pre-poned **and** post-poned to the payload, and the "secret number" of when it starts is kept inside the launcher in an obfuscated form (like shown before)
+the garbage before the payload starts. This is really not a problem, because the offset of garbage is both pre-poned **and** post-poned to the payload, and the "secret number" of when it starts is kept inside the launcher and computed at runtime.
 
-This is obviously vulnerable, reversing the binary will reveal the secret,
-all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and try to force static analysis.
+This is obviously vulnerable, reversing the binary will reveal the secret, all the launcher part is dedicated to the implementation of a series of measures to **block dynamic analysis** and try to force static analysis.
 
 ## Part 2: the launcher
 
@@ -322,7 +315,10 @@ This is a well known technique as it is possible to read:
 and in many other places in C programming literature.
 
 ```
-Put briefly, use syscall to create a memory file descriptor (syscall 319 for amd64), write the plaintext payload here, and execute. The fd will be automatically removed after the execution without leaving trace on the storage.
+Put briefly, use syscall to create a memory file descriptor (syscall 319 for amd64),
+write the plaintext payload here, and execute. 
+The fd will be automatically removed after the execution without 
+leaving trace on the storage.
 ```
 
 ### Possible weakpoints
@@ -331,13 +327,15 @@ This approach is vulnerable to
 
 1. "memory dump attack", for example pausing the VM during execution and manually search the ram for all file descriptors until you find the right one
 
-2. dynamic analysis, during execution "pausing" the process and spot the right fd
+2. "proc dump attack", in linux all the file descriptors are in `/proc` so dumping to another disk the complete folder will in a way or another dump the decrypted payload (if done before the execution finishes)
 
-3. reversing the binary to find the "secret" (which in our case is the offset) and from there, reverse the encryption process and reconstruct the plaintext
+3. dynamic analysis, during execution "pausing" the process and spot the right fd
 
-For point 1, it is possible to insert hypervisor detection, sandbox detection etc... it is in the TODO list, but I would leave it optional, in case you genuinely want to run the binary on VMs or Dockers
+4. reversing the binary to find the "secret" (which in our case is the offset) and from there, reverse the encryption process and reconstruct the plaintext
 
-Point 2 (and by consequence point 3) can be made harder by blocking dynamic analysis detecting debuggers, tracers and so on... 
+For point 1, it is possible to insert hypervisor detection, sandbox detection etc... it is in my TODO list, but I would leave it optional, in case you genuinely want to run the binary in VMs or Dockers.
+
+Point 3 (and by consequence point 4) can be made harder by blocking dynamic analysis detecting debuggers, tracers and so on... 
 
 Forcing static analysis of the decompiled code is already a big step forward in protecting the binary execution.
 
@@ -401,9 +399,9 @@ func obPtraceDetect() {
 }
 ```
 
-*Double ptraceme* ensures that tampering the ptrace loading with ld_preload with a fake ptrace lib that always returns 0, would result in a failure.
+*Double ptraceme* ensures that tampering the ptrace loading with a fake ptrace lib that always returns 0, would result in a failure.
 
-CMD Line detection, would check for common processes for debugging, this is pretty naive check 
+CMD Line detection, would check for common processes for debugging, this is pretty naive check:
 
 ```go
 /*
@@ -582,7 +580,7 @@ This type of checks are pretty basic and easy to port from C to Go.
 
 A couple of checks I would like to port are for example the heap relocation check, as explained in this repo: [debugmenot/test_nearheap.c at master · kirschju/debugmenot · GitHub](https://github.com/kirschju/debugmenot/blob/master/src/test_nearheap.c) 
 
-**GDB relocates the heap to the end of the bss section**
+>  GDB relocates the heap to the end of the bss section
 
 This type of check is not easily done in Go because *go does not support pointer arithmetic*, CGO should be the way, but would make it dynamically linked for the C part (or twice the size if statically linked)
 
@@ -687,7 +685,7 @@ Another form of protection, is the *dependency registration*.
 
 The idea behind it is to protect not only elf binaries, but also executable scripts, like python, bash, perl, php or anything with a shebang.
 
-A common attack that is possible is a "man in the middle execution", for example, let the payload be a bash script, in the moment of execution "/usr/bin/env bash" is called to execute the content of the script.
+A common attack that is possible is a "man in the middle execution", for example, let the payload be a bash script, in the moment of execution `/usr/bin/env bash` is called to execute the content of the script.
 
 If in the environment (or really with a symlink on /usr/bin/bash) we put something like:
 
@@ -707,11 +705,11 @@ This will result in a transparent execution but a dumped plaintext in /tmp
 
 So what can we do to ensure nothing like this happens?
 
-We will register a binary/dependency that is necessary for the payload to run (for example /usr/bin/bash for a bash script, /usr/bin/python3 for a python script etc etc) and verify that the dependency in the target where we would execute the payload is valid or not.
+We will *register a binary/dependency* that is necessary for the payload to run (for example /usr/bin/bash for a bash script, /usr/bin/python3 for a python script etc etc) and verify that the dependency in the target where we would execute the payload is valid or not.
 
 Now there is a problem, how do we verify that it's a valid binary? 
 
-Hash is too strict , for  example /usr/bin/bash on fedora is different from the one on centos 8, but both are valid binaries
+Using an Hash is too strict , for  example /usr/bin/bash on fedora is different from the one on centos 8, but both are valid binaries.
 
 Only the presence of it is not enough (like in the example attack before)
 
@@ -721,19 +719,21 @@ Some basic checks are made:
 
 - file size is +/- 15% of the registered one
 
+But something more is needed.
+
 #### Byte Frequency Distribution Study
 
-To address the problem it is possible to recycle a technique mostly used in the data-recovery territory: the byte frequency distribution study
+To address the problem it is possible to recycle a technique mostly used in the data-recovery territory: the <u>byte frequency distribution study</u>.
 
 References:
 
-[byte frequency analysis descriptor with spatial information for file fragment classification| Semantic Scholar](https://www.semanticscholar.org/paper/BYTE-FREQUENCY-ANALYSIS-DESCRIPTOR-WITH-SPATIAL-FOR-Xie-Abdullah/c39872eae0c61ecf47603aab3f5c1545ee612ac9)
+- [byte frequency analysis descriptor with spatial information for file fragment classification| Semantic Scholar](https://www.semanticscholar.org/paper/BYTE-FREQUENCY-ANALYSIS-DESCRIPTOR-WITH-SPATIAL-FOR-Xie-Abdullah/c39872eae0c61ecf47603aab3f5c1545ee612ac9)
 
-[A New Approach to Content-based File Type Detection](https://arxiv.org/pdf/1002.3174)
+- [A New Approach to Content-based File Type Detection](https://arxiv.org/pdf/1002.3174)
 
 The idea is to register the BFD of our dependency, then calculate the correlation index of Bravais-Pearson to see if the two dataset are linearly correlated.
 
-Ref: [Pearson correlation coefficient - Wikipedia](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)
+> Ref: [Pearson correlation coefficient - Wikipedia](https://en.wikipedia.org/wiki/Pearson_correlation_coefficient)
 
 Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/wiki/Covariance "Covariance") of the two variables divided by the product of their [standard deviations](https://en.wikipedia.org/wiki/Standard_deviations "Standard deviations").
 
@@ -741,9 +741,9 @@ Pearson's correlation coefficient is the [covariance](https://en.wikipedia.org/w
 
 If the index indicates strong correlation, we know that the two file are of the same type (binary)
 
-A second step is to study the combined standard deviation of the two datasets (std deviation of the first on the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
+A second step is to study the combined standard deviation of the two datasets (std deviation of the first and the second) and see if both values, the correlation and the combined std deviation are in certain ranges.
 
-This ensures that the dependency we are finding is of the same type (a binary) using the Bravais-Pearson index and "similar distribution" from the combined std deviation.
+This ensures that the dependency we are finding is of *the same type* (a binary) using the Bravais-Pearson index and *similar distribution* from the combined std deviation.
 
 Here an example of a valid dependency: /usr/bin/bash on fedora30 vs centos7
 
@@ -766,38 +766,32 @@ With offset 930000
 ```
 Compiled launcher (800kb)
 
-Random Garbage (130kb)
+OFFSET1 (130kb)
 
 Payload
 
-Random Garbage ( different one, 130kb)
+OFFSET2 ( different one, 130kb)
 ```
 
 The decryption key is 
 
-`sha512sum(Launcher+RandomGarbage)`
+`sha512sum(Launcher+OFFSET1)`
 
 This protects from file-based NOP attacks to remove some instructions from the launcher, and acts also as binary validation.
-
-
 
 ![payload](./pics/decryption.png)
 
 The payload is structured as above, OFFSET1 **ends on the offset value**, OFFSET2 is calculated as the byte reverse of the offset value.
 
-
-
 The procedure will:
 
-- calculate the offset (embedded in the code as a funcion for obfuscation purposes)
+- calculate the offset
 
 - take the launcher+OFFSET1, sha512sum it
 
 - remove OFFSET2 random bytes at the end
 
 - decrypt payload using the calculated sha512sum
-
-
 
 So **THE REAL DECRYPTION KEY IS BASED ON THE OFFSET ITSELF**, all the obfuscation/anti-debug is to protect this information that is stored in an obfuscated string (that is not saved but computed at runtime) of random name and content. 
 
