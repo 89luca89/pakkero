@@ -24,6 +24,14 @@ big-bin     148M    ->  88M
 
 With compression disabled, all resulting file size are ~1mb higher, making it suitable for 5+mb files.  
 
+#### How compares to UPX?
+
+Tested with a 24mb binary file (I didn't have a big project handy so I just concatenated a bunch of programs from `/usr/bin/` to make one big elf) became:
+
+- 12mb using `upx -9`
+- 13mb using `pakkero -c`
+- 14mb using `pakkero` without compression
+
 ## Install
 
 If you have a [Go](https://golang.org/) environment ready to go, it's as easy as:
