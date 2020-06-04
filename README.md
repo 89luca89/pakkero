@@ -843,7 +843,7 @@ This will make an impact on performance (all check are executed **for each IO on
 
 This is particularly discouraged for **srcipts payloads**, as they are even easier to spot as the path is directly in the process
 
-![handle](./pics/handle-stdout2.png)
+![handle](./pics/handle-stdout-2.png)
 
 
 
