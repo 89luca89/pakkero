@@ -188,26 +188,22 @@ all the words that are comprised between the three type of ticks supported in go
 "
 ```
 
-All of the strings found this way, are then replaced with a function that performs simple bit-shifts to return the original char value, so a string becomes for example:
+All of the strings found this way, are then replaced with a function that performs a simple operation of reconstruction of the original string:
 
 ```go
-func ƠÔƠΘƠΘÓÒ . . . . ÓƠŐƠŌŎÕÒΟŌÔ() string {
-    EAX := uint8(Ö0ΟÖΟŐŌŐŐŎÖŌÕ . . . .ÓOΘ0ΟŌŐŎŌÖÓÕƠ0ΟŎƠ.Sizeof(true))
-    return string(
-        []byte{
-            (((EAX<<EAX^EAX)<<EAX<<EAX|EAX)<<EAX | EAX) << EAX << EAX,
-            (((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX | EAX) << EAX << EAX,
-            (((EAX<<EAX^EAX)<<EAX|EAX)<<EAX<<EAX<<EAX | EAX) << EAX,
-            ((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX<<EAX | EAX),
-            (((EAX<<EAX^EAX)<<EAX<<EAX<<EAX<<EAX|EAX)<<EAX | EAX),
-            (((EAX<<EAX^EAX)<<EAX<<EAX<<EAX|EAX)<<EAX<<EAX | EAX),
-        },
-    )
+func ÓΘŌOÒŐÒŌÓÒOŎΘOΟ....0ŐÒÖŎÕΟΘÕÓÕÓŎÓŌÕ0ŎŌΘÕŎÕ() string {
+	ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌ...ŌÒƠÔÖΘŐÖΟŎƠƠ00Õ0ÖÕ0ÖŐŐÓΟŌΟ := []string{"Ò0ƠŐÖŐŎΘÖƠÔÖÕÓΘ...ÕÕŌŎŐƠÔΘΘƠ", "ÔÒÕΟƠ...ŐÒŌOƠÖ", "ƠΘŐÒƠΘŌ00Θ...ΘΟÔŎŎΘŐƠŐΘŎΟÕÖÕÖΟÖΘÒÖ"}
+	var ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ []byte
+	for _, ŌΘƠÔÕÔΘÔOÔOŐΟΘ...ŌΘƠÔÕÔΘÔOÔOŐΟΘ := range ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌÕÒÔÕŌŎ00ÔÔÒOƠÓÕÔÒ0ΘƠΘŐ0OOŎÓÒŐ0Õ0ÓOÕÓŐƠŌŎÕÖ0ÕÖÔŌΟΟŌÒÖÒÖOΟOÒŎŌÒÓÔƠΟΟÓŌÓOÔΟÒŎŎΘΟΟƠÔŐΘŎŌÔŌÒƠÔÖΘŐÖΟŎƠƠ00Õ0ÖÕ0ÖŐŐÓΟŌΟ {
+		ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ = append(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ, byte(len([]rune(ŌΘƠÔÕÔΘÔOÔOŐΟΘ...ŌΘƠÔÕÔΘÔOÔOŐΟΘ))))
+	}
+	return string(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ)
 }
 ```
 
-credits for the string obfuscation part goes to [GH0st3rs](https://github.com/GH0st3rs/obfus)  Thanks!
-as my implementation is started from that and tweaked to work in my workflow.
+A slice of string is generated, with each element has a lenght derived from the byte value of the original char of the original string.
+This way each byte of the original string is computed and calculated as the lenght of the correspondent string, casted to rune slice.
+
 
 The launcher is compiled then using:
 

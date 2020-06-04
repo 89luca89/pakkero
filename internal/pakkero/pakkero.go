@@ -85,7 +85,7 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 
 	// add offset to the secrets!
 	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
-		GenerateTyposquatName()}
+		GenerateTyposquatName(128)}
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)

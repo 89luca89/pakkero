@@ -177,17 +177,16 @@ func StripFile(infile string, launcherFile string) bool {
 
 /*
 GenerateTyposquatName is a typosquat name generator
-based on a length (128 default) this will create a random
+based on a lenght (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
-func GenerateTyposquatName() string {
+func GenerateTyposquatName(lenght int) string {
 	// We divide between an alphabet with number
 	// and one without, because function/variable names
 	// must not start with a number.
 	letterRunes := []rune("OÓÕÔÒÖŌŎŐƠΘΟ")
 	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
-	length := 128
-	b := make([]rune, length)
+	b := make([]rune, lenght)
 	// ensure we do not start with a number or we will break code.
 	b[0] = letterRunes[mathRand.Intn(len(letterRunes))]
 	for i := range b {
@@ -196,27 +195,52 @@ func GenerateTyposquatName() string {
 			b[i] = mixedRunes[mathRand.Intn(len(mixedRunes))]
 		}
 	}
-
 	return string(b)
 }
 
 /*
-GenerateStringFunc will hide a string creating a function that returns
-that value as a string encoded with a series of byteshift operations
+ObfuscateFuncVars will:
+  - extract all obfuscation-enabled func and var names:
+  - those start with "ob*" and will be listed
+  - for each matching string generate a typosquatted random string and
+    replace all string with that
 */
-func GenerateStringFunc(txt string, function string) string {
-	lines := []string{}
-	for _, item := range []byte(txt) {
-		lines = append(
-			lines, GenerateBitshift(item),
-		)
+func ObfuscateFuncVars(input string) string {
+	// obfuscate functions and variables names
+	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
+	words := regex.FindAllString(input, -1)
+	words = ReverseStringArray(words)
+	words = Unique(words)
+
+	for _, w := range words {
+		// generate random name for each matching string
+		input = strings.ReplaceAll(input, w, GenerateTyposquatName(128))
 	}
 
-	return fmt.Sprintf("func "+
-		function+
-		"() string { EAX := uint8(obUnsafe.Sizeof(true));"+
-		"return string(\n[]byte{\n%s,\n},\n)}",
-		strings.Join(lines, ",\n"))
+	return input
+}
+
+/*
+GenerateStringFunc will hide a string creating a function that returns
+that value as a string encoded with a series of lenght calculation of randomic
+string arrays generated
+*/
+func GenerateStringFunc(txt string, function string) string {
+
+	resString := "{"
+	for _, b := range []byte(txt) {
+		resString += "\"" + GenerateTyposquatName(int(b)) + "\"" + ","
+	}
+	// remove last comma
+	resString = strings.TrimSuffix(resString, ",")
+	// close array
+	resString += "}"
+	result := fmt.Sprintf("func " +
+		function +
+		"() string {\nobRegistered := []string" + resString +
+		"\nvar obResult []byte\nfor _,obValue := range obRegistered {\nobResult = append(obResult, byte(len([]rune(obValue))))\n}\nreturn string(obResult)\n}")
+
+	return result
 }
 
 /*
@@ -252,7 +276,7 @@ func ObfuscateStrings(input string) string {
 				_, present := Secrets[w]
 				if !present {
 					secret := w[1 : len(w)-1]
-					Secrets[w] = []string{secret, GenerateTyposquatName()}
+					Secrets[w] = []string{secret, GenerateTyposquatName(128)}
 				}
 			}
 		}
@@ -276,28 +300,6 @@ func ObfuscateStrings(input string) string {
 
 	// join back with the import section
 	return importSection + body
-}
-
-/*
-ObfuscateFuncVars will:
-  - extract all obfuscation-enabled func and var names:
-  - those start with "ob*" and will be listed
-  - for each matching string generate a typosquatted random string and
-    replace all string with that
-*/
-func ObfuscateFuncVars(input string) string {
-	// obfuscate functions and variables names
-	regex := regexp.MustCompile(`\bob[a-zA-Z0-9_]+`)
-	words := regex.FindAllString(input, -1)
-	words = ReverseStringArray(words)
-	words = Unique(words)
-
-	for _, w := range words {
-		// generate random name for each matching string
-		input = strings.ReplaceAll(input, w, GenerateTyposquatName())
-	}
-
-	return input
 }
 
 /*
@@ -344,7 +346,6 @@ func GenerateRandomAntiDebug(input string) string {
 		}
 		obfile = append(obfile, v)
 	}
-	fmt.Println(obfile)
 	// back to single string
 	return strings.Join(obfile, "\n")
 }
