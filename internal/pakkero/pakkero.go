@@ -11,11 +11,13 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 )
 
 const offsetPlaceholder = `"9999999"`
+const stdoutEnabledPlaceholder = `"ENABLESTDOUT"`
 const depNamePlaceholder = `"DEPNAME1"`
 const depSizePlaceholder = `"DEPSIZE2"`
 const depBFDPlaceholder = "[]float64{1, 2, 3, 4}"
@@ -44,7 +46,7 @@ func trap() {
 }
 
 // Pakkero will Encrypt and pack the payload for a secure execution
-func Pakkero(infile string, offset int64, outfile string, dependency string, compress bool) {
+func Pakkero(infile string, offset int64, outfile string, dependency string, compress bool, stdout bool) {
 	trap()
 
 	fmt.Print(" → Randomizing offset...")
@@ -87,6 +89,8 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
 		GenerateTyposquatName(128)}
 
+	Secrets[stdoutEnabledPlaceholder] = []string{strconv.FormatBool(stdout),
+		GenerateTyposquatName(128)}
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
 	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)

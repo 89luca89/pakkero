@@ -47,6 +47,7 @@ func help() {
 	println("  -o   <file>		place the output into <file> (default is <inputfile>.enc), optional")
 	println("  -c   			compress the output to occupy less space (uses UPX, optional)")
 	println("  -offset		Offset where to start the payload (Number of Bytes, optional)")
+	println("  -enable-stdout		Whether to wait and handle the process stdout/sterr or not (false by default, optional)")
 	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolute path, optional)")
 	println("  -v			Check " + programName + " version")
 }
@@ -64,9 +65,11 @@ func main() {
 	output := flag.String("o", "", "")
 	offset := flag.Int64("offset", 0, "")
 	compress := flag.Bool("c", false, "")
+	stdout := flag.Bool("enable-stdout", false, "")
 	flag.Bool("v", false, "")
 	flag.Parse()
 
+	println(*stdout)
 	switch os.Args[1] {
 	case "-v":
 		printVersion()
@@ -84,11 +87,11 @@ func main() {
 			if *compress {
 				*offset = pakkero.Random(800000, 900000)
 			} else {
-				*offset = pakkero.Random(1880000, 1900000)
+				*offset = pakkero.Random(1900000, 2000000)
 			}
 		}
 		if *file != "" {
-			pakkero.Pakkero(*file, *offset, *output, *dependency, *compress)
+			pakkero.Pakkero(*file, *offset, *output, *dependency, *compress, *stdout)
 		} else {
 			println("Missing arguments or invalid arguments!")
 			help()

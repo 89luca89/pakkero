@@ -543,38 +543,53 @@ func obLauncher() {
 	obStderrIn, _ := obCommand.StderrPipe()
 	defer obStderrIn.Close()
 
-	// OB_CHECK
-	obErr = obCommand.Start()
+	obStdout, obErr := obStrconv.ParseBool("ENABLESTDOUT")
 	if obErr != nil {
 		obExit()
 	}
-
-	var obWaitGroup obSync.WaitGroup
-
-	obWaitGroup.Add(2)
-
-	obStdoutScan := obBufio.NewScanner(obStdoutIn)
-	obStderrScan := obBufio.NewScanner(obStderrIn)
-	// OB_CHECK
-	// async fetch stdout
-	go func() {
-		defer obWaitGroup.Done()
-
-		for obStdoutScan.Scan() {
-			println(obStdoutScan.Text())
+	if obStdout {
+		// OB_CHECK
+		// launch and remain attached
+		obErr = obCommand.Start()
+		if obErr != nil {
+			obExit()
 		}
-	}()
-	// OB_CHECK
-	// async fetch stderr
-	go func() {
-		defer obWaitGroup.Done()
+		var obWaitGroup obSync.WaitGroup
 
-		for obStderrScan.Scan() {
-			println(obStderrScan.Text())
+		obWaitGroup.Add(2)
+
+		obStdoutScan := obBufio.NewScanner(obStdoutIn)
+		obStderrScan := obBufio.NewScanner(obStderrIn)
+		// OB_CHECK
+		// async fetch stdout
+		go func() {
+			defer obWaitGroup.Done()
+
+			for obStdoutScan.Scan() {
+				println(obStdoutScan.Text())
+			}
+		}()
+		// OB_CHECK
+		// async fetch stderr
+		go func() {
+			defer obWaitGroup.Done()
+
+			for obStderrScan.Scan() {
+				println(obStderrScan.Text())
+			}
+		}()
+		// OB_CHECK
+		obWaitGroup.Wait()
+	} else {
+		// launch and forget
+		obCommand.SysProcAttr = &obSyscall.SysProcAttr{Setpgid: true}
+		// OB_CHECK
+		obErr = obCommand.Start()
+		if obErr != nil {
+			obExit()
 		}
-	}()
-	// OB_CHECK
-	obWaitGroup.Wait()
+		obTime.Sleep(1 * obTime.Second)
+	}
 }
 
 func main() {

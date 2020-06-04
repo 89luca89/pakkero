@@ -102,6 +102,7 @@ Usage: pakkero -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-re
   -o   <file>           place the output into <file> (default is <inputfile>.enc), optional
   -c                    compress the output to occupy less space (uses UPX), optional
   -offset               Offset where to start the payload (Number of Bytes)
+  -enable-stdout        Whether to wait and handle the process stdout/sterr or not (false by default, optional)
   -register-dep         /path/to/dependency to analyze and use as fingerprint (absolutea, optional)
   -v                    Check pakkero version
 ```
@@ -112,6 +113,7 @@ Below there is a full explanation of provided arguments:
 * **o**: (optional) The file output that we will create
 * **c**: (optional) If specified, UPX will be used to further compress the Launcher
 * **offset**: (optional) The number of bytes from where to start the payload (increases if not using compression)
+* **enable-stdout** (optional) whether to enable or not the handling of the stdout/err of the payload **disabled by default, less secure**
 * **regiser-dep** (optional) Path to a file that can be used to register the fingerprint of a dependency to ensure that the Launcher runs only if a file with similar fingerprint is present
 * **v**: Print version
 
@@ -191,19 +193,18 @@ all the words that are comprised between the three type of ticks supported in go
 All of the strings found this way, are then replaced with a function that performs a simple operation of reconstruction of the original string:
 
 ```go
-func ÓΘŌOÒŐÒŌÓÒOŎΘOΟ....0ŐÒÖŎÕΟΘÕÓÕÓŎÓŌÕ0ŎŌΘÕŎÕ() string {
-	ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌ...ŌÒƠÔÖΘŐÖΟŎƠƠ00Õ0ÖÕ0ÖŐŐÓΟŌΟ := []string{"Ò0ƠŐÖŐŎΘÖƠÔÖÕÓΘ...ÕÕŌŎŐƠÔΘΘƠ", "ÔÒÕΟƠ...ŐÒŌOƠÖ", "ƠΘŐÒƠΘŌ00Θ...ΘΟÔŎŎΘŐƠŐΘŎΟÕÖÕÖΟÖΘÒÖ"}
-	var ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ []byte
-	for _, ŌΘƠÔÕÔΘÔOÔOŐΟΘ...ŌΘƠÔÕÔΘÔOÔOŐΟΘ := range ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌÕÒÔÕŌŎ00ÔÔÒOƠÓÕÔÒ0ΘƠΘŐ0OOŎÓÒŐ0Õ0ÓOÕÓŐƠŌŎÕÖ0ÕÖÔŌΟΟŌÒÖÒÖOΟOÒŎŌÒÓÔƠΟΟÓŌÓOÔΟÒŎŎΘΟΟƠÔŐΘŎŌÔŌÒƠÔÖΘŐÖΟŎƠƠ00Õ0ÖÕ0ÖŐŐÓΟŌΟ {
-		ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ = append(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ, byte(len([]rune(ŌΘƠÔÕÔΘÔOÔOŐΟΘ...ŌΘƠÔÕÔΘÔOÔOŐΟΘ))))
-	}
-	return string(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ...0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ)
+func ÓΘŌOÒŐÒŌÓÒOŎΘOΟ0ŐÒÖŎÕΟΘÕÓÕÓŎÓŌÕ0ŎŌΘÕŎÕ() string {
+    ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌŌÒƠÔÖΘŐÖΟŎƠƠ00Õ0ÖÕ0ÖŐŐÓΟŌΟ := []string{"Ò0ƠŐÖŐŎΘÖƠÔÖÕÓΘÕÕŌŎŐƠÔΘΘƠ", "ÔÒÕΟƠŐÒŌOƠÖ", "ƠΘŐÒƠΘŌ00ΘΘΟÔŎŎΘŐƠŐΘŎΟÕÖÕÖΟÖΘÒÖ"}
+    var ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ []byte
+    for _, ŌΘƠÔÕÔΘÔOÔOŐΟΘŌΘƠÔÕÔΘÔOÔOŐΟΘ := range ŌÒ0ŎŎŐÓÖÖΘO0ŌŌŌÒŌÕÒÔÕŌŎ00ÔÔÒOƠÓÕÔÒ0ΘƠΘŐ0OOŎÓÒŐ0Õ0ÓOÕÓŐƠŌŎÕÖ0ÕÖÔŌΟΟŌÒÖÒÖOΟOÒ0ÖŐŐÓΟŌΟ {
+        ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ = append(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ, byte(len([]rune(ŌΘƠÔÕÔΘÔOÔOŐΟΘŌΘƠÔÕÔΘÔOÔOŐΟΘ))))
+    }
+    return string(ΟŐÔÒÖÔΘÕÔŎÒÓÖÖÒΘ0ÖÔΟÖŎ0ÔOÓÖƠŌÔÓŌŌ)
 }
 ```
 
 A slice of string is generated, with each element has a lenght derived from the byte value of the original char of the original string.
 This way each byte of the original string is computed and calculated as the lenght of the correspondent string, casted to rune slice.
-
 
 The launcher is compiled then using:
 
@@ -331,7 +332,7 @@ This approach is vulnerable to
 
 1. "memory dump attack", for example pausing the VM during execution and manually search the ram for all file descriptors until you find the right one
 
-2. "proc dump attack", in linux all the file descriptors are in `/proc` so dumping to another disk the complete folder will in a way or another dump the decrypted payload (if done before the execution finishes)
+2. "proc dump attack", in linux all the file descriptors are in `/proc` so dumping to another disk the complete folder will in a way or another dump the decrypted payload (if done before the execution finishes), this is even more accentuated **if stdout management is enabled**
 
 3. dynamic analysis, during execution "pausing" the process and spot the right fd
 
@@ -805,6 +806,8 @@ As explained above, we will use a memory file descriptor to execute the binary w
 
 The binary will be executed using the `Command` library of Go, that uses the syscall exec under the hood, so no new shells are instantiated.
 
+### **if stdout management is enabled**
+
 Two routines are used to pipe the payload stderr and stdout to the launcher process.
 
 Also piping is supported.
@@ -834,4 +837,27 @@ For IO heavy processes it is possible to insert in the `Scan` of the outputs an 
     }()
 ```
 
-This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing.
+This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing
+
+**this is the least secure approach** as while the launcher is running the `/proc/PID/fd/mem` of the process is still accessible and thus containing the plaintext payload ready to be stealed
+
+This is particularly discouraged for **srcipts payloads**, as they are even easier to spot as the path is directly in the process
+
+![handle](./pics/handle-stdout2.png)
+
+
+
+With binaries the approach is safer (only the binary name is in the process, thus making it hard to spot requiring a complete /proc dump)
+
+### **if stdout management is NOT enabled (default)**
+
+The process is launched and disowned.
+Upon the termination of the launcher process, the `/proc/PID/fd/mem` of the process is deletet, so the only "copy" of the payload is in the process table of the detached process itself
+
+**This is the most secure approac** as it deletes all instances of the plaintext payload, leaving it only in a highly private part of the RAM of the process itself, even gaining immunity to /proc dump attacks
+
+
+
+This way even a script launcher with this approach is not possible to be retrieved:
+
+![stdout](./pics/handle-stdout.png)
