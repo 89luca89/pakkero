@@ -69,7 +69,6 @@ func main() {
 	flag.Bool("v", false, "")
 	flag.Parse()
 
-	println(*stdout)
 	switch os.Args[1] {
 	case "-v":
 		printVersion()
