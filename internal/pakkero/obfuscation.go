@@ -317,7 +317,7 @@ func GenerateRandomAntiDebug(input string) string {
 		`obLdPreloadDetect()`,
 		`obParentDetect()`,
 	}
-    var obfile []string
+	var obfile []string
 	// find OB_CHECK and put the checks there.
 	for _, v := range lines {
 		if strings.Contains(v, "//") {
@@ -337,9 +337,9 @@ func GenerateRandomAntiDebug(input string) string {
 				obfile = append(obfile, threadString)
 				continue
 			} else {
-                // remove comment, this is more to scramble the line numbers
-                // and make error reporting less accurate
-               continue
+				// remove comment, this is more to scramble the line numbers
+				// and make error reporting less accurate
+				continue
 			}
 		}
 		obfile = append(obfile, v)
