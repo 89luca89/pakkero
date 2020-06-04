@@ -113,7 +113,7 @@ Below there is a full explanation of provided arguments:
 * **o**: (optional) The file output that we will create
 * **c**: (optional) If specified, UPX will be used to further compress the Launcher
 * **offset**: (optional) The number of bytes from where to start the payload (increases if not using compression)
-* **enable-stdout** (optional) whether to enable or not the handling of the stdout/err of the payload **disabled by default, less secure**
+* **enable-stdout** (optional) whether to enable or not the handling of the stdout/err of the payload <u>**disabled by default, less secure**</u>
 * **regiser-dep** (optional) Path to a file that can be used to register the fingerprint of a dependency to ensure that the Launcher runs only if a file with similar fingerprint is present
 * **v**: Print version
 
@@ -332,7 +332,7 @@ This approach is vulnerable to
 
 1. "memory dump attack", for example pausing the VM during execution and manually search the ram for all file descriptors until you find the right one
 
-2. "proc dump attack", in linux all the file descriptors are in `/proc` so dumping to another disk the complete folder will in a way or another dump the decrypted payload (if done before the execution finishes), this is even more accentuated **if stdout management is enabled**
+2. "proc dump attack", in linux all the file descriptors are in `/proc` so dumping to another disk the complete folder will in a way or another dump the decrypted payload (if done before the execution finishes), **this is even more accentuated if stdout management is enabled**
 
 3. dynamic analysis, during execution "pausing" the process and spot the right fd
 
@@ -806,7 +806,18 @@ As explained above, we will use a memory file descriptor to execute the binary w
 
 The binary will be executed using the `Command` library of Go, that uses the syscall exec under the hood, so no new shells are instantiated.
 
-### **if stdout management is enabled**
+### **If stdout management is NOT enabled (default)**
+
+The process is launched and disowned.
+Upon the termination of the launcher process, the `/proc/PID/fd/mem` of the process is deleted, so the only "copy" of the payload is in the process table of the detached process itself
+
+**This is the most secure approach** as it deletes all instances of the plaintext payload, leaving it only in a highly private part of the RAM of the process itself, even gaining immunity to /proc dump attacks
+
+This way even a script launcher with this approach is not possible to be retrieved:
+
+![stdout](./pics/handle-stdout.png)
+
+### **If stdout management is enabled**
 
 Two routines are used to pipe the payload stderr and stdout to the launcher process.
 
@@ -837,25 +848,12 @@ For IO heavy processes it is possible to insert in the `Scan` of the outputs an 
     }()
 ```
 
-### **if stdout management is NOT enabled (default)**
-
-The process is launched and disowned.
-Upon the termination of the launcher process, the `/proc/PID/fd/mem` of the process is deletet, so the only "copy" of the payload is in the process table of the detached process itself
-
-**This is the most secure approach** as it deletes all instances of the plaintext payload, leaving it only in a highly private part of the RAM of the process itself, even gaining immunity to /proc dump attacks
-
-This way even a script launcher with this approach is not possible to be retrieved:
-
-![stdout](./pics/handle-stdout.png)
-
 This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing
 
-**this is the least secure approach** as while the launcher is running the `/proc/PID/fd/mem` of the process is still accessible and thus containing the plaintext payload ready to be stealed
+<u>*<mark>**this is the least secure approach**</mark>*</u> as while the launcher is running the `/proc/PID/fd/mem` of the process is still accessible and thus containing the plaintext payload ready to be stealed
 
 This is particularly discouraged for **srcipts payloads**, as they are even easier to spot as the path is directly in the process
 
 ![handle](./pics/handle-stdout-2.png)
 
-
 With binaries the approach is safer (only the binary name is in the process, thus making it hard to spot requiring a complete /proc dump)
-
