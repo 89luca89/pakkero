@@ -837,6 +837,17 @@ For IO heavy processes it is possible to insert in the `Scan` of the outputs an 
     }()
 ```
 
+### **if stdout management is NOT enabled (default)**
+
+The process is launched and disowned.
+Upon the termination of the launcher process, the `/proc/PID/fd/mem` of the process is deletet, so the only "copy" of the payload is in the process table of the detached process itself
+
+**This is the most secure approach** as it deletes all instances of the plaintext payload, leaving it only in a highly private part of the RAM of the process itself, even gaining immunity to /proc dump attacks
+
+This way even a script launcher with this approach is not possible to be retrieved:
+
+![stdout](./pics/handle-stdout.png)
+
 This will make an impact on performance (all check are executed **for each IO on any standard output/error**)  but can give a layer of hardness to process hijacking or tracing
 
 **this is the least secure approach** as while the launcher is running the `/proc/PID/fd/mem` of the process is still accessible and thus containing the plaintext payload ready to be stealed
@@ -846,18 +857,5 @@ This is particularly discouraged for **srcipts payloads**, as they are even easi
 ![handle](./pics/handle-stdout-2.png)
 
 
-
 With binaries the approach is safer (only the binary name is in the process, thus making it hard to spot requiring a complete /proc dump)
 
-### **if stdout management is NOT enabled (default)**
-
-The process is launched and disowned.
-Upon the termination of the launcher process, the `/proc/PID/fd/mem` of the process is deletet, so the only "copy" of the payload is in the process table of the detached process itself
-
-**This is the most secure approac** as it deletes all instances of the plaintext payload, leaving it only in a highly private part of the RAM of the process itself, even gaining immunity to /proc dump attacks
-
-
-
-This way even a script launcher with this approach is not possible to be retrieved:
-
-![stdout](./pics/handle-stdout.png)
