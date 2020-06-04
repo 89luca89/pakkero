@@ -317,26 +317,36 @@ func GenerateRandomAntiDebug(input string) string {
 		`obLdPreloadDetect()`,
 		`obParentDetect()`,
 	}
+    var obfile []string
 	// find OB_CHECK and put the checks there.
-	for i, v := range lines {
-		if strings.Contains(v, "// OB_CHECK") {
-			threadString := ""
-			checkString := ""
-			// randomize order of check to replace
-			for j, v := range ShuffleSlice(randomChecks) {
-				threadString = threadString + "go " + v + ";"
-				checkString += v
+	for _, v := range lines {
+		if strings.Contains(v, "//") {
+			if strings.Contains(v, "// OB_CHECK") {
+				threadString := ""
+				checkString := ""
+				// randomize order of check to replace
+				for j, v := range ShuffleSlice(randomChecks) {
+					threadString = threadString + "go " + v + ";"
+					checkString += v
 
-				if j != (len(randomChecks) - 1) {
-					checkString += `||`
+					if j != (len(randomChecks) - 1) {
+						checkString += `||`
+					}
 				}
+				// add action in case of failed check
+				obfile = append(obfile, threadString)
+				continue
+			} else {
+                // remove comment, this is more to scramble the line numbers
+                // and make error reporting less accurate
+               continue
 			}
-			// add action in case of failed check
-			lines[i] = threadString
 		}
+		obfile = append(obfile, v)
 	}
+	fmt.Println(obfile)
 	// back to single string
-	return strings.Join(lines, "\n")
+	return strings.Join(obfile, "\n")
 }
 
 /*

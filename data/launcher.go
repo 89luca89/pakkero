@@ -34,21 +34,13 @@ const obCorrelationLevel = 0.4
 const obStdLevel = 1
 const obFileSizeLevel = 15
 
-/*
-TODO:
-    missing an int3 scanner (golang runtime is full of them...)
-    missing a nearheap check (must be done in C)
-*/
-
 func obExit() {
 	println("https://shorturl.at/crzEZ")
 	obOS.Exit(ERR)
 }
 
-/*
-Breakpoint on linux are 0xCC and will be interpreted as a
-SIGTRAP, we will intercept them.
-*/
+// Breakpoint on linux are 0xCC and will be interpreted as a
+// SIGTRAP, we will intercept them.
 func obSigTrap(obInput chan obOS.Signal) {
 	obMySignal := <-obInput
 	switch obMySignal {
@@ -61,12 +53,10 @@ func obSigTrap(obInput chan obOS.Signal) {
 	}
 }
 
-/*
-attach to PTRACE, register if successful
-attach A G A I N , register if unsuccessful
-this protects against custom ptrace (always returning 0)
-against NOP attacks and LD_PRELOAD attacks
-*/
+// attach to PTRACE, register if successful
+// attach A G A I N , register if unsuccessful
+// this protects against custom ptrace (always returning 0)
+// against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
 	var obOffset = 0
 
@@ -93,9 +83,7 @@ func obPtraceDetect() {
 	}
 }
 
-/*
-Check the process cmdline to spot if a debugger is inline
-*/
+// Check the process cmdline to spot if a debugger is inline
 func obParentCmdLineDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -118,9 +106,7 @@ func obParentCmdLineDetect() {
 	}
 }
 
-/*
-Check the process status to spot if a debugger is active using the TracePid key
-*/
+// Check the process status to spot if a debugger is active using the TracePid key
 func obParentTracerDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -141,9 +127,7 @@ func obParentTracerDetect() {
 	}
 }
 
-/*
-Check the process cmdline to spot if a debugger is the PPID of our process
-*/
+// Check the process cmdline to spot if a debugger is the PPID of our process
 func obParentDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -166,10 +150,8 @@ func obParentDetect() {
 	}
 }
 
-/*
-Check the process cmdline to spot if a debugger is launcher
-"_" and Args[0] should match otherwise
-*/
+// Check the process cmdline to spot if a debugger is launcher
+// "_" and Args[0] should match otherwise
 func obEnvArgsDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obLines != obOS.Args[0] {
@@ -177,10 +159,8 @@ func obEnvArgsDetect() {
 	}
 }
 
-/*
-Check the process cmdline to spot if a debugger is inline
-"_" should not contain the name of any debugger
-*/
+// Check the process cmdline to spot if a debugger is inline
+// "_" should not contain the name of any debugger
 func obEnvParentDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obStrings.Contains(obLines, "gdb") ||
@@ -198,11 +178,9 @@ func obEnvParentDetect() {
 	}
 }
 
-/*
-Check the process cmdline to spot if a debugger is active
-most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
-to function, we try to spot this
-*/
+// Check the process cmdline to spot if a debugger is active
+// most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
+// to function, we try to spot this
 func obEnvDetect() {
 	_, obLines := obOS.LookupEnv("LINES")
 	_, obColumns := obOS.LookupEnv("COLUMNS")
@@ -213,11 +191,9 @@ func obEnvDetect() {
 	}
 }
 
-/*
-Check the process is launcher with a LD_PRELOAD set.
-This can be an injection attack (like on frida) to try and circumvent
-various restrictions (like ptrace checks)
-*/
+// Check the process is launcher with a LD_PRELOAD set.
+// This can be an injection attack (like on frida) to try and circumvent
+// various restrictions (like ptrace checks)
 func obLdPreloadDetect() {
 	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
@@ -394,9 +370,7 @@ func obDependencyCheck() {
 	}
 }
 
-/*
-Reverse a slice of bytes
-*/
+// Reverse a slice of bytes
 func obReverseByteArray(obInput []byte) []byte {
 	obResult := []byte{}
 
@@ -494,12 +468,11 @@ func obLauncher() {
 	}
 
 	// OB_CHECK
-	/*
-		the aes-256 psk is the sha512_256 sum of the whole executable
-		this is also useful to protect against NOP attacks to the anti-debug
-		features in the binary.
-		This doubles also as anti-tamper measure.
-	*/
+
+	//		the aes-256 psk is the sha512_256 sum of the whole executable
+	//		this is also useful to protect against NOP attacks to the anti-debug
+	//		features in the binary.
+	//		This doubles also as anti-tamper measure.
 	obPassword := obSHA.Sum512_256(obKey)
 	// OB_CHECK
 	obCipherBlock, _ := obAES.NewCipher(obPassword[:])
