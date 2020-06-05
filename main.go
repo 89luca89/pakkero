@@ -11,7 +11,7 @@ import (
 )
 
 const programName = "pakkero"
-const version = "0.4.0"
+const version = "0.5.0"
 const minArgsLen = 2
 
 var dependencies = []string{"ls", "sed", "go", "strip"}
