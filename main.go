@@ -84,9 +84,9 @@ func main() {
 		// set a default offset if not specified
 		if *offset == 0 {
 			if *compress {
-				*offset = pakkero.Random(810000, 900000)
+				*offset = pakkero.Random(750000, 800000)
 			} else {
-				*offset = pakkero.Random(2200000, 2300000)
+				*offset = pakkero.Random(1910000, 2000000)
 			}
 		}
 

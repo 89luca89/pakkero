@@ -10,7 +10,6 @@ import (
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
 	obErrors "errors"
-	obFlag "flag"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
@@ -57,7 +56,7 @@ func obSigTrap(obInput chan obOS.Signal) {
 // attach to PTRACE, register if successful
 // attach A G A I N , register if unsuccessful
 // this protects against custom ptrace (always returning 0)
-// against NOP attacks and LD_PRELOAD attacks
+// against NOP attacks and LD_PRELOAD attacks.
 func obPtraceDetect() {
 
 	var obOffset = 0
@@ -93,7 +92,7 @@ func obPtraceDetect() {
 	println(0)
 }
 
-// Check the process cmdline to spot if a debugger is inline
+// Check the process cmdline to spot if a debugger is inline.
 func obParentCmdLineDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -603,6 +602,17 @@ func obLauncher() {
 	}
 }
 
+// obIsForked returns wether we are a forked process of ourself, or a new spawn
+func obIsForked() bool {
+
+	obPidParent := obOS.Getppid()
+	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
+		"/cmdline"
+	obStatParent, _ := obUtilio.ReadFile(obNameFile)
+
+	return obStrings.Contains(string(obStatParent), obOS.Args[0])
+}
+
 func main() {
 
 	// Prepare to intercept SIGTRAP
@@ -627,18 +637,14 @@ func main() {
 	obLdPreloadDetect()
 	// OB_CHECK
 	obParentDetect()
-
-	obForked := obFlag.Bool("f", false, "")
-	obFlag.Parse()
-
 	// check if we are a forked process, if not, fork
 	// and ptrace ourself, else exit gracefully and continue
 	// with normal execution.
-	// 
+	//
 	// this workaround is because go does not support traditional fork()
 	// and calling ptrace in the main thread of execution will neuter
 	// any possibility of calling "exec" afterwards.
-	if *obForked {
+	if obIsForked() {
 		// we are a child process, let's ptrace
 		obPtraceDetect()
 	} else {
@@ -653,6 +659,7 @@ func main() {
 			println(obErr.Error())
 			obExit()
 		}
+		println(obErrout.String())
 		obPtraceOut, _ := obStrconv.ParseInt(obErrout.String(), 10, 32)
 		if obPtraceOut == 1 {
 			obExit()
