@@ -19,7 +19,7 @@ var dependenciesComplete = []string{"upx", "ls", "sed", "go", "strip"}
 
 /*
 TestDependencies if all dependencies are present
-in the system
+in the system.
 */
 func testDependencies(deps []string) {
 	for _, v := range deps {

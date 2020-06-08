@@ -68,7 +68,7 @@ func ReverseByteArray(input []byte) []byte {
 }
 
 /*
-ReverseByte will change a byte endianess
+ReverseByte will change a byte endianess.
 */
 func ReverseByte(b byte) byte {
 	var d byte
@@ -83,7 +83,7 @@ func ReverseByte(b byte) byte {
 }
 
 /*
-ReverseStringArray reverse a slice of strings
+ReverseStringArray reverse a slice of strings.
 */
 func ReverseStringArray(ss []string) []string {
 	last := len(ss) - 1
@@ -96,7 +96,7 @@ func ReverseStringArray(ss []string) []string {
 }
 
 /*
-ReverseString reverse a string
+ReverseString reverse a string.
 */
 func ReverseString(input string) string {
 	var result string
@@ -139,7 +139,7 @@ func ExecCommand(name string, args []string) bool {
 /*
 ListImportsFromFile will extract from a GO file the import section
 and return an array with all the imports (with multiple entry in case
-of sub packages)
+of sub packages).
 */
 func ListImportsFromFile(inputFile string) []string {
 	byteContent, _ := ioutil.ReadFile(inputFile)
@@ -164,7 +164,7 @@ func ListImportsFromFile(inputFile string) []string {
 }
 
 /*
-GenerateRandomGarbage creates random garbage to rise entropy
+GenerateRandomGarbage creates random garbage to rise entropy.
 */
 func GenerateRandomGarbage(size int64) string {
 	randomGarbage := make([]byte, size)
@@ -178,7 +178,7 @@ func GenerateRandomGarbage(size int64) string {
 }
 
 /*
-GzipContent an input byte slice and return it compressed
+GzipContent an input byte slice and return it compressed.
 */
 func GzipContent(input []byte) []byte {
 	// GZIP before encrypt
@@ -196,7 +196,7 @@ func GzipContent(input []byte) []byte {
 }
 
 /*
-GenerateNullString will return a string with only void chars
+GenerateNullString will return a string with only void chars.
 */
 func GenerateNullString(n int) string {
 	result := ""
@@ -211,7 +211,7 @@ func GenerateNullString(n int) string {
 /*
 RegisterDependency will take a file in input and register the
 Byte Frequency Distribution (BFD) and some other data to let the launcher
-do statystical analysis of the found files
+do statystical analysis of the found files.
 */
 func RegisterDependency(dependency string) {
 	dependencyFile, _ := os.Open(dependency)

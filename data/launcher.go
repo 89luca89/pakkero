@@ -115,7 +115,7 @@ func obParentCmdLineDetect() {
 	}
 }
 
-// Check the process status to spot if a debugger is active using the TracePid key
+// Check the process status to spot if a debugger is active using the TracePid key.
 func obParentTracerDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -136,7 +136,7 @@ func obParentTracerDetect() {
 	}
 }
 
-// Check the process cmdline to spot if a debugger is the PPID of our process
+// Check the process cmdline to spot if a debugger is the PPID of our process.
 func obParentDetect() {
 	obPidParent := obOS.Getppid()
 
@@ -160,7 +160,7 @@ func obParentDetect() {
 }
 
 // Check the process cmdline to spot if a debugger is launcher
-// "_" and Args[0] should match otherwise
+// "_" and Args[0] should match otherwise.
 func obEnvArgsDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obLines != obOS.Args[0] {
@@ -169,7 +169,7 @@ func obEnvArgsDetect() {
 }
 
 // Check the process cmdline to spot if a debugger is inline
-// "_" should not contain the name of any debugger
+// "_" should not contain the name of any debugger.
 func obEnvParentDetect() {
 	obLines, _ := obOS.LookupEnv("_")
 	if obStrings.Contains(obLines, "gdb") ||
@@ -189,7 +189,7 @@ func obEnvParentDetect() {
 
 // Check the process cmdline to spot if a debugger is active
 // most debuggers (like GDB) will set LINE,COLUMNS or LD_PRELOAD
-// to function, we try to spot this
+// to function, we try to spot this.
 func obEnvDetect() {
 	_, obLines := obOS.LookupEnv("LINES")
 	_, obColumns := obOS.LookupEnv("COLUMNS")
@@ -202,7 +202,7 @@ func obEnvDetect() {
 
 // Check the process is launcher with a LD_PRELOAD set.
 // This can be an injection attack (like on frida) to try and circumvent
-// various restrictions (like ptrace checks)
+// various restrictions (like ptrace checks).
 func obLdPreloadDetect() {
 	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
@@ -223,7 +223,7 @@ func obLdPreloadDetect() {
 	}
 }
 
-// calculate BFD (byte frequency distribution) for the input dependency
+// calculate BFD (byte frequency distribution) for the input dependency.
 func obUtilBFDCalc(obInput string) []float64 {
 	obFile, _ := obUtilio.ReadFile(obInput)
 
@@ -244,7 +244,7 @@ func obUtilAbsCalc(obInput float64) float64 {
 	return obInput
 }
 
-// calculate the covariance of two input slices
+// calculate the covariance of two input slices.
 func obUtilCovarianceCalc(obDepInput []float64, obTargetInput []float64) float64 {
 	obMeanDepInput := 0.0
 	obMeanTargetInput := 0.0
@@ -267,7 +267,7 @@ func obUtilCovarianceCalc(obDepInput []float64, obTargetInput []float64) float64
 	return obCovariance
 }
 
-// calculate the standard deviation of the values in a slice
+// calculate the standard deviation of the values in a slice.
 func obUtilStandardDeviationCalc(obInput []float64) float64 {
 	obSums := 0.0
 	// calculate the array of rations between the values
@@ -289,7 +289,7 @@ func obUtilStandardDeviationCalc(obInput []float64) float64 {
 }
 
 // calculate the standard deviation of the values of reference over
-// retrieved values
+// retrieved values.
 func obUtilCombinedStandardDeviationCalc(obDepBFD []float64, obTargetBFD []float64) float64 {
 	obDiffs := [256]float64{}
 	obSums := 0.0
@@ -378,7 +378,7 @@ func obDependencyCheck() {
 	}
 }
 
-// Reverse a slice of bytes
+// Reverse a slice of bytes.
 func obReverseByteArray(obInput []byte) []byte {
 	obResult := []byte{}
 
@@ -390,7 +390,7 @@ func obReverseByteArray(obInput []byte) []byte {
 	return obResult
 }
 
-// Change byte endianess
+// Change byte endianess.
 func obByteReverse(obBar byte) byte {
 	var obFoo byte
 
@@ -602,7 +602,7 @@ func obLauncher() {
 	}
 }
 
-// obIsForked returns wether we are a forked process of ourself, or a new spawn
+// obIsForked returns wether we are a forked process of ourself, or a new spawn.
 func obIsForked() bool {
 
 	obPidParent := obOS.Getppid()
