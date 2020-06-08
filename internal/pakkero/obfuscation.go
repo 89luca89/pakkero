@@ -15,10 +15,10 @@ import (
 	"time"
 )
 
-// Secrets are the group of strings that we want to obfuscate
+// Secrets are the group of strings that we want to obfuscate.
 var Secrets = map[string][]string{}
 
-// LauncherStub Stub of the Launcher.go, put here during compilation time
+// LauncherStub Stub of the Launcher.go, put here during compilation time.
 const LauncherStub = "LAUNCHERSTUB"
 
 var extras = []string{
@@ -64,7 +64,7 @@ var extras = []string{
 /*
 StripUPXHeaders will ensure no trace of UPX headers are left
 so that reversing will be more challenging and break
-simple attempts like "upx -d" in case of compression
+simple attempts like "upx -d" in case of compression.
 */
 func StripUPXHeaders(infile string) bool {
 	// Bit sequence of UPX copyright and header infos
@@ -113,7 +113,7 @@ func StripUPXHeaders(infile string) bool {
 
 /*
 StripFile will strip out all unneeded headers from and ELF
-file in input
+file in input.
 */
 func StripFile(infile string, launcherFile string) bool {
 	// strip symbols and headers
@@ -177,16 +177,16 @@ func StripFile(infile string, launcherFile string) bool {
 
 /*
 GenerateTyposquatName is a typosquat name generator
-based on a lenght (128 default) this will create a random
+based on a length (128 default) this will create a random
 uniqe string composed only of letters and zeroes that are lookalike.
 */
-func GenerateTyposquatName(lenght int) string {
+func GenerateTyposquatName(length int) string {
 	// We divide between an alphabet with number
 	// and one without, because function/variable names
 	// must not start with a number.
 	letterRunes := []rune("OÓÕÔÒÖŌŎŐƠΘΟ")
 	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
-	b := make([]rune, lenght)
+	b := make([]rune, length)
 	// ensure we do not start with a number or we will break code.
 	b[0] = letterRunes[mathRand.Intn(len(letterRunes))]
 	for i := range b {
@@ -195,6 +195,7 @@ func GenerateTyposquatName(lenght int) string {
 			b[i] = mixedRunes[mathRand.Intn(len(mixedRunes))]
 		}
 	}
+
 	return string(b)
 }
 
@@ -222,8 +223,8 @@ func ObfuscateFuncVars(input string) string {
 
 /*
 GenerateStringFunc will hide a string creating a function that returns
-that value as a string encoded with a series of lenght calculation of randomic
-string arrays generated
+that value as a string encoded with a series of length calculation of randomic
+string arrays generated.
 */
 func GenerateStringFunc(txt string, function string) string {
 
@@ -245,7 +246,7 @@ func GenerateStringFunc(txt string, function string) string {
 
 /*
 ObfuscateStrings will extract all plaintext strings denotet with
-backticks and obfuscate them using byteshift wise operations
+backticks and obfuscate them using byteshift wise operations.
 */
 func ObfuscateStrings(input string) string {
 
@@ -305,7 +306,7 @@ func ObfuscateStrings(input string) string {
 /*
 GenerateRandomAntiDebug will Insert random order of anti-debug check
 together with inline compilation to induce big number
-of instructions in random order
+of instructions in random order.
 */
 func GenerateRandomAntiDebug(input string) string {
 	lines := strings.Split(input, "\n")
@@ -335,8 +336,10 @@ func GenerateRandomAntiDebug(input string) string {
 						checkString += `||`
 					}
 				}
+
 				// add action in case of failed check
 				obfile = append(obfile, threadString)
+
 				continue
 			} else {
 				// remove comment, this is more to scramble the line numbers
@@ -344,6 +347,7 @@ func GenerateRandomAntiDebug(input string) string {
 				continue
 			}
 		}
+
 		obfile = append(obfile, v)
 	}
 	// back to single string
@@ -356,7 +360,7 @@ ObfuscateLauncher the go code of the runner before compiling it.
 Basic techniques are applied:
 - GenerateRandomAntiDebug
 - ObfuscateStrings
-- ObfuscateFuncVars
+- ObfuscateFuncVars.
 */
 func ObfuscateLauncher(infile string) error {
 	byteContent, err := ioutil.ReadFile(infile)

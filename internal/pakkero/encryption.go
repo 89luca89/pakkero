@@ -20,7 +20,7 @@ this will not only encrypt the payload but:
 - generate a password using the randomized UPX Binary's sha512_256 sum
 - cipher the payload with AESGCM using the generated password
 - swap endianess on all the encrypted bytes
-- reverse the complete payload
+- reverse the complete payload.
 */
 func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 	// generate a password using the randomized UPX Binary's sha512_256 sum

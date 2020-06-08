@@ -89,6 +89,7 @@ func main() {
 				*offset = pakkero.Random(1900000, 2000000)
 			}
 		}
+
 		if *file != "" {
 			pakkero.Pakkero(*file, *offset, *output, *dependency, *compress, *stdout)
 		} else {

@@ -9,6 +9,7 @@ import (
 	obSHA "crypto/sha512"
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
+	obErrors "errors"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
@@ -522,7 +523,7 @@ func obLauncher() {
 		obFileDescriptor,
 		uintptr(1024+9),
 		uintptr(obSealAll))
-	if obErr != obSyscall.Errno(0) {
+	if !obErrors.Is(obErr, obSyscall.Errno(0)) {
 		obExit()
 	}
 
@@ -547,6 +548,7 @@ func obLauncher() {
 	if obErr != nil {
 		obExit()
 	}
+
 	if obStdout {
 		// OB_CHECK
 		// launch and remain attached
@@ -554,6 +556,7 @@ func obLauncher() {
 		if obErr != nil {
 			obExit()
 		}
+
 		var obWaitGroup obSync.WaitGroup
 
 		obWaitGroup.Add(2)
@@ -599,7 +602,7 @@ func main() {
 
 	go obSigTrap(obChannel)
 
-	// obPtraceDetect()
+	obPtraceDetect()
 	// OB_CHECK
 	obDependencyCheck()
 	// OB_CHECK
