@@ -371,36 +371,43 @@ func obSigTrap(obInput chan obOS.Signal) {
 This is pretty basic, so we go ahead and try to block **ptrace**:
 
 ```go
-/*
-attach to PTRACE, register if successful
-attach A G A I N , register if unsuccessful
-this protects against custom ptrace (always returning 0)
-against NOP attacks and LD_PRELOAD attacks
-*/
+// attach to PTRACE, register if successful
+// attach A G A I N , register if unsuccessful
+// this protects against custom ptrace (always returning 0)
+// against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
-    var obOffset = 0
 
-    _, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-        uintptr(obSyscall.PTRACE_TRACEME),
-        0,
-        0)
+	var obOffset = 0
 
-    if obResult == OK {
-        obOffset = 5
-    }
+	obProc, _ := obOS.FindProcess(obOS.Getppid())
 
-    _, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-        uintptr(obSyscall.PTRACE_TRACEME),
-        0,
-        0)
+	obErr := obSyscall.PtraceAttach(obProc.Pid)
+	if obErr == nil {
+		obOffset = 5
+	}
 
-    if obResult == ERR {
-        obOffset *= 3
-    }
+	obErr = obSyscall.PtraceAttach(obProc.Pid)
+	if obErr != nil {
+		obOffset *= 3
+	}
 
-    if obOffset != (3 * 5) {
-        obExit()
-    }
+	if obOffset != (3 * 5) {
+		obProc.Signal(obSyscall.SIGCONT)
+		println(1)
+
+		return
+	}
+
+	obErr = obSyscall.PtraceDetach(obProc.Pid)
+	if obErr != nil {
+		obProc.Signal(obSyscall.SIGCONT)
+		println(0)
+
+		return
+	}
+
+	obProc.Signal(obSyscall.SIGCONT)
+	println(0)
 }
 ```
 
