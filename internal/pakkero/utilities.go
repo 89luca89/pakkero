@@ -35,7 +35,7 @@ func Random(min, max int64) int64 {
 }
 
 /*
-Unique will deduplicate a given slice
+Unique will deduplicate a given slice.
 */
 func Unique(slice []string) []string {
 	keys := make(map[string]bool)
@@ -53,7 +53,7 @@ func Unique(slice []string) []string {
 }
 
 /*
-ReverseByteArray will reverse a slice of bytes
+ReverseByteArray will reverse a slice of bytes.
 */
 func ReverseByteArray(input []byte) []byte {
 	reversed := []byte{}
