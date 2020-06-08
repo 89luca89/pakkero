@@ -659,7 +659,6 @@ func main() {
 			println(obErr.Error())
 			obExit()
 		}
-		println(obErrout.String())
 		obPtraceOut, _ := obStrconv.ParseInt(obErrout.String(), 10, 32)
 		if obPtraceOut == 1 {
 			obExit()
