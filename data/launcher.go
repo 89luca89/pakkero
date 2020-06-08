@@ -10,6 +10,7 @@ import (
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
 	obErrors "errors"
+	obFlag "flag"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
@@ -29,15 +30,14 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
-const ERR = 1
-const OK = 0
+const obErr = 1
 const obCorrelationLevel = 0.4
 const obStdLevel = 1
 const obFileSizeLevel = 15
 
 func obExit() {
 	println("https://shorturl.at/crzEZ")
-	obOS.Exit(ERR)
+	obOS.Exit(obErr)
 }
 
 // Breakpoint on linux are 0xCC and will be interpreted as a
@@ -59,29 +59,36 @@ func obSigTrap(obInput chan obOS.Signal) {
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks
 func obPtraceDetect() {
+
 	var obOffset = 0
 
-	_, _, obResult := obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-		uintptr(obSyscall.PTRACE_TRACEME),
-		0,
-		0)
+	obProc, _ := obOS.FindProcess(obOS.Getppid())
 
-	if obResult == OK {
+	obErr := obSyscall.PtraceAttach(obProc.Pid)
+	if obErr == nil {
 		obOffset = 5
 	}
 
-	_, _, obResult = obSyscall.RawSyscall(obSyscall.SYS_PTRACE,
-		uintptr(obSyscall.PTRACE_TRACEME),
-		0,
-		0)
-
-	if obResult == ERR {
+	obErr = obSyscall.PtraceAttach(obProc.Pid)
+	if obErr != nil {
 		obOffset *= 3
 	}
 
 	if obOffset != (3 * 5) {
-		obExit()
+		obProc.Signal(obSyscall.SIGCONT)
+		println(1)
+		return
 	}
+
+	obErr = obSyscall.PtraceDetach(obProc.Pid)
+	if obErr != nil {
+		obProc.Signal(obSyscall.SIGCONT)
+		println(0)
+		return
+	}
+
+	obProc.Signal(obSyscall.SIGCONT)
+	println(0)
 }
 
 // Check the process cmdline to spot if a debugger is inline
@@ -199,15 +206,15 @@ func obLdPreloadDetect() {
 	obKey := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 	obValue := obStrconv.FormatInt(obTime.Now().UnixNano(), 10)
 
-	err := obOS.Setenv(obKey, obValue)
-	if err != nil {
+	obErr := obOS.Setenv(obKey, obValue)
+	if obErr != nil {
 		obExit()
 	}
 
 	obLineLdPreload, _ := obOS.LookupEnv(obKey)
 	if obLineLdPreload == obValue {
-		err := obOS.Unsetenv(obKey)
-		if err != nil {
+		obErr := obOS.Unsetenv(obKey)
+		if obErr != nil {
 			obExit()
 		}
 	} else {
@@ -320,8 +327,7 @@ func obDependencyCheck() {
 		obDepBFD:  []float64{1, 2, 3, 4},
 	}
 	// control that we effectively want to control the dependencies
-	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
-		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") && (obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
 		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
@@ -596,13 +602,13 @@ func obLauncher() {
 }
 
 func main() {
+
 	// Prepare to intercept SIGTRAP
 	obChannel := make(chan obOS.Signal, 1)
 	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)
 
 	go obSigTrap(obChannel)
 
-	obPtraceDetect()
 	// OB_CHECK
 	obDependencyCheck()
 	// OB_CHECK
@@ -619,6 +625,38 @@ func main() {
 	obLdPreloadDetect()
 	// OB_CHECK
 	obParentDetect()
-	// OB_CHECK
-	obLauncher()
+
+	obForked := obFlag.Bool("f", false, "")
+	obFlag.Parse()
+
+	// check if we are a forked process, if not, fork
+	// and ptrace ourself, else exit gracefully and continue
+	// with normal execution.
+	// 
+	// this workaround is because go does not support traditional fork()
+	// and calling ptrace in the main thread of execution will neuter
+	// any possibility of calling "exec" afterwards.
+	if *obForked {
+		// we are a child process, let's ptrace
+		obPtraceDetect()
+	} else {
+		// simulate for self, launch ourself in another
+		// process to ptrace ourself
+		obCommand := obExec.Command(obOS.Args[0], "-f")
+		var obOutput, obErrout obBytes.Buffer
+		obCommand.Stdout = &obOutput
+		obCommand.Stderr = &obErrout
+		obErr := obCommand.Run()
+		if obErr != nil {
+			println(obErr.Error())
+			obExit()
+		}
+		obPtraceOut, _ := obStrconv.ParseInt(obErrout.String(), 10, 32)
+		if obPtraceOut == 1 {
+			obExit()
+		}
+		// Ok we are set to go! Let's execute the payload
+		// OB_CHECK
+		obLauncher()
+	}
 }

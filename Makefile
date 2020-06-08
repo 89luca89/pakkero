@@ -67,6 +67,7 @@ test: clean
 		--file /usr/bin/echo \
 		-o /tmp/test.enc \
 		-offset 2850000 \
+		-enable-stdout \
 		-register-dep /usr/bin/bash;
 	sync;
 	for i in $$(seq 1 20); do /tmp/test.enc $$i; done;
