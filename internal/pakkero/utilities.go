@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// Colors for strings
+// Colors for strings.
 const (
 	SuccessColor = "\033[1;32m%s\033[0m"
 	WarningColor = "\033[1;33m%s\033[0m"
@@ -27,7 +27,7 @@ const ERR = 1
 const OK = 0
 
 /*
-Random will return a random number in a range
+Random will return a random number in a range.
 */
 func Random(min, max int64) int64 {
 	mathRand.Seed(time.Now().UnixNano())
