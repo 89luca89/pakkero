@@ -77,6 +77,7 @@ func obPtraceDetect() {
 	if obOffset != (3 * 5) {
 		obProc.Signal(obSyscall.SIGCONT)
 		println(1)
+
 		return
 	}
 
@@ -84,6 +85,7 @@ func obPtraceDetect() {
 	if obErr != nil {
 		obProc.Signal(obSyscall.SIGCONT)
 		println(0)
+
 		return
 	}
 
