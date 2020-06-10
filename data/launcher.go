@@ -58,7 +58,6 @@ func obSigTrap(obInput chan obOS.Signal) {
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks.
 func obPtraceDetect() {
-
 	var obOffset = 0
 
 	obProc, _ := obOS.FindProcess(obOS.Getppid())
@@ -328,7 +327,8 @@ func obDependencyCheck() {
 		obDepBFD:  []float64{1, 2, 3, 4},
 	}
 	// control that we effectively want to control the dependencies
-	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") && (obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
+	if (obInstanceDep.obDepName != obStrControl1[1:]+obStrControl2[1:]+"1") &&
+		(obInstanceDep.obDepSize != obStrControl1[1:]+obStrControl3[1:]+"2") {
 		// check if the file is a symbolic link
 		obLTargetStats, _ := obOS.Lstat(obInstanceDep.obDepName)
 		if (obLTargetStats.Mode() & obOS.ModeSymlink) != 0 {
@@ -604,7 +604,6 @@ func obLauncher() {
 
 // obIsForked returns wether we are a forked process of ourself, or a new spawn.
 func obIsForked() bool {
-
 	obPidParent := obOS.Getppid()
 	obNameFile := "/proc/" + obStrconv.FormatInt(int64(obPidParent), 10) +
 		"/cmdline"
@@ -614,7 +613,6 @@ func obIsForked() bool {
 }
 
 func main() {
-
 	// Prepare to intercept SIGTRAP
 	obChannel := make(chan obOS.Signal, 1)
 	obSignal.Notify(obChannel, obSyscall.SIGTRAP, obSyscall.SIGILL)

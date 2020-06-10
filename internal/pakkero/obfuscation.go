@@ -227,7 +227,6 @@ that value as a string encoded with a series of length calculation of randomic
 string arrays generated.
 */
 func GenerateStringFunc(txt string, function string) string {
-
 	resString := "{"
 	for _, b := range []byte(txt) {
 		resString += "\"" + GenerateTyposquatName(int(b)) + "\"" + ","
@@ -239,7 +238,8 @@ func GenerateStringFunc(txt string, function string) string {
 	result := fmt.Sprintf("func " +
 		function +
 		"() string {\nobRegistered := []string" + resString +
-		"\nvar obResult []byte\nfor _,obValue := range obRegistered {\nobResult = append(obResult, byte(len([]rune(obValue))))\n}\nreturn string(obResult)\n}")
+		"\nvar obResult []byte\nfor _,obValue := range obRegistered "+
+		"{\nobResult = append(obResult, byte(len([]rune(obValue))))\n}\nreturn string(obResult)\n}")
 
 	return result
 }
@@ -249,7 +249,6 @@ ObfuscateStrings will extract all plaintext strings denotet with
 backticks and obfuscate them using byteshift wise operations.
 */
 func ObfuscateStrings(input string) string {
-
 	// parse the launcher file to create the list of imports in it
 	imports := strings.Index(input, "import (")
 	endimports := strings.Index(input[imports:], ")")
