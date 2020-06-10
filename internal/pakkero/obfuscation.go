@@ -238,7 +238,7 @@ func GenerateStringFunc(txt string, function string) string {
 	result := fmt.Sprintf("func " +
 		function +
 		"() string {\nobRegistered := []string" + resString +
-		"\nvar obResult []byte\nfor _,obValue := range obRegistered "+
+		"\nvar obResult []byte\nfor _,obValue := range obRegistered " +
 		"{\nobResult = append(obResult, byte(len([]rune(obValue))))\n}\nreturn string(obResult)\n}")
 
 	return result
