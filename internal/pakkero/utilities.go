@@ -23,7 +23,11 @@ const (
 	WarningColor = "\033[1;33m%s\033[0m"
 	ErrorColor   = "\033[1;31m%s\033[0m"
 )
+
+// ERR Is the exit Code 1.
 const ERR = 1
+
+// OK Is the exit Code 0.
 const OK = 0
 
 /*
