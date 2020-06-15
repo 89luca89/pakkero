@@ -16,7 +16,6 @@ const minArgsLen = 2
 
 var dependencies = []string{"ls", "sed", "go", "strip"}
 var dependenciesComplete = []string{"upx", "ls", "sed", "go", "strip"}
-
 /*
 TestDependencies if all dependencies are present
 in the system.
