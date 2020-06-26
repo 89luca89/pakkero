@@ -58,10 +58,10 @@ func obSigTrap(obInput chan obOS.Signal) {
 // attach A G A I N , register if unsuccessful
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks.
-func obPtraceDetect() {
+func obPtraceDetect(pid int, father bool) {
 	var obOffset = 0
 
-	obProc, _ := obOS.FindProcess(obOS.Getppid())
+	obProc, _ := obOS.FindProcess(pid)
 
 	obErr := obSyscall.PtraceAttach(obProc.Pid)
 	if obErr == nil {
@@ -73,23 +73,18 @@ func obPtraceDetect() {
 		obOffset *= 3
 	}
 
-	if obOffset != (3 * 5) {
-		obProc.Signal(obSyscall.SIGCONT)
-		println(1)
-
-		return
-	}
-
-	obErr = obSyscall.PtraceDetach(obProc.Pid)
-	if obErr != nil {
-		obProc.Signal(obSyscall.SIGCONT)
-		println(0)
-
-		return
-	}
-
 	obProc.Signal(obSyscall.SIGCONT)
-	println(0)
+
+	if obOffset != (3 * 5) {
+		if father {
+			obExit()
+		} else {
+			obProc.Signal(obSyscall.SIGTRAP)
+		}
+
+		return
+	}
+
 }
 
 // Check the process cmdline to spot if a debugger is inline.
@@ -589,6 +584,7 @@ func obLauncher() {
 				println(obStderrScan.Text())
 			}
 		}()
+
 		// OB_CHECK
 		obWaitGroup.Wait()
 	} else {
@@ -645,23 +641,17 @@ func main() {
 	// any possibility of calling "exec" afterwards.
 	if obIsForked() {
 		// we are a child process, let's ptrace
-		obPtraceDetect()
+		obPtraceDetect(obOS.Getppid(), false)
 	} else {
 		// simulate for self, launch ourself in another
 		// process to ptrace ourself
-		obCommand := obExec.Command(obOS.Args[0], "-f")
-		var obOutput, obErrout obBytes.Buffer
-		obCommand.Stdout = &obOutput
-		obCommand.Stderr = &obErrout
-		obErr := obCommand.Run()
+		obCommand := obExec.Command(obOS.Args[0], obOS.Args[1:]...)
+		obErr := obCommand.Start()
 		if obErr != nil {
 			println(obErr.Error())
 			obExit()
 		}
-		obPtraceOut, _ := obStrconv.ParseInt(obErrout.String(), 10, 32)
-		if obPtraceOut == 1 {
-			obExit()
-		}
+		obPtraceDetect(obCommand.Process.Pid, true)
 		// Ok we are set to go! Let's execute the payload
 		// OB_CHECK
 		obLauncher()
