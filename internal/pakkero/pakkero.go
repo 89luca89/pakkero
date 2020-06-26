@@ -70,6 +70,7 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	// packages
 	fmt.Print(" → Registering Dependencies...")
 
+    Secrets[stdoutEnabledPlaceholder] = []string{"\"unset\"", "leaveunset"}
 	// ------------------------------------------------------------------------
 	// Register eventual dependency passed by cli
 	// If a dependency check is present, register it.
@@ -91,8 +92,6 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
 		GenerateTyposquatName(128)}
 
-	Secrets[stdoutEnabledPlaceholder] = []string{strconv.FormatBool(stdout),
-		GenerateTyposquatName(128)}
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
 	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)
@@ -134,8 +133,9 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 		"-trimpath",
 		"-gcflags",
 		"-N -l -nolocalimports",
-		"-ldflags",
-		"-s -w -extldflags -static",
+		"-ldflags=" +
+		"-X main.Stdout=" + strconv.FormatBool(stdout) +
+		" -s -w -extldflags -static\"",
 	}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)

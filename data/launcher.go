@@ -30,6 +30,8 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
+
+var Stdout string = "ENABLESTDOUT"
 const obErr = 1
 const obCorrelationLevel = 0.4
 const obStdLevel = 1
@@ -547,7 +549,7 @@ func obLauncher() {
 	obStderrIn, _ := obCommand.StderrPipe()
 	defer obStderrIn.Close()
 
-	obStdout, obErr := obStrconv.ParseBool("ENABLESTDOUT")
+	obStdout, obErr := obStrconv.ParseBool(Stdout)
 	if obErr != nil {
 		obExit()
 	}
