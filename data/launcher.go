@@ -30,8 +30,8 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
-
 var Stdout string = "ENABLESTDOUT"
+
 const obErr = 1
 const obCorrelationLevel = 0.4
 const obStdLevel = 1
@@ -412,6 +412,19 @@ const (
 	obSysMEMFDCreate = 319
 )
 
+func obGetFDPath(obPid int, obFD int, obPayload []byte) string {
+	// check if we are pakkering a script, if it's a script
+	// use specific pid path
+	if string(obPayload[0:2]) == "#!" {
+		return "/proc/" +
+			obStrconv.Itoa(obPid) +
+			"/fd/" +
+			obStrconv.Itoa(obFD)
+	}
+	// else use self for elf files
+	return "/proc/self/fd/" + obStrconv.Itoa(obFD)
+}
+
 func obLauncher() {
 	// OB_CHECK
 	obNameFile, _ := obOS.Executable()
@@ -533,10 +546,8 @@ func obLauncher() {
 	}
 
 	// OB_CHECK
-	obFDPath := "/proc/" +
-		obStrconv.Itoa(obOS.Getpid()) +
-		"/fd/" +
-		obStrconv.Itoa(int(obFileDescriptor))
+	obFDPath := obGetFDPath(obOS.Getpid(), int(obFileDescriptor), obPayload)
+
 	// OB_CHECK
 	obCommand := obExec.Command(obFDPath)
 	// OB_CHECK
@@ -591,13 +602,13 @@ func obLauncher() {
 		obWaitGroup.Wait()
 	} else {
 		// launch and forget
-		obCommand.SysProcAttr = &obSyscall.SysProcAttr{Setpgid: true}
+		obCommand.SysProcAttr = &obSyscall.SysProcAttr{Setpgid: true, Noctty:true}
 		// OB_CHECK
 		obErr = obCommand.Start()
 		if obErr != nil {
 			obExit()
 		}
-		obTime.Sleep(1 * obTime.Second)
+		obTime.Sleep(2 * obTime.Second)
 	}
 }
 
