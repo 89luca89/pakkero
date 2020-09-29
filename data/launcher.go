@@ -60,6 +60,8 @@ func obSigTrap(obInput chan obOS.Signal) {
 // attach A G A I N , register if unsuccessful
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks.
+//
+// keep attached to avoid late attaching
 func obPtraceDetect(pid int, father bool) {
 	var obOffset = 0
 
@@ -70,23 +72,27 @@ func obPtraceDetect(pid int, father bool) {
 		obOffset = 5
 	}
 
-	obErr = obSyscall.PtraceAttach(obProc.Pid)
-	if obErr != nil {
-		obOffset *= 3
-	}
-
-	obProc.Signal(obSyscall.SIGCONT)
-
-	if obOffset != (3 * 5) {
-		if father {
-			obExit()
-		} else {
-			obProc.Signal(obSyscall.SIGTRAP)
+	// continuously check for ptrace on passed pid
+	for {
+		obErr = obSyscall.PtraceAttach(obProc.Pid)
+		if obErr != nil {
+			obOffset *= 3
 		}
 
-		return
+		obProc.Signal(obSyscall.SIGCONT)
+
+		if obOffset != (3 * 5) {
+			if father {
+				obExit()
+			} else {
+				obProc.Signal(obSyscall.SIGTRAP)
+			}
+		}
+
+		obOffset /= 3
 	}
 
+	return
 }
 
 // Check the process cmdline to spot if a debugger is inline.
@@ -602,7 +608,7 @@ func obLauncher() {
 		obWaitGroup.Wait()
 	} else {
 		// launch and forget
-		obCommand.SysProcAttr = &obSyscall.SysProcAttr{Setpgid: true, Noctty:true}
+		obCommand.SysProcAttr = &obSyscall.SysProcAttr{Setpgid: true, Noctty: true}
 		// OB_CHECK
 		obErr = obCommand.Start()
 		if obErr != nil {
@@ -664,7 +670,7 @@ func main() {
 			println(obErr.Error())
 			obExit()
 		}
-		obPtraceDetect(obCommand.Process.Pid, true)
+		go obPtraceDetect(obCommand.Process.Pid, true)
 		// Ok we are set to go! Let's execute the payload
 		// OB_CHECK
 		obLauncher()
