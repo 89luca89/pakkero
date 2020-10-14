@@ -5,6 +5,7 @@
 Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F89luca89%2Fpakkero.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2F89luca89%2Fpakkero?ref=badge_shield)
 
 ## Introduction
 
@@ -864,3 +865,7 @@ This is particularly discouraged for **srcipts payloads**, as they are even easi
 ![handle](./pics/handle-stdout-2.png)
 
 With binaries the approach is safer (only the binary name is in the process, thus making it hard to spot requiring a complete /proc dump)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F89luca89%2Fpakkero.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2F89luca89%2Fpakkero?ref=badge_large)
