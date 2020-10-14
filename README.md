@@ -5,7 +5,7 @@
 Credit: [alegrey91](https://github.com/alegrey91) for the logo! Thanks!
 
 [![GPLv3 license](https://img.shields.io/badge/License-GPLv3-blue.svg)](http://perso.crans.org/besson/LICENSE.html)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F89luca89%2Fpakkero.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2F89luca89%2Fpakkero?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2F89luca89%2Fpakkero.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2F89luca89%2Fpakkero?ref=badge_small)
 
 ## Introduction
 
