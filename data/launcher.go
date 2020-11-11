@@ -89,10 +89,9 @@ func obPtraceDetect(pid int, father bool) {
 			}
 		}
 
+		obTime.Sleep(1 * obTime.Second)
 		obOffset /= 3
 	}
-
-	return
 }
 
 // Check the process cmdline to spot if a debugger is inline.
