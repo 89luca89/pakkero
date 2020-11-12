@@ -30,6 +30,7 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
+// This variable will be overwritten during compilation
 var Stdout string = "ENABLESTDOUT"
 
 const obErr = 1

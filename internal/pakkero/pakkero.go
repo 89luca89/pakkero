@@ -70,7 +70,7 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	// packages
 	fmt.Print(" → Registering Dependencies...")
 
-    Secrets[stdoutEnabledPlaceholder] = []string{"\"unset\"", "leaveunset"}
+	Secrets[stdoutEnabledPlaceholder] = []string{"\"unset\"", "leaveunset"}
 	// ------------------------------------------------------------------------
 	// Register eventual dependency passed by cli
 	// If a dependency check is present, register it.
@@ -134,8 +134,8 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 		"-gcflags",
 		"-N -l -nolocalimports",
 		"-ldflags=" +
-		"-X main.Stdout=" + strconv.FormatBool(stdout) +
-		" -s -w -extldflags -static\"",
+			"-X main.Stdout=" + strconv.FormatBool(stdout) +
+			" -s -w -extldflags -static\"",
 	}
 	flags = append(flags, "-o")
 	flags = append(flags, outfile)
