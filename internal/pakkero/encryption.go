@@ -9,6 +9,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha512"
+	"fmt"
 	"io"
 	"io/ioutil"
 )
@@ -32,7 +33,7 @@ func EncryptAESReversed(plaintext []byte, outfile string) (string, error) {
 	*/
 	b, err := ioutil.ReadFile(outfile)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read input file: %w", err)
 	}
 
 	// use SHA512 (32byte) of the passphrase as key

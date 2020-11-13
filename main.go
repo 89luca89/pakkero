@@ -10,12 +10,23 @@ import (
 	"github.com/89luca89/pakkero/internal/pakkero"
 )
 
-const programName = "pakkero"
-const version = "0.7.0"
-const minArgsLen = 2
+const (
+	programName = "pakkero"
+	version     = "0.7.0"
+	minArgsLen  = 2
+)
 
-var dependencies = []string{"ls", "sed", "go", "strip"}
-var dependenciesComplete = []string{"upx", "ls", "sed", "go", "strip"}
+const (
+	minOffsetCompressed = 750000
+	maxOffsetCompressed = 800000
+	minOffset           = 1910000
+	maxOffset           = 2100000
+)
+
+var (
+	dependencies         = []string{"ls", "sed", "go", "strip"}
+	dependenciesComplete = []string{"upx", "ls", "sed", "go", "strip"}
+)
 
 /*
 TestDependencies if all dependencies are present
@@ -51,6 +62,7 @@ func help() {
 	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolute path, optional)")
 	println("  -v			Check " + programName + " version")
 }
+
 func main() {
 	if len(os.Args) < minArgsLen {
 		help()
@@ -84,9 +96,9 @@ func main() {
 		// set a default offset if not specified
 		if *offset == 0 {
 			if *compress {
-				*offset = pakkero.Random(750000, 800000)
+				*offset = pakkero.Random(minOffsetCompressed, maxOffsetCompressed)
 			} else {
-				*offset = pakkero.Random(1910000, 2000000)
+				*offset = pakkero.Random(minOffset, maxOffset)
 			}
 		}
 

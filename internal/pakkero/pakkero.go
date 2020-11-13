@@ -8,19 +8,19 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
-	"time"
 )
 
-const offsetPlaceholder = `"9999999"`
-const stdoutEnabledPlaceholder = `"ENABLESTDOUT"`
-const depNamePlaceholder = `"DEPNAME1"`
-const depSizePlaceholder = `"DEPSIZE2"`
-const depBFDPlaceholder = "[]float64{1, 2, 3, 4}"
+const (
+	offsetPlaceholder        = `"9999999"`
+	stdoutEnabledPlaceholder = `"ENABLESTDOUT"`
+	depNamePlaceholder       = `"DEPNAME1"`
+	depSizePlaceholder       = `"DEPSIZE2"`
+	depBFDPlaceholder        = "[]float64{1, 2, 3, 4}"
+)
 
 var launcherFile = os.TempDir() + "/launcher.go"
 
@@ -58,8 +58,6 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 
 	// ------------------------------------------------------------------------
 	// offset Hysteresis, this will prevent easy key retrieving
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	offset += Random(128, 4094)
 
 	fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
@@ -89,13 +87,14 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	fmt.Print(" → Creating Launcher Stub...")
 
 	// add offset to the secrets!
-	Secrets[offsetPlaceholder] = []string{fmt.Sprintf("%d", offset),
-		GenerateTyposquatName(128)}
+	Secrets[offsetPlaceholder] = []string{
+		fmt.Sprintf("%d", offset),
+		GenerateTyposquatName(128),
+	}
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
 	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)
-
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		println(fmt.Sprintf("failed writing to file: %s", err))
@@ -129,7 +128,8 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 
 	os.Setenv("CGO_ENABLED", "0")
 
-	flags = []string{"build", "-a",
+	flags = []string{
+		"build", "-a",
 		"-trimpath",
 		"-gcflags",
 		"-N -l -nolocalimports",
