@@ -10,11 +10,10 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io/ioutil"
-	mathRand "math/rand"
+	"math/big"
 	"os"
 	"os/exec"
 	"strings"
-	"time"
 )
 
 // Colors for strings.
@@ -31,11 +30,28 @@ const ERR = 1
 const OK = 0
 
 /*
+RandomInt64 will return a random number in a range.
+*/
+func RandomInt64(max int64) int64 {
+	bg := big.NewInt(max)
+	n, err := rand.Int(rand.Reader, bg)
+	if err != nil {
+		panic(err)
+	}
+	return n.Int64()
+}
+
+/*
 Random will return a random number in a range.
 */
 func Random(min, max int64) int64 {
-	mathRand.Seed(time.Now().UnixNano())
-	return mathRand.Int63n(max-min) + min
+	bg := big.NewInt(max - min)
+	n, err := rand.Int(rand.Reader, bg)
+	if err != nil {
+		panic(err)
+	}
+	// add n to min to support the passed in range
+	return n.Int64() + min
 }
 
 /*
@@ -116,8 +132,10 @@ func ReverseString(input string) string {
 ShuffleSlice will shuffle a slice.
 */
 func ShuffleSlice(in []string) []string {
-	mathRand.Seed(time.Now().UnixNano())
-	mathRand.Shuffle(len(in), func(i, j int) { in[i], in[j] = in[j], in[i] })
+	for i := len(in) - 1; i > 0; i-- {
+		j := RandomInt64(int64(i) + 1)
+		in[i], in[j] = in[j], in[i]
+	}
 
 	return in
 }
@@ -129,7 +147,6 @@ and ensure it's result is not err.
 func ExecCommand(name string, args []string) bool {
 	cmd := exec.Command(name, args...)
 	errString, err := cmd.CombinedOutput()
-
 	if err != nil {
 		println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
 		println(string(errString))
@@ -251,5 +268,6 @@ func RegisterDependency(dependency string) {
 	Secrets[depNamePlaceholder] = []string{dependency, GenerateTyposquatName(128)}
 	// register size
 	Secrets[depSizePlaceholder] = []string{
-		fmt.Sprintf("%d", dependencyStats.Size()), GenerateTyposquatName(128)}
+		fmt.Sprintf("%d", dependencyStats.Size()), GenerateTyposquatName(128),
+	}
 }

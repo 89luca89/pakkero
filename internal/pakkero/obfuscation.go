@@ -9,10 +9,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
-	mathRand "math/rand"
 	"regexp"
 	"strings"
-	"time"
 )
 
 // Secrets are the group of strings that we want to obfuscate.
@@ -169,7 +167,7 @@ func StripFile(infile string, launcherFile string) bool {
 		input = strings.ReplaceAll(input, strings.Title(remove), newName)
 	}
 	// save.
-	err = ioutil.WriteFile(infile, []byte(input), 0644)
+	err = ioutil.WriteFile(infile, []byte(input), 0600)
 	// ------------------------------------------------------------------------
 
 	return err == nil
@@ -188,11 +186,10 @@ func GenerateTyposquatName(length int) string {
 	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
 	b := make([]rune, length)
 	// ensure we do not start with a number or we will break code.
-	b[0] = letterRunes[mathRand.Intn(len(letterRunes))]
+	b[0] = letterRunes[Random(0, int64(len(mixedRunes)))]
 	for i := range b {
 		if i != 0 {
-			mathRand.Seed(time.Now().UnixNano())
-			b[i] = mixedRunes[mathRand.Intn(len(mixedRunes))]
+			b[i] = mixedRunes[Random(0, int64(len(mixedRunes)))]
 		}
 	}
 
@@ -364,7 +361,7 @@ Basic techniques are applied:
 func ObfuscateLauncher(infile string) error {
 	byteContent, err := ioutil.ReadFile(infile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read input file: %w", err)
 	}
 
 	content := string(byteContent)
@@ -385,9 +382,9 @@ func ObfuscateLauncher(infile string) error {
 	// ------------------------------------------------------------------------
 
 	// save.
-	err = ioutil.WriteFile(infile, []byte(content), 0644)
+	err = ioutil.WriteFile(infile, []byte(content), 0600)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to save output file: %w", err)
 	}
 
 	return nil
