@@ -100,7 +100,10 @@ func obPtraceDetect(pid int, father bool) {
 			if father {
 				obExit()
 			} else {
-				obProc.Signal(obSyscall.SIGTRAP)
+				obErr = obProc.Signal(obSyscall.SIGTRAP)
+				if obErr != nil {
+					obExit()
+				}
 			}
 		}
 

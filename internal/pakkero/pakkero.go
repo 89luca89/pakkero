@@ -94,7 +94,8 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 
 	// copy the stub from where to start.
 	launcherStub, _ := base64.StdEncoding.DecodeString(LauncherStub)
-	err := ioutil.WriteFile(launcherFile, launcherStub, 0644)
+
+	err := ioutil.WriteFile(launcherFile, launcherStub, 0600)
 	if err != nil {
 		fmt.Printf(ErrorColor, "\t\t[ ERR ]\n")
 		println(fmt.Sprintf("failed writing to file: %s", err))

@@ -34,10 +34,12 @@ RandomInt64 will return a random number in a range.
 */
 func RandomInt64(max int64) int64 {
 	bg := big.NewInt(max)
+
 	n, err := rand.Int(rand.Reader, bg)
 	if err != nil {
 		panic(err)
 	}
+
 	return n.Int64()
 }
 
@@ -46,6 +48,7 @@ Random will return a random number in a range.
 */
 func Random(min, max int64) int64 {
 	bg := big.NewInt(max - min)
+
 	n, err := rand.Int(rand.Reader, bg)
 	if err != nil {
 		panic(err)
@@ -146,6 +149,7 @@ and ensure it's result is not err.
 */
 func ExecCommand(name string, args []string) bool {
 	cmd := exec.Command(name, args...)
+
 	errString, err := cmd.CombinedOutput()
 	if err != nil {
 		println(fmt.Sprintf("failed to execute command %s: %s", cmd, err))
