@@ -186,10 +186,10 @@ func GenerateTyposquatName(length int) string {
 	mixedRunes := []rune("0OÓÕÔÒÖŌŎŐƠΘΟ")
 	b := make([]rune, length)
 	// ensure we do not start with a number or we will break code.
-	b[0] = letterRunes[Random(0, int64(len(mixedRunes)))]
+	b[0] = letterRunes[Random(0, int64(len(mixedRunes)-1))]
 	for i := range b {
 		if i != 0 {
-			b[i] = mixedRunes[Random(0, int64(len(mixedRunes)))]
+			b[i] = mixedRunes[Random(0, int64(len(mixedRunes)-1))]
 		}
 	}
 
