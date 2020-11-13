@@ -30,13 +30,15 @@ type obDependency struct {
 	obDepBFD  []float64
 }
 
-// Stdout variable will be overwritten during compilation
+// Stdout variable will be overwritten during compilation.
 var Stdout string = "ENABLESTDOUT"
 
-const obErr = 1
-const obCorrelationLevel = 0.4
-const obStdLevel = 1
-const obFileSizeLevel = 15
+const (
+	obErr              = 1
+	obCorrelationLevel = 0.4
+	obStdLevel         = 1
+	obFileSizeLevel    = 15
+)
 
 func obExit() {
 	println("https://shorturl.at/crzEZ")
@@ -62,9 +64,9 @@ func obSigTrap(obInput chan obOS.Signal) {
 // this protects against custom ptrace (always returning 0)
 // against NOP attacks and LD_PRELOAD attacks.
 //
-// keep attached to avoid late attaching
+// keep attached to avoid late attaching.
 func obPtraceDetect(pid int, father bool) {
-	var obOffset = 0
+	obOffset := 0
 
 	obProc, _ := obOS.FindProcess(pid)
 
@@ -80,7 +82,19 @@ func obPtraceDetect(pid int, father bool) {
 			obOffset *= 3
 		}
 
-		obProc.Signal(obSyscall.SIGCONT)
+		obErr = obProc.Signal(obSyscall.SIGCONT)
+		if obErr != nil {
+			// we cannot send sigcont to out pid
+			// we should exit.
+			if father {
+				obExit()
+			} else {
+				obErr = obProc.Signal(obSyscall.SIGTRAP)
+				if obErr != nil {
+					obExit()
+				}
+			}
+		}
 
 		if obOffset != (3 * 5) {
 			if father {
@@ -90,7 +104,8 @@ func obPtraceDetect(pid int, father bool) {
 			}
 		}
 
-		obTime.Sleep(1 * obTime.Second)
+		obTime.Sleep(250 * obTime.Millisecond)
+
 		obOffset /= 3
 	}
 }
@@ -409,18 +424,18 @@ func obByteReverse(obBar byte) byte {
 
 const (
 	obCloexec uint = 1
-	// allow seal operations to be performed
+	// allow seal operations to be performed.
 	obAllowSealing uint = 2
-	// memfd is now immutable
+	// memfd is now immutable.
 	obSealAll = 0x0001 | 0x0002 | 0x0004 | 0x0008
-	// amd64 specific
+	// amd64 specific.
 	obSysFCNTL       = obSyscall.SYS_FCNTL
 	obSysMEMFDCreate = 319
 )
 
 func obGetFDPath(obPid int, obFD int, obPayload []byte) string {
 	// check if we are pakkering a script, if it's a script
-	// use specific pid path
+	// use specific pid path.
 	if string(obPayload[0:2]) == "#!" {
 		return "/proc/" +
 			obStrconv.Itoa(obPid) +
