@@ -53,14 +53,16 @@ func printVersion() {
 Print Help.
 */
 func help() {
-	println("Usage: " + programName + " -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-register-dep /path/to/file)")
-	println("  -file <file>		Target file to Pack")
-	println("  -o   <file>		place the output into <file> (default is <inputfile>.enc), optional")
-	println("  -c   			compress the output to occupy less space (uses UPX, optional)")
-	println("  -offset		Offset where to start the payload (Number of Bytes, optional)")
-	println("  -enable-stdout		Whether to wait and handle the process stdout/sterr or not (false by default, optional)")
-	println("  -register-dep		/path/to/dependency to analyze and use as fingerprint (absolute path, optional)")
-	println("  -v			Check " + programName + " version")
+	println("Usage: " +
+		programName +
+		" -file /path/to/file -offset OFFSET (-o /path/to/output) (-c) (-register-dep /path/to/file)")
+	println("  -file <file>				Target file to Pack")
+	println("  -o    <file>				place the output into <file> (default is <inputfile>.enc, optional)")
+	println("  -offset <offset>			Offset where to start the payload (Number of Bytes, optional)")
+	println("  -register-dep <file-dependency>	Target file to analyze and use as fingerprint (absolute path, optional)")
+	println("  -c					compress the output to occupy less space (uses UPX, optional)")
+	println("  -enable-stdout			Whether to wait and handle the process stdout/sterr or not (false by default, optional)")
+	println("  -v					Check " + programName + " version")
 }
 
 func main() {
