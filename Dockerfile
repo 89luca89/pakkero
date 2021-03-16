@@ -1,12 +1,10 @@
-FROM amd64/golang:latest
+FROM golang:alpine
 
 ENV CGO_ENABLED=0
 ENV GO111MODULE=off
 
-RUN apt-get update \
-    && apt-get install -y \
-    && apt-get install -y upx \ 
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --update-cache upx git make binutils coreutils \
+    && rm -rf /var/cache/apk/*
 
 RUN upx --version
 
