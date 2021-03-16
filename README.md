@@ -142,6 +142,34 @@ Go build works fine, but will skip a fundamental step in the building process, *
 
 This way the Pakkero binary has inside the source of the Launcher to be used for each packaging.
 
+#### Building using Docker
+
+Build Pakkero image:
+
+```sh
+sudo docker build . -t pakkero
+```
+
+Run containerized Pakkero:
+
+```sh
+sudo docker run -it -v <target_dir>:/ext pakkero --file /ext/<target_elf> -o /ext/<target_elf>.packed
+```
+
+#### Building using Podman
+
+Build Pakkero image:
+
+```sh
+sudo podman build . -t pakkero
+```
+
+Run containerized Pakkero:
+
+```sh
+sudo podman run -it -v <target_dir>:/ext pakkero --file /ext/<target_elf> -o /ext/<target_elf>.packed
+```
+
 #### Payload
 
 For this purpose the payload is simply compressed using zlib then encrypted using AES256-GCM
