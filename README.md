@@ -156,6 +156,20 @@ Run containerized Pakkero:
 sudo docker run -it -v <target_dir>:/ext pakkero --file /ext/<target_elf> -o /ext/<target_elf>.packed
 ```
 
+#### Building using Podman
+
+Build Pakkero image:
+
+```sh
+sudo podman build . -t pakkero
+```
+
+Run containerized Pakkero:
+
+```sh
+sudo podman run -it -v <target_dir>:/ext pakkero --file /ext/<target_elf> -o /ext/<target_elf>.packed
+```
+
 #### Payload
 
 For this purpose the payload is simply compressed using zlib then encrypted using AES256-GCM
