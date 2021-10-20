@@ -60,7 +60,7 @@ clean:
 
 test: clean
 	dist/pakkero \
-		--file /usr/bin/echo \
+		-file /usr/bin/echo \
 		-o /tmp/test.enc \
 		-offset 2850000 \
 		-enable-stdout \
