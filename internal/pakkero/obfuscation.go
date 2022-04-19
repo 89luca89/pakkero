@@ -144,8 +144,6 @@ func StripFile(infile string, launcherFile string) bool {
 	// stripping of golang builtins and keyWords strings
 	removeStrings := []string{}
 	removeStrings = append(removeStrings, extras...)
-	// stripping of the dependencies strings
-	removeStrings = append(removeStrings, ListImportsFromFile(launcherFile)...)
 	// anonymize the launcherFile string to hide the original launcher file name
 	removeStrings = append(removeStrings, launcherFile)
 

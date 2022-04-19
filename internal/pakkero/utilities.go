@@ -13,7 +13,6 @@ import (
 	"math/big"
 	"os"
 	"os/exec"
-	"strings"
 )
 
 // Colors for strings.
@@ -159,33 +158,6 @@ func ExecCommand(name string, args []string) bool {
 	}
 
 	return true
-}
-
-/*
-ListImportsFromFile will extract from a GO file the import section
-and return an array with all the imports (with multiple entry in case
-of sub packages).
-*/
-func ListImportsFromFile(inputFile string) []string {
-	byteContent, _ := ioutil.ReadFile(inputFile)
-	input := string(byteContent)
-	result := []string{}
-
-	// retrieve import section
-	imports := strings.Index(input, "import (")
-	endimports := strings.Index(input[imports:], ")")
-	importSection := input[imports+len("import (")+1 : imports+endimports-1]
-	// now get all imports from the .go file and anonymize them
-	for _, imports := range strings.Split(importSection, "\n") {
-		head := strings.Split(imports, ` `)
-		importlet := head[1]
-		// remove quotation marks
-		importlet = importlet[1 : len(importlet)-1]
-		// add to the group of removal
-		result = append(result, importlet)
-	}
-
-	return result
 }
 
 /*
