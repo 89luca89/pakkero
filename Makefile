@@ -23,7 +23,6 @@ all:
 		--remove-section=.got \
 		--remove-section=.note.ABI-tag \
 		--remove-section=.note.gnu.build-id \
-		--remove-section=.note.go.buildid \
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
 		dist/pakkero;
@@ -53,14 +52,13 @@ clean:
 		--remove-section=.got \
 		--remove-section=.note.ABI-tag \
 		--remove-section=.note.gnu.build-id \
-		--remove-section=.note.go.buildid \
 		--remove-section=.shstrtab \
 		--remove-section=.typelink \
 		dist/pakkero
 
 test: clean
 	dist/pakkero \
-		-file /usr/bin/echo \
+		-file /usr/bin/echo -c \
 		-o /tmp/test.enc \
 		-offset 2850000 \
 		-enable-stdout \

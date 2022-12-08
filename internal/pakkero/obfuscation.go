@@ -131,7 +131,6 @@ func StripFile(infile string, launcherFile string) bool {
 			"--remove-section=.got",
 			"--remove-section=.note.ABI-tag",
 			"--remove-section=.note.gnu.build-id",
-			"--remove-section=.note.go.buildid",
 			"--remove-section=.shstrtab",
 			"--remove-section=.typelink",
 			infile,
