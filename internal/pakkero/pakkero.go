@@ -12,6 +12,8 @@ import (
 	"os/signal"
 	"strconv"
 	"syscall"
+
+	"github.com/alegrey91/go-upx"
 )
 
 const (
@@ -172,7 +174,17 @@ func Pakkero(infile string, offset int64, outfile string, dependency string, com
 	fmt.Print(" → Compressing Launcher...")
 
 	if compress {
-		if ExecCommand("upx", []string{outfile}) &&
+		options := goupx.Options{
+			Output:               "",
+			Force:                false,
+			Verbose:              false,
+		}
+		upx := goupx.NewUPX()
+		compression, err := upx.Compress(outfile, 8, options)
+		if err != nil {
+			fmt.Println(err)
+		}
+		if compression &&
 			StripUPXHeaders(outfile) {
 			fmt.Printf(SuccessColor, "\t\t[ OK ]\n")
 		} else {
