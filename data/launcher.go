@@ -2,7 +2,6 @@
 package main
 
 import (
-	obBufio "bufio"
 	obBytes "bytes"
 	obZlib "compress/zlib"
 	obAES "crypto/aes"
@@ -11,6 +10,7 @@ import (
 	obBase64 "encoding/base64"
 	obBinary "encoding/binary"
 	obErrors "errors"
+	obIO "io"
 	obUtilio "io/ioutil"
 	obMath "math"
 	obOS "os"
@@ -449,6 +449,11 @@ func obGetFDPath(obPid int, obFD int, obPayload []byte) string {
 	return "/proc/self/fd/" + obStrconv.Itoa(obFD)
 }
 
+func obCopyOutput(obDestination obIO.Writer, obSource obIO.Reader) error {
+	_, obErr := obIO.Copy(obDestination, obSource)
+	return obErr
+}
+
 func obLauncher() {
 	// OB_CHECK
 	obNameFile, _ := obOS.Executable()
@@ -601,25 +606,17 @@ func obLauncher() {
 
 		obWaitGroup.Add(2)
 
-		obStdoutScan := obBufio.NewScanner(obStdoutIn)
-		obStderrScan := obBufio.NewScanner(obStderrIn)
 		// OB_CHECK
 		// async fetch stdout
 		go func() {
 			defer obWaitGroup.Done()
-
-			for obStdoutScan.Scan() {
-				println(obStdoutScan.Text())
-			}
+			_ = obCopyOutput(obOS.Stdout, obStdoutIn)
 		}()
 		// OB_CHECK
 		// async fetch stderr
 		go func() {
 			defer obWaitGroup.Done()
-
-			for obStderrScan.Scan() {
-				println(obStderrScan.Text())
-			}
+			_ = obCopyOutput(obOS.Stderr, obStderrIn)
 		}()
 
 		// OB_CHECK
